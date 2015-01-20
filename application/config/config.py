@@ -7,9 +7,11 @@ db={
     'user':'root',
     'passwd':'root',
     'database':'test',
-    'maxconnections':3,
+    'maxconnections':30,
     'blocking':True,
 }
+
+
 
 log={
 
@@ -18,10 +20,26 @@ log={
 
 }
 
+
+mail={
+    'host':'smtp.163.com',
+    'user':'easyphp',
+    'password':'123456',
+    'postfix':'163.com'
+}
+
+
+server={
+    'port':8005,
+    'host':'0.0.0.0'
+}
+
 config={
 
 'log':log,
-'db':db
+'db':db,
+'mail':mail,
+'server':server
 
 }
 

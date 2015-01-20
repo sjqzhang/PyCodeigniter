@@ -20,7 +20,9 @@ class CI_DB(object):
         self.queries=[]
 
 
+
     def get_connection(self):
+        # print("get_connection")
         conn= self.pool.dedicated_connection()
         cursor=conn.cursor()
         cursor.execute('set names utf8')
@@ -79,10 +81,33 @@ class CI_DB(object):
             try:
                 cursor.close()
                 conn.close()
+                # print("close")
             except UnboundLocalError,ee:
                 pass
 
+    def mquery(self,conn,sql,param=tuple()):
+        if type(param) is types.DictType:
+            sql,param=self.format(sql,param)
+            # print(param)
+        # conn=self.get_connection()
+        try:
+            cursor=conn.cursor()
+            result=cursor.execute(sql,param)
+            self.queries.append(sql)
+            if re.compile(r'^\s*(select|show)',re.IGNORECASE).match(sql):
+                rows=self.dict_result(cursor)
+                return rows
+            else:
+                return result
+        except Exception,e:
+            print(e)
 
+        finally:
+            try:
+                cursor.close()
+                conn.close()
+            except UnboundLocalError,ee:
+                pass
 
 
 if __name__=='__main__':

@@ -16,7 +16,7 @@ class CI_Loader(object):
         self.application_path= kwargs['application_path']
         self.app=kwargs['app']
         self.kwargs=kwargs
-        self.app_modules_list=['controllers','models','helpers','library']
+        self.app_modules_list=['helpers','library','models','controllers']
         self.modules={}
         self.classes={}
         self.sys_path=sys.path

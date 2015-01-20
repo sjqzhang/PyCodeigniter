@@ -70,12 +70,16 @@ if __name__=='__main__':
         exec('from CI_Logger import CI_Logger')
         exec('from CI_DB import CI_DB')
         exec('from CI_DBActiveRec import CI_DBActiveRec')
+        exec('from CI_Router import CI_Router')
+        exec('from CI_Mail import CI_Mail')
         self.logger= eval('CI_Logger(**self.config["log"])')
         self.loader= eval('CI_Loader(**self.config)')
         self.db= eval('CI_DBActiveRec(**self.config["db"])')
+        self.router= eval('CI_Router(**self.config)')
+        self.mail= eval('CI_Mail(**self.config["mail"])')
         sys.path.remove(self.system_path+os.path.sep+'core')
         sys.path.remove(self.application_path+os.path.sep+'config')
-        for m in ['CI_DBActiveRec','CI_DB','CI_Logger']:
+        for m in ['CI_DBActiveRec','CI_DB','CI_Logger','CI_Mail','CI_Router']:
             module=__import__(m)
             self.loader.regcls(m,getattr(module,m))
 
@@ -85,6 +89,20 @@ if __name__=='__main__':
             folder_path=application_path+os.path.sep+folder
             if not os.path.isdir( folder_path):
                 os.mkdir(folder_path)
+
+
+    def request_hander(self, environ, start_response):
+        pass
+        status = '200 OK' # HTTP Status
+        headers = [('Content-type', 'text/plain')] # HTTP Headers
+        start_response(status, headers)
+
+        result= self.router.wsgi_route(self,environ)
+
+        return list(result)
+
+
+
 
 if __name__=='__main__':
     import platform
@@ -110,6 +128,9 @@ if __name__=='__main__':
     # app.loader.model('SearchModel').search()
 
    # 0 print app.logger.log(app.db.query("select * from test"))
+
+
+
 
 
 
