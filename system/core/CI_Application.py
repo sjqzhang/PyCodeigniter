@@ -1,0 +1,115 @@
+#!/usr/bin/env python
+# -*- coding:utf8 -*-
+__author__ = 'xiaozhang'
+
+
+import sys
+import os
+
+
+class CI_Application(object):
+    def __init__(self,system_path,application_path):
+        self.system_path=system_path
+        self.application_path=application_path
+        self.config={}
+        self.loader=None
+        self.logger=None
+        self.db=None
+        self._app_create(application_path)
+        self.init()
+
+    def _default_config(self):
+        config='''
+import logging
+
+
+db={
+    'host':'172.16.132.230',
+    'user':'root',
+    'passwd':'root',
+    'database':'test',
+    'maxconnections':3,
+    'blocking':True,
+}
+
+log={
+
+    'log_file':r'/log/abc.log',
+    'log_level':logging.INFO
+
+}
+
+config={
+
+'log':log,
+'db':db
+
+}
+
+
+if __name__=='__main__':
+    print(config)
+
+        '''
+
+        return config
+
+
+    def init(self):
+        sys.path.insert(0,self.system_path+os.path.sep+'core')
+        sys.path.insert(0,self.application_path+os.path.sep+'config')
+        config=__import__('config')
+        self.config=config.config
+        self.config['system_path']=self.system_path
+        self.config['application_path']=self.application_path
+        self.config['app']=self
+        for conf in self.config.keys():
+            if isinstance(self.config[conf],dict):
+                self.config[conf]['app']=self
+        exec('from CI_Loader import CI_Loader')
+        exec('from CI_Logger import CI_Logger')
+        exec('from CI_DB import CI_DB')
+        exec('from CI_DBActiveRec import CI_DBActiveRec')
+        self.logger= eval('CI_Logger(**self.config["log"])')
+        self.loader= eval('CI_Loader(**self.config)')
+        self.db= eval('CI_DBActiveRec(**self.config["db"])')
+        sys.path.remove(self.system_path+os.path.sep+'core')
+        sys.path.remove(self.application_path+os.path.sep+'config')
+        for m in ['CI_DBActiveRec','CI_DB','CI_Logger']:
+            module=__import__(m)
+            self.loader.regcls(m,getattr(module,m))
+
+    def _app_create(self,application_path):
+        floder_list=['controllers','models','helpers','library','config']
+        for folder in floder_list:
+            folder_path=application_path+os.path.sep+folder
+            if not os.path.isdir( folder_path):
+                os.mkdir(folder_path)
+
+if __name__=='__main__':
+    import platform
+    if platform.system()=='Windows':
+        # app=CI_Application(r'E:\python\study\Codeigniter\system',r'E:\python\study\Codeigniter\application')
+        app=CI_Application(r'E:\python\study\Codeigniter\system',r'I:/python_src')
+    else:
+        app=CI_Application(r'/var/www/pyexample/Codeigniter/system',r'/var/www/pyexample/Codeigniter/application')
+    # print(app.loader)
+
+    app.init()
+    # print app.loader.model('SearchModel')['aclass']().search()
+
+    # app.logger.log("sdfasf")
+
+
+    # app.app_create('I:/python_src')
+
+    print app.loader.ctrl('Hello').add(4,5)
+    print app.loader.ctrl('Hello').select()
+
+
+    # app.loader.model('SearchModel').search()
+
+   # 0 print app.logger.log(app.db.query("select * from test"))
+
+
+
