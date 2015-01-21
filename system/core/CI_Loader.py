@@ -38,7 +38,7 @@ class CI_Loader(object):
         try:
             return self.modules[categroy][name]['instance']
         except KeyError,e:
-            self.app.logger.log(name+" not found")
+            self.app.logger.error(name+" not found")
 
 
 
@@ -73,7 +73,11 @@ class CI_Loader(object):
                     has_init=hasattr(aclass,'__init__')
                     if has_init:
                         init_member=getattr(aclass,'__init__')
-                        arginfo= inspect.getargspec(init_member)
+                        arginfo= str(init_member)
+                        if re.match(r'^<unbound method',arginfo):
+                            arginfo= inspect.getargspec(init_member)
+                        else:
+                            arginfo=''
                     else:
                         arginfo=''
                     if module not in self.modules[module_name].keys():

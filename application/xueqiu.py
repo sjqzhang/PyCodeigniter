@@ -51,56 +51,30 @@ def start_gevent_server(app):
     server.serve_forever()
 
 
-def test(app):
-    app.loader.model('IndexModel').search()
-    print app.loader.ctrl('Index').add(3,4)
-    import time
-    start=time.time()
-    def job():
 
+def start_fetch(app):
+    from apscheduler.schedulers.blocking import BlockingScheduler
 
-        count=100
-        while count>0:
-            app.loader.model('IndexModel').search()
-            # print("hellow")
-            count=count-1
+    scheduler = BlockingScheduler({
 
+        'apscheduler.executors.default': {
+            'class': 'apscheduler.executors.pool:ThreadPoolExecutor',
+            'max_workers': '20'
+        },
+        'apscheduler.executors.processpool': {
+            'type': 'processpool',
+            'max_workers': '5'
+        },
+        'apscheduler.job_defaults.coalesce': 'false',
+        'apscheduler.job_defaults.max_instances': '3',
+        'apscheduler.timezone': 'UTC',
+    })
 
-    import gevent
-    from gevent import monkey
-
-    monkey.patch_socket()
-    jobs=[]
-    for i in xrange(0,10):
-        jobs.append(gevent.spawn(job))
-        # job()
-
-    gevent.joinall(jobs)
-
-
-
-    print(time.time()-start)
-
-
-    # job()
-
-    # app.db.query("insert into test(id,msg) values({id},{msg})",{'id':6,'msg':"asdfasdf"})
-
-
-    # app.db.insert('test',{'id':'6','msg':"asdfa'sdf"})
-
-
-
-    db=app.loader.cls('CI_DBActiveRec')(**app.config['db'])
-
-    print(db)
-
-
-    print db.query('select * from test')
-
-
-
-
+    # app.loader.ctrl('XueQiu').load_news_urls()
+    # app.loader.ctrl('XueQiu').load_json_url()
+    scheduler.add_job(app.loader.ctrl('XueQiu').load_news_urls, 'interval', minutes=1)
+    scheduler.add_job(app.loader.ctrl('XueQiu').load_url, 'interval', minutes=1)
+    scheduler.start()
 
 
 
@@ -115,9 +89,12 @@ if __name__=='__main__':
 
 
 
-    app.loader.ctrl('XueQiu').load_url()
-    app.loader.ctrl('XueQiu').load_news_urls()
+    # app.loader.ctrl('XueQiu').load_url()
+    # app.loader.ctrl('XueQiu').load_news_urls()
     # app.loader.ctrl('XueQiu').load_json_url()
+
+
+    start_fetch(app)
 
 
 
