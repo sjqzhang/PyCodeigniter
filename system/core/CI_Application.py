@@ -99,7 +99,7 @@ if __name__=='__main__':
 
         result= self.router.wsgi_route(self,environ)
 
-        return list(result)
+        return list(str(result))
 
 
 

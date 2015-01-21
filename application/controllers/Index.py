@@ -24,6 +24,6 @@ class Index:
     def ar(self):
         return self.app.db.mquery(self.app.db.get_connection(), 'select * from test')
 
-    def index(self,**kwargs):
+    def index(self):
         return "hello world"
 

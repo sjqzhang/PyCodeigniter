@@ -37,7 +37,7 @@ class CI_Router(object):
                 data[item[0]]=''
 
 
-        return json.dumps(eval('app.loader.ctrl(ctrl).'+func+'(**data)'))
+        return eval('app.loader.ctrl(ctrl).'+func+'(**data)')
 
 
 

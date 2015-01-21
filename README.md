@@ -44,6 +44,20 @@ config.py
 
 ```
 
++ how to visit your website?
+
+```
+
+#http://127.0.0.1:8005/conntroller_class/function
+#
+
+
+http://127.0.0.1:8005/Index/index
+
+
+
+```
+
 
 + how to get controller class instance?
 
