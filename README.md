@@ -21,7 +21,7 @@ def app_run(system_path,application_path):
 if __name__=='__main__':
     app=app_run('./system','./application')
     #app=app_run('path/to/system','path/to/your/application')
-    print app.loader.ctrl('Index').index()
+    start_server(app)
 
 ```
 
