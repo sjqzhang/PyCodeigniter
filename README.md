@@ -17,6 +17,9 @@ def app_run(system_path,application_path):
     app=CI_Application(system_path,application_path)
     return app
 
+def start_server(app):
+    httpd=make_server(app.config['server']['host'],app.config['server']['port'],app.request_hander)
+    httpd.serve_forever()
 
 if __name__=='__main__':
     app=app_run('./system','./application')

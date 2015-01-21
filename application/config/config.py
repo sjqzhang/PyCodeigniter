@@ -3,7 +3,7 @@ import logging
 
 
 db={
-    'host':'172.16.132.230',
+    'host':'127.0.0.1',
     'user':'root',
     'passwd':'root',
     'database':'test',
