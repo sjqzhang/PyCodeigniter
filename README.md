@@ -1,4 +1,11 @@
-##1. How to use?
+##1.dependency
+
++ `logging`
++ `pymysql`
++ `DBUtils`
+
+
+##2. How to use?
 
 ```python
 #!/usr/bin/env python
@@ -25,15 +32,25 @@ if __name__=='__main__':
     app=app_run('./system','./application')
     #app=app_run('path/to/system','path/to/your/application')
     start_server(app)
+    
+```
+
+
+command line
+
+```
+python app.py
+```
+
+visit website
+
+```
+http://127.0.0.1:8005/Index/index
 
 ```
 
 
-##2.dependency
 
-+ `logging`
-+ `pymysql`
-+ `DBUtils`
 
 ##3. Q&A
 
@@ -41,11 +58,12 @@ if __name__=='__main__':
 + how to config your application?
 
 ```
-#you can edit application/config/config.py
+#you can edit application/config/config.py 
 
 config.py
 
 ```
+
 
 + how to visit your website?
 
