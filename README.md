@@ -22,15 +22,15 @@ if __name__=='__main__':
     app=app_run('./system','./application')
     #app=app_run('path/to/system','path/to/your/application')
     print app.loader.ctrl('Index').index()
-    
+
 ```
 
 
 ##2.dependency
 
-### 1.logging
-### 2.pymysql
-### 3.DBUtils
++ `logging`
++ `pymysql`
++ `DBUtils`
 
 ##3. Q&A
 
@@ -38,7 +38,7 @@ if __name__=='__main__':
 + how to config your application?
 
 ```
-#you can edit application/config/config.py 
+#you can edit application/config/config.py
 
 config.py
 
