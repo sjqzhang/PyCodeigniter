@@ -23,8 +23,8 @@ log={
 
 mail={
     'host':'smtp.163.com',
-    'user':'easyphp',
-    'password':'123456',
+    'user':'abc',
+    'password':'abc',
     'postfix':'163.com'
 }
 
