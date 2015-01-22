@@ -13,25 +13,16 @@
 __author__ = 'xiaozhang'
 
 
+from codeigniter.system.core.CI_Application import CI_Application
 
-import os
-import sys
+def main():
+    app=CI_Application(r'./')
 
-def app_run(system_path,application_path):
-    sys.path.insert(0,application_path)
-    sys.path.insert(0,system_path+os.path.sep+'core')
-    exec(r'from CI_Application import CI_Application')
-    app=CI_Application(system_path,application_path)
-    return app
+    app.start_server()
 
-def start_server(app):
-    httpd=make_server(app.config['server']['host'],app.config['server']['port'],app.request_hander)
-    httpd.serve_forever()
+if __name__ == '__main__':
+    main()
 
-if __name__=='__main__':
-    app=app_run('./system','./application')
-    #app=app_run('path/to/system','path/to/your/application')
-    start_server(app)
     
 ```
 
