@@ -3,15 +3,12 @@
 __author__ = 'xiaozhang'
 
 
-from codeigniter.system.core.CI_Application import CI_Application
+
 
 class Index:
 
     def __init__(self,abc=0, *args, **kwargs):
-        pass
-        self.model= self.app.loader.model('IndexModel')
-
-
+        self.model= kwargs['app'].loader.model('IndexModel')
 
     def index(self):
         return "hello world"

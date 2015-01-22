@@ -78,7 +78,7 @@ if __name__=='__main__':
         exec('from CI_Mail import CI_Mail')
         self.logger= eval('CI_Logger(**self.config["log"])')
         self.loader= eval('CI_Loader(**self.config)')
-        if 'db' in self.config.keys:
+        if 'db' in self.config.keys():
             self.db= eval('CI_DBActiveRec(**self.config["db"])')
         else:
             self.logger.warn('db not config')
