@@ -37,6 +37,12 @@ class CI_Router(object):
                 data[item[0]]=''
 
 
+        try:
+            ctrl=app.loader.ctrl(ctrl)
+            if not hasattr(ctrl,func):
+                 return "Not Found"
+        except Exception as err:
+            return "Not Found"
         return eval('app.loader.ctrl(ctrl).'+func+'(**data)')
 
 

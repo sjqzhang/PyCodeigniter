@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-*- coding:utf-8 -*-
-__author__ = 'linzhonghong'
+__author__ = 'writed by linzhonghong modify by xiangzhang'
 
 import re
 import pymysql
@@ -87,7 +87,7 @@ class CI_DBActiveRec(CI_DB):
 
 
     def select(self, select='*', escape=None):
-        if isinstance(select, basestring):
+        if isinstance(select, str):
             select = select.split(',')
         for val in select:
             val = val.strip()
@@ -113,12 +113,12 @@ class CI_DBActiveRec(CI_DB):
         return self._max_min_avg_sum(select, alias, 'SUM')
 
     def _max_min_avg_sum(self, select='', alias='', _type='MAX'):
-        if type(select) != type(basestring) or select == '':
-            print 'db_invalid_query'
+        if type(select) != type('') or select == '':
+            print('db_invalid_query')
             return
         _type = _type.upper()
         if _type not in ['MAX', 'MIN', 'AVG', 'SUM']:
-            print 'Invalid function type: %s' % _type
+            print('Invalid function type: %s' % _type)
             return
         if alias == '':
             alias = self._create_alias_from_table(select.strip())
@@ -141,7 +141,7 @@ class CI_DBActiveRec(CI_DB):
         return self
 
     def from_(self, from_str):
-        if isinstance(from_str, basestring):
+        if isinstance(from_str, str):
             from_str = from_str.split(',')
         for val in from_str:
             v = val.strip()
@@ -268,7 +268,7 @@ class CI_DBActiveRec(CI_DB):
         return self
 
     def group_by(self, by):
-        if isinstance(by, basestring):
+        if isinstance(by, str):
             by = by.split(',')
         for val in by:
             val = val.strip()
@@ -350,7 +350,7 @@ class CI_DBActiveRec(CI_DB):
 
 
     def escape(self, str_):
-        if isinstance(str_, basestring):
+        if isinstance(str_, str):
             str_ = converters.escape_str(str_)
         elif isinstance(str_, bool):
             str_ = converters.escape_bool(str_)
@@ -466,6 +466,10 @@ class CI_DBActiveRec(CI_DB):
         return self.query(sql)
 
     def _insert(self, table, keys, values):
+
+        for i in range(0,len(values)):
+            values[i]=str(values[i])
+
         return """INSERT INTO %s
                 (%s)
                 VALUES (%s);
@@ -493,6 +497,9 @@ class CI_DBActiveRec(CI_DB):
         return self.query(sql)
 
     def _replace(self, table, keys, values):
+        for i in range(0,len(values)):
+            values[i]=str(values[i])
+
         return """REPLACE INTO %s
                 (%s)
                 VALUES (%s);
@@ -525,7 +532,8 @@ class CI_DBActiveRec(CI_DB):
 
     def _update(self, table, values, where, orderby=None, limit=False):
         valstr = []
-        for key, value in values:
+        for key in values.keys():
+            value=values[key]
             valstr.append(key+' = '+value)
         limit = ' LIMIT %s' % limit if limit is not False else ''
         if not isinstance(orderby, (list, tuple)):
@@ -702,12 +710,12 @@ if __name__ == '__main__':
     db['default']['database'] = 'test';
     db['default']['maxconnections'] = 3;
     db['default']['blocking'] = True;
-    dbc = DBActiveRec(**db['default'])
+    # dbc = DBActiveRec(**db['default'])
     # res = dbc.select('*').from_('z_task').where({'task_uuid': 'd291425d-8e9f-e90f-8298-0c96d50c7a87', 'task_type':3}).get()
-    # print res
+    # print(res
     # res = dbc.select(['task_id', 'task_type', 'task_ip']).where(
     #     {'task_uuid !=': 'd291425d-8e9f-e90f-8298-0c96d50c7a87'}
     # ).get('z_task')
-    # print res
-    print dbc.select("*").from_("hyrd").limit(200).get()
-    # print dbc.last_query()
+    # print(res
+    print(dbc.select("*").from_("hyrd").limit(200).get())
+    # print(dbc.last_query()

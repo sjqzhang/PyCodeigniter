@@ -74,15 +74,15 @@ class CI_DB(object):
                 return rows
             else:
                 return result
-        except Exception,e:
-            print(e)
+        except Exception as  e:
+            self.app.logger.error(e)
 
         finally:
             try:
                 cursor.close()
                 conn.close()
                 # print("close")
-            except UnboundLocalError,ee:
+            except UnboundLocalError as ee:
                 pass
 
     def mquery(self,conn,sql,param=tuple()):
@@ -99,14 +99,14 @@ class CI_DB(object):
                 return rows
             else:
                 return result
-        except Exception,e:
-            print(e)
+        except Exception as e:
+            self.app.logger.error(e)
 
         finally:
             try:
                 cursor.close()
                 conn.close()
-            except UnboundLocalError,ee:
+            except UnboundLocalError as ee:
                 pass
 
 

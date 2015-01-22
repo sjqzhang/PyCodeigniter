@@ -37,7 +37,7 @@ class CI_Loader(object):
     def _load(self,categroy,name):
         try:
             return self.modules[categroy][name]['instance']
-        except KeyError,e:
+        except KeyError as e:
             self.app.logger.error(name+" not found")
 
 
@@ -92,15 +92,15 @@ class CI_Loader(object):
                             if not hasattr(_instance,'app'):
                                 setattr(_instance,'app',self.app)
 
-                        except Exception,e:
-                            self.app.logger.log('create '+ module+ ' failed ,please check parameters',logging.ERROR)
+                        except Exception as e:
+                            self.app.logger.error('create '+ module+ ' failed ,please check parameters, '+str(e))
                             # print(file_path, e)
 
                         self.modules[module_name][module]={'aclass':getattr( cmodule ,module),'instance':_instance}
                         self.classes[module]=getattr(cmodule ,module)
 
-                except Exception,e:
-                    self.app.logger.error(e)
+                except Exception as e:
+                    self.app.logger.error("load "+module+" module error "+str(e))
 
             elif os.path.isdir(file_path):
                 self._load(module_name,file_path)
@@ -119,6 +119,6 @@ if __name__=='__main__':
     #loader=CI_Loader(r'E:\python\study\Codeigniter\system',r'E:\python\study\Codeigniter\application')
     loader=CI_Loader(application_path=r'E:\python\study\Codeigniter\application',app=None)
 
-    print loader.model('SearchModel')
+    print(loader.model('SearchModel'))
 
 

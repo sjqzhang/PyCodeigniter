@@ -35,8 +35,8 @@ class CI_Mail(object):
             s.sendmail(me, to, msg.as_string())
             s.close()
             return True
-        except Exception, e:
-            print str(e)
+        except Exception as  err:
+            self.app.logger.error(err)
             return False
 
 if __name__ == '__main__':
