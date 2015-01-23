@@ -16,6 +16,7 @@ class CI_Mail(object):
         self.postfix=kwargs['postfix'];
 
 
+
     def send(self,to,subject,content,is_html=True):
         if isinstance(to,basestring):
             to=[to]

@@ -11,8 +11,16 @@ import re
 
 class CI_Logger(object):
     def __init__(self,**kwargs):
-        self.log_file_path=kwargs['log_file']
-        self.log_level=kwargs['log_level']
+        self.log_file_path=kwargs['file']
+        self.log_level=kwargs['level']
+        if kwargs.has_key('file_size'):
+            self.file_size=kwargs['file_size']
+        else:
+            self.file_size=100 * 1024 * 1024
+        if kwargs.has_key('back_count'):
+            self.back_count=kwargs['back_count']
+        else:
+            self.back_count=10
         # self.log_formatter='%(asctime)s %(levelname)s %(module)s.%(funcName)s Line:%(lineno)d %(message)s'
         self.log_formatter='%(asctime)s %(levelname)s %(message)s'
         self.init()
@@ -42,7 +50,7 @@ class CI_Logger(object):
 
 
     def set_handlers(self, log_file_path):
-        handler = RotatingFileHandler(filename=log_file_path, maxBytes=10 * 1024 * 1024, backupCount=3)
+        handler = RotatingFileHandler(filename=log_file_path, maxBytes=self.file_size, backupCount=self.back_count)
         self.logger.setLevel(self.log_level)
         formatter = logging.Formatter(self.log_formatter)
         handler.setFormatter(formatter)
@@ -81,6 +89,10 @@ class CI_Logger(object):
     def warn(self,message):
         if logging.WARN>=self.log_level:
             self._log(message,logging.WARN)
+
+    def debug(self,message):
+        if logging.DEBUG>=self.log_level:
+            self._log(message,logging.DEBUG)
 
 
 

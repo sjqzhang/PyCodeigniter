@@ -15,6 +15,11 @@ class CI_DB(object):
             self.app=kwargs['app']
             self.logger=self.app.logger
             del kwargs['app']
+        if kwargs.has_key('debug'):
+            self.debug=kwargs['debug']
+            del kwargs['debug']
+        else:
+            self.debug=False
         self.pool=PooledDB(pymysql,**kwargs)
 
         self.queries=[]
@@ -69,6 +74,10 @@ class CI_DB(object):
             cursor=conn.cursor()
             result=cursor.execute(sql,param)
             self.queries.append(sql)
+            if len(self.queries)>100:
+               del self.queries[0]
+            if self.debug:
+                self.logger.info(sql)
             if re.compile(r'^\s*(select|show)',re.IGNORECASE).match(sql):
                 rows=self.dict_result(cursor)
                 return rows
@@ -78,12 +87,16 @@ class CI_DB(object):
             self.app.logger.error(e)
 
         finally:
+
+
             try:
                 cursor.close()
                 conn.close()
                 # print("close")
             except UnboundLocalError as ee:
                 pass
+            except Exception as er:
+                self.logger.error(er)
 
     def mquery(self,conn,sql,param=tuple()):
         if type(param) is types.DictType:

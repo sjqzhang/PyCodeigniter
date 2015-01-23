@@ -9,14 +9,17 @@ db={
     'database':'test',
     'maxconnections':30,
     'blocking':True,
+    'debug':True
 }
 
 
 
 log={
 
-    'log_file':r'./log.log',
-    'log_level':logging.INFO
+    'file':r'./log.log',
+    'level':logging.INFO,
+    'file_size':1024*1024*100,
+    'back_count':10
 
 }
 
