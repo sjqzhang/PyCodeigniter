@@ -70,14 +70,18 @@ if __name__=='__main__':
         for conf in self.config.keys():
             if isinstance(self.config[conf],dict):
                 self.config[conf]['app']=self
-        exec('from CI_Loader import CI_Loader')
-        exec('from CI_Logger import CI_Logger')
-        exec('from CI_DB import CI_DB')
-        exec('from CI_DBActiveRec import CI_DBActiveRec')
-        exec('from CI_Router import CI_Router')
-        exec('from CI_Mail import CI_Mail')
+        # exec('from CI_Loader import CI_Loader')
+        # exec('from CI_Logger import CI_Logger')
+        # exec('from CI_DB import CI_DB')
+        # exec('from CI_DBActiveRec import CI_DBActiveRec')
+        # exec('from CI_Router import CI_Router')
+        # exec('from CI_Mail import CI_Mail')
+        module_list=['CI_Logger','CI_Loader','CI_Mail','CI_Router','CI_DB','CI_DBActiveRec','CI_Input']
+        for m in module_list:
+            exec('from '+ m +' import '+m)
         self.logger= eval('CI_Logger(**self.config["log"])')
         self.loader= eval('CI_Loader(**self.config)')
+        self.input= eval('CI_Input(**self.config)')
         if 'db' in self.config.keys():
             self.db= eval('CI_DBActiveRec(**self.config["db"])')
         else:
@@ -86,7 +90,7 @@ if __name__=='__main__':
         self.mail= eval('CI_Mail(**self.config["mail"])')
         sys.path.remove(self.system_path+os.path.sep+'core')
         sys.path.remove(self.application_path+os.path.sep+'config')
-        for m in ['CI_Logger','CI_Mail','CI_Router','CI_DB','CI_DBActiveRec']:
+        for m in module_list:
             try:
                 module=__import__(m)
                 self.loader.regcls(m,getattr(module,m))

@@ -15,6 +15,7 @@ class CI_Loader(object):
     def __init__(self,**kwargs):
         self.application_path= kwargs['application_path']
         self.app=kwargs['app']
+        self.app.loader=self
         self.kwargs=kwargs
         self.app_modules_list=['helpers','library','models','controllers']
         self.modules={}
