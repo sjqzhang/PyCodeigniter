@@ -13,8 +13,8 @@ class CI_Router(object):
         self.app=kwargs['app']
 
     def wsgi_route(self,env):
-
         data=self.app.input.parse(env)
+        print(data)
         try:
             if data.has_key('__ctrl_name__'):
                 ctrl=data['__ctrl_name__']
@@ -29,9 +29,10 @@ class CI_Router(object):
         except Exception as err:
             return "Not Found"
         try:
-            return eval('app.loader.ctrl(ctrl).'+func+'(**data)')
+            return eval('self.app.loader.ctrl(ctrl).'+func+'(**data)')
         except Exception as e:
             self.app.logger.error('when call controller %s function %s error,%s'%(ctrl,func,str(e)))
+            return "Server Error,Please see log file"
 
 
     def webpy_route(self):

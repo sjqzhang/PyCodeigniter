@@ -85,6 +85,7 @@ class CI_DB(object):
                 return result
         except Exception as  e:
             self.app.logger.error(e)
+            raise e
 
         finally:
 

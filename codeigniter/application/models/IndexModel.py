@@ -18,11 +18,11 @@ class IndexModel(object):
     def insert(self):
         return self.app.db.insert('test',{'id':"123",'msg':"test"})
 
-    def upate(self):
-        self.app.db.update('test',{'msg':"tessdfasdft"},{'id':'123'})
+    def update(self):
+        return self.app.db.update('test',{'msg':"tessdfasdft"},{'id':'123'})
 
     def delete(self):
-        self.app.db.app.db.delete('test',{'id':'123'})
+        return self.app.db.app.db.delete('test',{'id':'123'})
 
 
 

@@ -19,8 +19,8 @@ class Index:
     def insert(self):
        return  self.model.insert()
 
-    def upate(self):
-        return  self.model.upate()
+    def update(self):
+        return  self.model.update()
 
     def delete(self):
         return  self.model.delete()
