@@ -14,7 +14,6 @@ class CI_Router(object):
 
     def wsgi_route(self,env):
         data=self.app.input.parse(env)
-        print(data)
         try:
             if data.has_key('__ctrl_name__'):
                 ctrl=data['__ctrl_name__']

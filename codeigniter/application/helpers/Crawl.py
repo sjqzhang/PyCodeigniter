@@ -10,10 +10,6 @@ import urllib
 import re
 
 
-import gevent
-from gevent import monkey
-
-monkey.patch_socket()
 
 import sys
 
@@ -93,9 +89,9 @@ if __name__=='__main__':
         open(folder+sd+'/'+title.encode('gbk')+'.txt','w').write(text.encode('utf-8'))
 
 
-    e= [gevent.spawn(save,'I:/xueqiu/',x) for x in urls]
-
-    gevent.joinall(e)
+    # e= [gevent.spawn(save,'I:/xueqiu/',x) for x in urls]
+    #
+    # gevent.joinall(e)
 
     print(time.time()-start)
 

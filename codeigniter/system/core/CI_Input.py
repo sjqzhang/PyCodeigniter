@@ -4,6 +4,8 @@ __author__ = 'xiaozhang'
 
 
 from urlparse import parse_qs
+from urllib import quote,unquote
+
 
 class CI_Input(object):
 
@@ -35,11 +37,15 @@ class CI_Input(object):
             func='index'
         items=query.split(r'&')
         for i in items:
-            item=i.split(r'=')
-            if len(item)==2:
-                data[item[0]]=item[1]
-            elif len(item)==1 and item[0]!='':
-                data[item[0]]=''
+            try:
+                item=i.split(r'=')
+                if len(item)==2:
+                    # data[item[0]]=unicode( unquote( item[1]),'utf-8').encode("utf-8")
+                    data[item[0]]=unquote( item[1])
+                elif len(item)==1 and item[0]!='':
+                    data[item[0]]=''
+            except Exception as e:
+                self.app.logger.warn(e)
 
         data=dict( data.items()+env['__FORM__DATA__'].items())
         try:
@@ -48,7 +54,7 @@ class CI_Input(object):
                     if isinstance(data[k],list):
                         data[k]= eval(data[k][0])
                 elif isinstance(data[k],list):
-                    data[k]=unicode( data[k][0],'utf-8')
+                    data[k]=unicode( data[k][0],'utf-8').encode("utf-8")
         except UnicodeDecodeError as e:
             self.app.logger.warn(str(e)+str(data))
         except Exception as e:
