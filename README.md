@@ -1,8 +1,18 @@
-##1.dependency
+##1.Install
 
+###1.1 dependency
 + `logging`
 + `pymysql`
 + `DBUtils`
+
+###1.2 how to install
+```
+pip install pymysql
+pip install DBUtils
+pip install --upgrade PyCodeigniter
+
+
+```
 
 
 ##2. How to use?
