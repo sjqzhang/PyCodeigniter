@@ -7,12 +7,13 @@
 
 ##2. How to use?
 
+
+####2.1 simple example
 ```python
+
 #!/usr/bin/env python
 # -*- coding:utf8 -*-
 __author__ = 'xiaozhang'
-
-
 from codeigniter.system.core.CI_Application import CI_Application
 
 def main():
@@ -40,6 +41,67 @@ http://127.0.0.1:8005/Index/index
 
 ```
 
+####2.2 how to integrate with `web.py`
+
+```python
+#!/usr/bin/env python
+# -*- coding:utf8 -*-
+__author__ = 'xiaozhang'
+
+import web
+
+from codeigniter.system.core.CI_Application import CI_Application
+
+
+ci=CI_Application(application_path=r'./')
+
+
+urls = (
+    '/.*', ci.router.webpy_route
+)
+app = web.application(urls, globals())
+
+session = web.session.Session(app, web.session.DiskStore('sessions'))
+
+
+if __name__ == "__main__":
+
+
+    app.run()
+```
+
+
+####2.3 how to integrate with `web.py` and `gevent`
+
+```python
+#!/usr/bin/python
+"""A web.py application powered by gevent"""
+
+from gevent import monkey; monkey.patch_all()
+from gevent.pywsgi import WSGIServer
+import time
+import web
+
+
+from codeigniter.system.core.CI_Application import CI_Application
+
+
+ci=CI_Application(application_path=r'./')
+
+urls = (
+    '/.*', ci.router.webpy_route
+)
+
+
+
+if __name__ == "__main__":
+    application = web.application(urls, globals()).wsgifunc()
+    print 'Serving on 8088...'
+    WSGIServer(('', 8088), application).serve_forever()
+
+
+
+```
 
 
 
