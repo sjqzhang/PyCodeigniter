@@ -3,21 +3,19 @@
 
 
 
-import pyquery
-import time
+
 import urllib2
 import urllib
 import re
 
 
 
-import sys
-
 
 
 class Crawl(object):
 
     def url_fetch(self, url,data=None):
+        import pyquery
         html='';
         # print(url)
         try:
@@ -43,20 +41,22 @@ class Crawl(object):
         return html
 
     def url_query(self,url,selector):
+        import pyquery
         html=self.url_fetch(url)
         return pyquery.PyQuery(selector,html)
 
 
 if __name__=='__main__':
-    crawl=Crawl();
-
-    start=time.time()
-    urls=[]
-    for a in crawl.url_query("http://xueqiu.com/today/cn",".list_item_tit a"):
-        href=pyquery.PyQuery(a).attr('href')
-        title=pyquery.PyQuery(a).text()
-        if re.match(r'/\d+/\d+',href):
-            urls.append({'href':"http://xueqiu.com"+href,'title':title})
+    pass
+    # crawl=Crawl();
+    #
+    # start=time.time()
+    # urls=[]
+    # for a in crawl.url_query("http://xueqiu.com/today/cn",".list_item_tit a"):
+    #     href=pyquery.PyQuery(a).attr('href')
+    #     title=pyquery.PyQuery(a).text()
+    #     if re.match(r'/\d+/\d+',href):
+    #         urls.append({'href':"http://xueqiu.com"+href,'title':title})
 
 
     # for u in  urls:
@@ -70,29 +70,29 @@ if __name__=='__main__':
     # pymysql.connect(host="172.16.132.230", user='root', password="root",
     #              database='stock', port=3306, unix_socket=None,
     #              charset='utf-8', sql_mode=None,)
-    def save(folder,url):
-        import time
-        import os
-
-        sd= time.strftime("%Y-%m-%d",time.gmtime())
-        text= crawl.url_query(url['href'],'.detail').html()
-        title= url['title']
-        text=re.sub(r'<br\s*/>',"\r\n",text)
-        text=re.sub(r'<p\s+[^>]*?>',"\r\n    ",text)
-        text=re.sub(r'</p>',"\r\n",text)
-        text=re.sub(r'<\w+[^>]*?>|</\w+>',"",text)
-        text=re.sub(r'<!--.*?-->',"",text)
-        text=re.sub(r'\$.*?\$',"",text)
-        text=re.sub(r'[\r\n]{3,}',"\r\n\r\n",text)
-        if not os.path.isdir(folder+sd):
-            os.mkdir(folder+sd)
-        open(folder+sd+'/'+title.encode('gbk')+'.txt','w').write(text.encode('utf-8'))
+    # def save(folder,url):
+    #     import time
+    #     import os
+    #
+    #     sd= time.strftime("%Y-%m-%d",time.gmtime())
+    #     text= crawl.url_query(url['href'],'.detail').html()
+    #     title= url['title']
+    #     text=re.sub(r'<br\s*/>',"\r\n",text)
+    #     text=re.sub(r'<p\s+[^>]*?>',"\r\n    ",text)
+    #     text=re.sub(r'</p>',"\r\n",text)
+    #     text=re.sub(r'<\w+[^>]*?>|</\w+>',"",text)
+    #     text=re.sub(r'<!--.*?-->',"",text)
+    #     text=re.sub(r'\$.*?\$',"",text)
+    #     text=re.sub(r'[\r\n]{3,}',"\r\n\r\n",text)
+    #     if not os.path.isdir(folder+sd):
+    #         os.mkdir(folder+sd)
+    #     open(folder+sd+'/'+title.encode('gbk')+'.txt','w').write(text.encode('utf-8'))
 
 
     # e= [gevent.spawn(save,'I:/xueqiu/',x) for x in urls]
     #
     # gevent.joinall(e)
 
-    print(time.time()-start)
+    # print(time.time()-start)
 
 

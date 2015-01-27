@@ -6,7 +6,7 @@ __author__ = 'xiaozhang'
 import sys
 import os
 
-from wsgiref.simple_server import make_server
+
 
 
 class CI_Application(object):
@@ -126,11 +126,12 @@ if __name__=='__main__':
         headers = [('Content-type', 'text/plain')] # HTTP Headers
         start_response(status, headers)
 
-        result= self.router.wsgi_route(self,environ)
+        result= self.router.wsgi_route(environ)
 
         return list(str(result))
 
     def start_server(self):
+        from wsgiref.simple_server import make_server
         httpd=make_server(self.config['server']['host'],self.config['server']['port'],self.request_hander)
         self.logger.info("server listen to : "+str(self.config['server']['port']))
         httpd.serve_forever()
