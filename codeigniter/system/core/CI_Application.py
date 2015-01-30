@@ -83,7 +83,7 @@ if __name__=='__main__':
         self.loader= eval('CI_Loader(**self.config)')
         self.input= eval('CI_Input(**self.config)')
         if 'db' in self.config.keys():
-            self.db= eval('CI_DBActiveRec(**self.config["db"])')
+            self.db= eval('CI_DB(**self.config["db"])')
         else:
             self.logger.warn('db not config')
         self.router= eval('CI_Router(**self.config)')

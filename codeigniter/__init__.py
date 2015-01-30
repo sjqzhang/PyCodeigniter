@@ -6,6 +6,7 @@ r'''
 
 ## how to use?
 
+# first way (just for test)
 
 from codeigniter.system.core.CI_Application import CI_Application
 
@@ -16,6 +17,37 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+
+
+## second way (recommend)
+
+
+#!/usr/bin/env python
+# -*- coding:utf8 -*-
+__author__ = 'xiaozhang'
+
+import web
+
+from codeigniter.system.core.CI_Application import CI_Application
+
+
+ci=CI_Application(application_path=r'./')
+
+
+urls = (
+    '/.*', ci.router.webpy_route
+)
+app = web.application(urls, globals())
+
+session = web.session.Session(app, web.session.DiskStore('sessions'))
+
+
+if __name__ == "__main__":
+
+
+    app.run()
+
 
 
 ## if you want to know more,you can see models ,controllers
@@ -38,13 +70,21 @@ class Index:
     def insert(self):
        return  self.model.insert()
 
-    def upate(self):
-        return  self.model.upate()
+    def update(self):
+        return  self.model.update()
 
     def delete(self):
         return  self.model.delete()
 
+    def ar(self):
+        return self.model.ar()
+
+    def tran(self):
+        return self.model.tran()
+
+
 ## model
+
 
 class IndexModel(object):
     def __init__(self,**xx):
@@ -54,16 +94,32 @@ class IndexModel(object):
         return "hello world"
 
     def search(self):
-        return  self.app.db.mquery(self.app.db.get_connection(), 'select * from test')
+        return  self.app.db.query( 'select * from test')
 
     def insert(self):
         return self.app.db.insert('test',{'id':"123",'msg':"test"})
 
-    def upate(self):
-        self.app.db.update('test',{'msg':"tessdfasdft"},{'id':'123'})
+    def update(self):
+        return self.app.db.update('test',{'msg':"tessdfasdft"},{'id':'123'})
 
     def delete(self):
-        self.app.db.app.db.delete('test',{'id':'123'})
+        return self.app.db.app.db.delete('test',{'id':'123'})
+
+    def ar(self):
+        return self.app.db.ar().select("*").from_('test').limit(2).get()
+
+    def tran(self):
+        conn=self.app.db.get_connection()
+        self.app.db.begin(conn)
+        self.app.db.insert('test',{'id':"12398",'msg':"test"},conn)
+        self.app.db.rollback(conn)
+        # self.app.db.commit(conn)
+        self.app.db.close(conn)
+
+
+
+
+
 
 
 '''

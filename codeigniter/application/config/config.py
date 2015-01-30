@@ -7,8 +7,10 @@ db={
     'user':'root',
     'passwd':'root',
     'database':'test',
+    'charset':'utf8',
     'maxconnections':30,
     'blocking':True,
+    'autocommit':True,
     'debug':True
 }
 

@@ -18,6 +18,7 @@ codeigniter\system\__init__.py
 codeigniter\system\core\CI_Application.py
 codeigniter\system\core\CI_DB.py
 codeigniter\system\core\CI_DBActiveRec.py
+codeigniter\system\core\CI_Input.py
 codeigniter\system\core\CI_Loader.py
 codeigniter\system\core\CI_Logger.py
 codeigniter\system\core\CI_Mail.py

@@ -6,6 +6,8 @@ __author__ = 'xiaozhang'
 import re
 import types
 
+from CI_DBActiveRec import CI_DBActiveRec
+
 class CI_DB(object):
     def __init__(self, **kwargs):
         import pymysql
@@ -30,8 +32,8 @@ class CI_DB(object):
         # print("get_connection")
         conn= self.pool.dedicated_connection()
         cursor=conn.cursor()
-        cursor.execute('set names utf8')
-        cursor.execute('set autocommit=ON')
+        # cursor.execute('set names utf8')
+        # cursor.execute('set autocommit=ON')
         cursor.close()
         return conn
 
@@ -65,11 +67,28 @@ class CI_DB(object):
             result.append(row2)
         return result
 
-    def query(self,sql,param=tuple()):
+    def begin(self,conn):
+        conn._con.begin()
+
+    def rollback(self,conn):
+        conn._con.rollback()
+
+    def commit(self,conn):
+        conn._con.commit()
+
+    def close(self,conn):
+        conn.close()
+
+    def query(self,sql,param=tuple(),conn=None):
+        auto_close=True
+        # print(type(conn))
         if type(param) is types.DictType:
             sql,param=self.format(sql,param)
             # print(param)
-        conn=self.get_connection()
+        if conn==None:
+            conn=self.get_connection()
+        else:
+            auto_close=False
         try:
             cursor=conn.cursor()
             result=cursor.execute(sql,param)
@@ -88,47 +107,47 @@ class CI_DB(object):
             raise e
 
         finally:
-
-
             try:
                 cursor.close()
-                conn.close()
+                if auto_close:
+                    conn.close()
                 # print("close")
             except UnboundLocalError as ee:
                 pass
             except Exception as er:
                 self.logger.error(er)
+    def execute(self,sql,param=tuple(),conn=None):
+        return self.query(sql,param,conn)
 
-    def mquery(self,conn,sql,param=tuple()):
-        if type(param) is types.DictType:
-            sql,param=self.format(sql,param)
-            # print(param)
-        # conn=self.get_connection()
-        try:
-            cursor=conn.cursor()
-            result=cursor.execute(sql,param)
-            self.queries.append(sql)
-            if re.compile(r'^\s*(select|show)',re.IGNORECASE).match(sql):
-                rows=self.dict_result(cursor)
-                return rows
-            else:
-                return result
-        except Exception as e:
-            self.app.logger.error(e)
+    def insert(self, table='', _set=None,conn=None):
+       return self.ar(conn).insert(table,_set)
 
-        finally:
-            try:
-                cursor.close()
-                conn.close()
-            except UnboundLocalError as ee:
-                pass
+    def update(self, table='', _set=None, where=None, conn=None):
+        return self.ar(conn).update(table,_set,where)
+
+    def delete(self, table='', where='',conn=None):
+        return self.ar(conn).delete(table,where)
+
+    def ar(self,conn=None):
+        kwargs={}
+        if conn==None:
+            # kwargs['conn']=self.get_connection()
+            kwargs['auto_close']=True
+            kwargs['app']=self.app
+        else:
+            kwargs['conn']=conn
+            kwargs['auto_close']=False
+            kwargs['app']=self.app
+        return CI_DBActiveRec(**kwargs)
+
+
 
 
 if __name__=='__main__':
 
     opts=dict(maxconnections=3,blocking=True,host='172.16.132.230', passwd='root',user="root",database="test")
 
-    db=CI_Database(**opts)
+    db=CI_DB(**opts)
 
 
     rows=db.query("select * from test")

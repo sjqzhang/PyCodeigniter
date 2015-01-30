@@ -25,3 +25,8 @@ class Index:
     def delete(self):
         return  self.model.delete()
 
+    def ar(self):
+        return self.model.ar()
+
+    def tran(self):
+        return self.model.tran()

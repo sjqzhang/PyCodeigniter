@@ -12,7 +12,7 @@ from CI_DB import *
 
 
 
-class CI_DBActiveRec(CI_DB):
+class CI_DBActiveRec():
     ar_select = list()
     ar_distinct = False
     ar_from = list()
@@ -57,8 +57,23 @@ class CI_DBActiveRec(CI_DB):
     def __init__(self,**kwargs):
         self._reset_select()
         self._reset_write()
-        super(CI_DBActiveRec,self).__init__(**kwargs)
+        #super(CI_DBActiveRec,self).__init__(**kwargs)
         #super(DBActiveRec, self).__init__(cursorclass=cursorclass)
+
+        self.app=kwargs['app']
+        if kwargs.has_key('conn'):
+            self.conn=kwargs['conn']
+        if kwargs.has_key('auto_close'):
+            self.auto_close=kwargs['auto_close']
+        else:
+            self.auto_close=True
+
+    def query(self,sql):
+        if self.auto_close:
+            # self.conn.close()
+            return self.app.db.query(sql)
+        else:
+            return self.app.db.query(sql,None,self.conn)
 
     def __getattr__(self, in_field):
         dynamic_properties = ["find_by_", "delete_by_"]
