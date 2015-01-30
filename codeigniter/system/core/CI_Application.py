@@ -133,7 +133,9 @@ if __name__=='__main__':
     def start_server(self):
         from wsgiref.simple_server import make_server
         httpd=make_server(self.config['server']['host'],self.config['server']['port'],self.request_hander)
-        self.logger.info("server listen to : "+str(self.config['server']['port']))
+        msg="server listen to : "+str(self.config['server']['port'])
+        self.logger.info(msg)
+        print(msg)
         httpd.serve_forever()
 
 

@@ -3,10 +3,10 @@
 __author__ = 'writed by linzhonghong modify by xiangzhang'
 
 import re
-import pymysql
-from pymysql import converters
-
-from CI_DB import *
+# import pymysql
+# from pymysql import converters
+#
+# from CI_DB import *
 
 
 
@@ -57,6 +57,7 @@ class CI_DBActiveRec():
     def __init__(self,**kwargs):
         self._reset_select()
         self._reset_write()
+        self.ESCAPE_REGEX = re.compile(r"[\0\n\r\032\'\"\\]")
         #super(CI_DBActiveRec,self).__init__(**kwargs)
         #super(DBActiveRec, self).__init__(cursorclass=cursorclass)
 
@@ -363,18 +364,60 @@ class CI_DBActiveRec():
                 self.ar_set[self._protect_identifiers(k, False, True)] = self.escape(v)
         return self
 
+    def escape_str(self, string, like = False):
+        """
+         * Escape String
+         *
+         * @access  public
+         * @param   string
+         * @param   bool    whether or not the string will be used in a LIKE condition
+         * @return  string
+        """
+
+        if isinstance(string, dict):
+            for key,val in string.iteritems():
+                string[key] = self.escape_str(val, like)
+            return string
+
+
+        # if self._conn:
+        #     string = self.mysql_real_escape_string(string)
+        # else:
+        #     string = ''.join({'"':'\\"', "'":"\\'", "\0":"\\\0", "\\":"\\\\"}.get(c, c) for c in string)
+
+        string = ''.join({'"':'\\"', "'":"\\'", "\0":"\\\0", "\\":"\\\\"}.get(c, c) for c in string)
+
+        # escape LIKE condition wildcards
+        if like == True:
+            string = string.replace('%', '\\%')
+            string = string.replace('_', '\\_')
+
+        return string
 
     def escape(self, str_):
         if isinstance(str_, str):
-            str_ = converters.escape_str(str_)
+            str_ = self.escape_str(str_)
         elif isinstance(str_, bool):
-            str_ = converters.escape_bool(str_)
+            str_ = str(int(str_))
         elif str_ == '':
-            str_ = converters.escape_None(str_)
-        return str_
+            str_ = 'NULL'
+        return "'%s'" % str_
 
     def escape_like_str(self, str_):
-        return converters.escape_str(str_)
+        return self.escape_str(str_,True)
+
+
+    # def escape(self, str_):
+    #     if isinstance(str_, basestring):
+    #         str_ = converters.escape_str(str_)
+    #     elif isinstance(str_, bool):
+    #         str_ = converters.escape_bool(str_)
+    #     elif str_ == '':
+    #         str_ = converters.escape_None(str_)
+    #     return str_
+    #
+    # def escape_like_str(self, str_):
+    #     return converters.escape_str(str_)
 
     def _escape_identifiers(self, item):
         """
@@ -732,5 +775,5 @@ if __name__ == '__main__':
     #     {'task_uuid !=': 'd291425d-8e9f-e90f-8298-0c96d50c7a87'}
     # ).get('z_task')
     # print(res
-    print(dbc.select("*").from_("hyrd").limit(200).get())
+    # print(dbc.select("*").from_("hyrd").limit(200).get())
     # print(dbc.last_query()
