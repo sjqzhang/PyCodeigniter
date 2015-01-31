@@ -4,7 +4,10 @@ __author__ = 'xiaozhang'
 
 import json
 
-
+try:
+    import web
+except Exception as e:
+    pass
 
 
 
@@ -35,7 +38,6 @@ class CI_Router(object):
 
 
     def webpy_route(self):
-        import web
         return self.wsgi_route(web.ctx['environ'])
 
 
