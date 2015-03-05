@@ -7,12 +7,24 @@
 import urllib2
 import urllib
 import re
+from  urlparse import urlparse
 
 
 
 
 
 class Crawl(object):
+
+
+    def parse_url(self,url):
+
+        url_info=urlparse(url)
+        host=url_info.scheme+'://'+url_info.netloc
+        relative=host
+        if len(url_info.path)>0 and url_info.path.rindex('/')>0:
+            relative=host + url_info.path[0: url_info.path.rindex('/')]
+        return host,relative
+
 
     def url_fetch(self, url,data=None):
         import pyquery
@@ -30,6 +42,14 @@ class Crawl(object):
                 data=data
             )
             html=urllib2.urlopen(req,timeout=15).read()
+            absolute_url,relative_url=self.parse_url(url)
+            html=re.sub(r'src="/','src="'+absolute_url+'/',html)
+            html=re.sub(r'href="/','href="'+absolute_url+'/',html)
+            html=re.sub(r'src="(?!http)([^"]*)"','src="'+relative_url+'/\\1"',html)
+            html=re.sub(r'src=\'(?!http)(?!#)([^\']*)\'','src=\''+relative_url+'\\1\'',html)
+            html=re.sub(r'href=\'(?!http)(?!#)([^\']*)\'','href=\''+relative_url+'\\1\'',html)
+            html=re.sub(r'href="(?!http)([^"]*)"','href="'+relative_url+'/\\1"',html)
+
             charset=re.compile(r'<meta[^>]*charset=[\'\"]*?([a-z0-8\-]+)[\'\"]?[^>]*?>',re.IGNORECASE).findall(html)
             if len(charset) >0:
                 if charset[0]=='gb2312':
@@ -49,6 +69,12 @@ class Crawl(object):
 if __name__=='__main__':
     pass
     # crawl=Crawl();
+    # aa=""
+    #
+    # url_info='http://www.baidu.com'
+    #
+    # print crawl.url_fetch('http://test.meizu.com/')
+    # print crawl.parse_url(url_info)
     #
     # start=time.time()
     # urls=[]
