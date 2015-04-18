@@ -13,6 +13,12 @@ class Index:
     def index(self):
         return "hello world"
 
+    def _abc(self):
+        return "_abc"
+
+    def abc(self):
+        return "abbc"
+
     def search(self):
 
         return  self.model.search()

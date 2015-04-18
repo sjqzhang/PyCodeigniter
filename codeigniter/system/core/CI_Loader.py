@@ -94,8 +94,8 @@ class CI_Loader(object):
                                 setattr(_instance,'app',self.app)
                             if _instance!=None and module_name=='controllers' and not hasattr(_instance,'model') and self.modules['models'].has_key(module+'Model'):
                                 setattr(_instance,'model',self.model(module+'Model'))
-                                print(self.model(module+'Model'))
-                                print(self.model(module+'Model').search())
+                                # print(self.model(module+'Model'))
+                                # print(self.model(module+'Model').search())
 
                         except Exception as e:
                             self.app.logger.error('create '+ module+ ' failed ,please check parameters, '+str(e))
