@@ -14,6 +14,7 @@ class Index:
         return "hello world"
 
     def search(self):
+
         return  self.model.search()
 
     def insert(self):

@@ -103,7 +103,7 @@ class CI_DB(object):
             else:
                 return result
         except Exception as  e:
-            self.app.logger.error(e)
+            self.app.logger.error(str(e)+"sql:\n"+sql)
             raise e
 
         finally:

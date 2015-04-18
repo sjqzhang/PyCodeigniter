@@ -81,16 +81,17 @@ if __name__ == "__main__":
 ```
 
 
-####2.3 how to integrate with `web.py` and `gevent`
+####2.3 how to integrate with  `gevent`
 
 ```python
+
 #!/usr/bin/python
 """A web.py application powered by gevent"""
 
 from gevent import monkey; monkey.patch_all()
 from gevent.pywsgi import WSGIServer
 import time
-import web
+
 
 
 from codeigniter.system.core.CI_Application import CI_Application
@@ -98,14 +99,16 @@ from codeigniter.system.core.CI_Application import CI_Application
 
 ci=CI_Application(application_path=r'./')
 
-urls = (
-    '/.*', ci.router.webpy_route
-)
+
+
+def application(env, start_response):
+    html=ci.router.wsgi_route(env)
+    start_response('200 OK', [('Content-Type', 'text/html')])
+    return [str(html)]
 
 
 
 if __name__ == "__main__":
-    application = web.application(urls, globals()).wsgifunc()
     print 'Serving on 8088...'
     WSGIServer(('', 8088), application).serve_forever()
 

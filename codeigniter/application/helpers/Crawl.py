@@ -65,10 +65,40 @@ class Crawl(object):
         html=self.url_fetch(url)
         return pyquery.PyQuery(selector,html)
 
+    def pq(self,obj):
+        import pyquery
+        return pyquery.PyQuery(obj)
+
 
 if __name__=='__main__':
     pass
-    # crawl=Crawl();
+    import pyquery
+    crawl=Crawl();
+
+
+    # href=crawl.url_query('http://quote.eastmoney.com/stocklist.html','.quotebody').html()
+    # print(href)
+    href=crawl.url_query('http://quote.eastmoney.com/stocklist.html','.quotebody li a')
+    d={}
+    sql='''INSERT INTO stock.stock_code
+	(stockno,
+	NAME
+	)
+	VALUES
+	('%s',
+	'%s'
+	);
+  '''
+    for url in href:
+        text=crawl.pq(url).text()
+        code=re.findall(r'\d{6}', crawl.pq(url).text())
+        name=text.replace('('+code[0]+')','')
+        # print(name)
+        # print(code[0])
+        # d[code[0][0:3]]='abc'
+        print(sql % (code[0],name))
+
+    print(d.keys())
     # aa=""
     #
     # url_info='http://www.baidu.com'
