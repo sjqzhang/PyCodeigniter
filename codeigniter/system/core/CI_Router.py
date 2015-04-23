@@ -5,6 +5,7 @@ __author__ = 'xiaozhang'
 import json
 import re
 
+
 try:
     import web
 except Exception as e:
@@ -46,18 +47,27 @@ class CI_Router(object):
             if f!=None:
                 func=f
             if not hasattr(ctrl_instance,func) or str(func).startswith('_'):
-                 return "Not Found"
+                 return "404 Not Found", "Not Found"
         except Exception as err:
-            return "Not Found"
+            return "404 Not Found", "Not Found"
         try:
-            return eval('self.app.loader.ctrl(ctrl).'+func+'(**data)')
+            return '200 OK',eval('self.app.loader.ctrl(ctrl).'+func+'(**data)')
         except Exception as e:
             self.app.logger.error('when call controller %s function %s error,%s'%(ctrl,func,str(e)))
-            return "Server Error,Please see log file"
+            return  "500 Internal server error","Server Error,Please see log file"
 
 
     def webpy_route(self):
-        return self.wsgi_route(web.ctx['environ'])
+        try:
+            code,obj= self.wsgi_route(web.ctx['environ'])
+            if isinstance(obj,str):
+                return obj
+            else:
+                return str(json.dumps(obj))
+        except Exception,e:
+            self.app.logger.error(e)
+            return "Server Error"
+
 
 
 

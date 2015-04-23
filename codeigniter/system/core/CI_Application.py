@@ -5,16 +5,21 @@ __author__ = 'xiaozhang'
 
 import sys
 import os
+import json
 
 
 
 
 class CI_Application(object):
-    def __init__(self,application_path=None,system_path=None):
+    def __init__(self,application_path=None,system_path=None,config_file=None):
         if system_path==None:
             system_path=os.path.dirname( os.path.dirname(__file__))
         self.system_path=system_path
         self.application_path=application_path
+        if config_file!=None:
+                   exec open(config_file,'r').read()
+                   self.config=eval('config')
+
         self.config={}
         self.loader=None
         self.logger=None
@@ -121,14 +126,16 @@ if __name__=='__main__':
 
 
     def request_hander(self, environ, start_response):
-        pass
-        status = '200 OK' # HTTP Status
-        headers = [('Content-type', 'text/plain')] # HTTP Headers
-        start_response(status, headers)
+        html=''
+        code,obj=self.router.wsgi_route(environ)
+        if not isinstance(obj,str):
+            html=json.dumps(obj)
+            start_response(str(code), [('Content-Type', 'application/json')])
+        else:
+            start_response(str(code), [('Content-Type', 'text/html')])
+            html=obj
+        return [str(html)]
 
-        result= self.router.wsgi_route(environ)
-
-        return list(str(result))
 
     def start_server(self):
         from wsgiref.simple_server import make_server

@@ -92,6 +92,10 @@ class CI_Loader(object):
 
                             if not hasattr(_instance,'app'):
                                 setattr(_instance,'app',self.app)
+                            if not hasattr(_instance,'db'):
+                                setattr(_instance,'db',self.app.db)
+                            if not hasattr(_instance,'logger'):
+                                setattr(_instance,'logger',self.app.logger)
                             if _instance!=None and module_name=='controllers' and not hasattr(_instance,'model') and self.modules['models'].has_key(module+'Model'):
                                 setattr(_instance,'model',self.model(module+'Model'))
                                 # print(self.model(module+'Model'))

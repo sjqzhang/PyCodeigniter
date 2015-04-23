@@ -15,10 +15,10 @@ pip install --upgrade PyCodeigniter
 ```
 
 
-##2. How to use?
+##2. How to use? (if you want to have high performance, recommand using `gevent`)
 
 
-####2.1 simple example
+####2.1 simple example (just for test)
 ```python
 
 #!/usr/bin/env python
@@ -27,7 +27,7 @@ __author__ = 'xiaozhang'
 from codeigniter.system.core.CI_Application import CI_Application
 
 def main():
-    app=CI_Application(r'./')
+    app=CI_Application(application_path=r'./')
 
     app.start_server()
 
@@ -81,36 +81,41 @@ if __name__ == "__main__":
 ```
 
 
-####2.3 how to integrate with  `gevent`
+####2.3 how to integrate with  `gevent`　(recommed）
 
 ```python
-
 #!/usr/bin/python
 """A web.py application powered by gevent"""
 
 from gevent import monkey; monkey.patch_all()
 from gevent.pywsgi import WSGIServer
 import time
-
-
+import web
+import json
 
 from codeigniter.system.core.CI_Application import CI_Application
 
-
-ci=CI_Application(application_path=r'./')
-
-
+ci=CI_Application(application_path=r'./',config_file=r'./config.py')
+port=ci.config['server']['port']
+host=ci.config['server']['host']
 
 def application(env, start_response):
-    html=ci.router.wsgi_route(env)
-    start_response('200 OK', [('Content-Type', 'text/html')])
+    html=''
+
+    code,obj=ci.router.wsgi_route(env)
+    if not isinstance(obj,str):
+        html=json.dumps(obj)
+        start_response(str(code), [('Content-Type', 'application/json')])
+    else:
+        start_response(str(code), [('Content-Type', 'text/html')])
+        html=obj
     return [str(html)]
 
 
 
 if __name__ == "__main__":
-    print 'Serving on 8088...'
-    WSGIServer(('', 8088), application).serve_forever()
+    print 'Serving on %s...' % port
+    WSGIServer((host, port), application).serve_forever()
 
 
 
