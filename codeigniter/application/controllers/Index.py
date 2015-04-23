@@ -20,8 +20,7 @@ class Index:
         return "abbc"
 
     def search(self):
-
-        return  self.model.search()
+        return self.model.search()
 
     def insert(self):
        return  self.model.insert()

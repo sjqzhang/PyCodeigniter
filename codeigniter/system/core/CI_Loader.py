@@ -9,6 +9,7 @@ import sys
 import logging
 import inspect
 import re
+import imp
 
 
 class CI_Loader(object):
@@ -40,6 +41,57 @@ class CI_Loader(object):
             return self.modules[categroy][name]['instance']
         except KeyError as e:
             self.app.logger.error(name+" not found")
+    def load_file(self,filename):
+        try:
+            name=filename.replace('.py','')
+            name=os.path.basename(name)
+            fn_, path, desc = imp.find_module(name, [os.path.dirname(filename)])
+            mod = imp.load_module(name, fn_, path, desc)
+            return mod
+        except Exception as e:
+            self.app.logger.error("load module error filename:"+ filename +str(e))
+
+    def load_module(self,mod_dir):
+        try:
+            names = {}
+            modules = []
+            funcs = {}
+            for fn_ in os.listdir(mod_dir):
+                if fn_.startswith('_'):
+                    continue
+                if (fn_.endswith(('.py', '.pyc', '.pyo', '.so')) or os.path.isdir(fn_)):
+                    extpos = fn_.rfind('.')
+                    if extpos > 0:
+                        _name = fn_[:extpos]
+                    else:
+                        _name = fn_
+                    names[_name] = os.path.join(mod_dir, fn_)
+            for name in names:
+                try:
+                    fn_, path, desc = imp.find_module(name, [mod_dir])
+                    mod = imp.load_module(name, fn_, path, desc)
+                except:
+                    continue
+                modules.append(mod)
+            for mod in modules:
+                for attr in dir(mod):
+                    if attr.startswith('_'):
+                        continue
+                    #
+                    if callable(getattr(mod, attr)):
+                        func = getattr(mod, attr)
+                        if isinstance(func, type):
+                            if any(['Error' in func.__name__, 'Exception' in func.__name__]):
+                                continue
+                        try:
+                            funcs['{0}.{1}'.format(mod.__name__, attr)] = func
+                        except Exception as e:
+                            self.app.logger.error("load module error dir:"+ mod_dir +str(e))
+                            continue
+            return funcs
+        except Exception as e:
+            self.app.logger.error("load module error dir:"+ mod_dir +str(e))
+
 
 
 

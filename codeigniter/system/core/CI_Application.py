@@ -6,7 +6,7 @@ __author__ = 'xiaozhang'
 import sys
 import os
 import json
-
+import imp
 
 
 
@@ -16,59 +16,30 @@ class CI_Application(object):
             system_path=os.path.dirname( os.path.dirname(__file__))
         self.system_path=system_path
         self.application_path=application_path
-        if config_file!=None:
-                   exec open(config_file,'r').read()
-                   self.config=eval('config')
-
+        self.config_file=config_file
         self.config={}
+
+        if config_file!=None:
+            execfile(config_file,{},self.config)
+
+        else:
+            sys.path.insert(0,self.application_path+os.path.sep+'config')
+            config=__import__('config')
         self.loader=None
         self.logger=None
         self.db=None
         self._app_create(application_path)
         self.init()
 
-    def _default_config(self):
-        config='''
-import logging
 
 
-db={
-    'host':'172.16.132.230',
-    'user':'root',
-    'passwd':'root',
-    'database':'test',
-    'maxconnections':3,
-    'blocking':True,
-}
-
-log={
-
-    'log_file':r'/log/abc.log',
-    'log_level':logging.INFO
-
-}
-
-config={
-
-'log':log,
-'db':db
-
-}
-
-
-if __name__=='__main__':
-    print(config)
-
-        '''
-
-        return config
 
 
     def init(self):
         sys.path.insert(0,self.system_path+os.path.sep+'core')
-        sys.path.insert(0,self.application_path+os.path.sep+'config')
-        config=__import__('config')
-        self.config=config.config
+        # sys.path.insert(0,self.application_path+os.path.sep+'config')
+        # config=__import__('config')
+        # self.config=config.config
         self.config['system_path']=self.system_path
         self.config['application_path']=self.application_path
         self.config['app']=self
@@ -94,7 +65,8 @@ if __name__=='__main__':
         self.router= eval('CI_Router(**self.config)')
         self.mail= eval('CI_Mail(**self.config["mail"])')
         sys.path.remove(self.system_path+os.path.sep+'core')
-        sys.path.remove(self.application_path+os.path.sep+'config')
+        if self.config_file==None:
+            sys.path.remove(self.application_path+os.path.sep+'config')
         for m in module_list:
             try:
                 module=__import__(m)
@@ -144,6 +116,8 @@ if __name__=='__main__':
         self.logger.info(msg)
         print(msg)
         httpd.serve_forever()
+
+
 
 
 

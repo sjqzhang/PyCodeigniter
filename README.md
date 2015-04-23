@@ -95,7 +95,7 @@ import json
 
 from codeigniter.system.core.CI_Application import CI_Application
 
-ci=CI_Application(application_path=r'./',config_file=r'./config.py')
+ci=CI_Application(application_path=r'./')
 port=ci.config['server']['port']
 host=ci.config['server']['host']
 

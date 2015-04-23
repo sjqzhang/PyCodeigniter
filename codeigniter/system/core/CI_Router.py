@@ -64,7 +64,7 @@ class CI_Router(object):
                 return obj
             else:
                 return str(json.dumps(obj))
-        except Exception,e:
+        except Exception as e:
             self.app.logger.error(e)
             return "Server Error"
 
