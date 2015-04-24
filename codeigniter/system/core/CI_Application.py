@@ -18,12 +18,6 @@ class CI_Application(object):
         self.application_path=application_path
         self.config_file=config_file
         self.config={}
-        if config_file!=None:
-            execfile(config_file,{},self.config)
-        else:
-            sys.path.insert(0,self.application_path+os.path.sep+'config')
-            config=__import__('config')
-            self.config=config.config
         self.loader=None
         self.logger=None
         self.db=None
@@ -33,9 +27,13 @@ class CI_Application(object):
 
 
 
-
-
     def init(self):
+        if self.config_file!=None:
+            execfile(self.config_file,{},self.config)
+        else:
+            sys.path.insert(0,self.application_path+os.path.sep+'config')
+            config=__import__('config')
+            self.config=config.config
         sys.path.insert(0,self.system_path+os.path.sep+'core')
         # sys.path.insert(0,self.application_path+os.path.sep+'config')
         # config=__import__('config')
