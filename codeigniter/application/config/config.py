@@ -40,12 +40,18 @@ server={
     'envroment':'develoment'
 }
 
+cache={
+    'type':'memory',
+    'max_count':10*10000
+}
+
 config={
 
 'log':log,
 'db':db,
 'mail':mail,
-'server':server
+'server':server,
+'cache':cache
 
 }
 

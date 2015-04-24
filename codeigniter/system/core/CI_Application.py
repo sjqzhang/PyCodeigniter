@@ -18,16 +18,16 @@ class CI_Application(object):
         self.application_path=application_path
         self.config_file=config_file
         self.config={}
-
         if config_file!=None:
             execfile(config_file,{},self.config)
-
         else:
             sys.path.insert(0,self.application_path+os.path.sep+'config')
             config=__import__('config')
+            self.config=config.config
         self.loader=None
         self.logger=None
         self.db=None
+        self.cache=None
         self._app_create(application_path)
         self.init()
 
@@ -52,18 +52,22 @@ class CI_Application(object):
         # exec('from CI_DBActiveRec import CI_DBActiveRec')
         # exec('from CI_Router import CI_Router')
         # exec('from CI_Mail import CI_Mail')
-        module_list=['CI_Logger','CI_Loader','CI_Mail','CI_Router','CI_DB','CI_DBActiveRec','CI_Input']
+        module_list=['CI_Logger','CI_Loader','CI_Mail','CI_Router','CI_DB','CI_DBActiveRec','CI_Input','CI_Cache']
         for m in module_list:
             exec('from '+ m +' import '+m)
         self.logger= eval('CI_Logger(**self.config["log"])')
-        self.loader= eval('CI_Loader(**self.config)')
+
         self.input= eval('CI_Input(**self.config)')
         if 'db' in self.config.keys():
             self.db= eval('CI_DB(**self.config["db"])')
         else:
             self.logger.warn('db not config')
+        self.loader= eval('CI_Loader(**self.config)')
         self.router= eval('CI_Router(**self.config)')
-        self.mail= eval('CI_Mail(**self.config["mail"])')
+        if 'mail' in self.config.keys():
+            self.mail= eval('CI_Mail(**self.config["mail"])')
+        if 'cache' in self.config.keys():
+            self.cache= eval('CI_Cache(**self.config)')
         sys.path.remove(self.system_path+os.path.sep+'core')
         if self.config_file==None:
             sys.path.remove(self.application_path+os.path.sep+'config')

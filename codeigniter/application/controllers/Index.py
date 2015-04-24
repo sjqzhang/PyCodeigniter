@@ -4,13 +4,16 @@ __author__ = 'xiaozhang'
 
 
 
+from codeigniter.system.core.CI_Cache import CI_Cache
 
 class Index:
 
     def __init__(self,abc=0, *args, **kwargs):
         self.model= kwargs['app'].loader.model('IndexModel')
 
+    @CI_Cache.Cache()
     def index(self):
+        print('xxxxxxxx')
         return "hello world"
 
     def _abc(self):

@@ -12,6 +12,10 @@ import re
 import imp
 
 
+def init_instace(self,app):
+    print('xxxxxxxxxxxxxxxxxxxxxxxxxx')
+    globals()['ci']=app
+
 class CI_Loader(object):
     def __init__(self,**kwargs):
         self.application_path= kwargs['application_path']
@@ -100,6 +104,8 @@ class CI_Loader(object):
         self.classes[name]=aclass
 
 
+
+
     def _load_application(self,module_name,path=None):
         if path==None:
             path=self.application_path
@@ -118,10 +124,15 @@ class CI_Loader(object):
                 try:
                     module=file.split('.')[0]
                     # __import__(module)
+                    # globals()['ci']=self.app
                     exec("from "+module+" import "+module )
+                    # exec("from "+module+" import *")
                     cmodule=__import__(module)
 
                     aclass= getattr(cmodule,module)
+                    # print(aclass)
+                    # aclass.init__instance=init_instace
+                    # print(dir(aclass))
 
                     has_init=hasattr(aclass,'__init__')
                     if has_init:
@@ -138,9 +149,15 @@ class CI_Loader(object):
                         try:
 
                             if str(arginfo).find('kwargs')>0:
+
                                 _instance= eval(module+'(**self.kwargs)')
                             else:
                                 _instance= eval(module+'()')
+
+                            # instace_metho= getattr(_instance,'init__instance',None)
+                            # print(instace_metho)
+                            # if instace_metho!=None:
+                            #     instace_metho(self.app)
 
                             if not hasattr(_instance,'app'):
                                 setattr(_instance,'app',self.app)
