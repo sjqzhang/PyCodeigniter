@@ -13,11 +13,11 @@ class CI_DB(object):
         import pymysql
         import DBUtils
         from DBUtils.PooledDB import PooledDB
-        if kwargs.has_key('app'):
+        if 'app' in kwargs.keys():
             self.app=kwargs['app']
             self.logger=self.app.logger
             del kwargs['app']
-        if kwargs.has_key('debug'):
+        if 'debug' in kwargs.keys():
             self.debug=kwargs['debug']
             del kwargs['debug']
         else:

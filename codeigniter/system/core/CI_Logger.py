@@ -17,24 +17,14 @@ class CI_Logger(object):
     def __init__(self,**kwargs):
         self.log_file_path=kwargs['file']
         self.log_level=kwargs['level']
-        if PY2:
-            if kwargs.has_key('file_size'):
-                self.file_size=kwargs['file_size']
-            else:
-                self.file_size=100 * 1024 * 1024
-            if kwargs.has_key('back_count'):
-                self.back_count=kwargs['back_count']
-            else:
-                self.back_count=10
+        if 'file_size' in kwargs.keys() :
+            self.file_size=kwargs['file_size']
         else:
-            if 'file_size' in kwargs :
-                self.file_size=kwargs['file_size']
-            else:
-                self.file_size=100 * 1024 * 1024
-            if 'back_count' in kwargs:
-                self.back_count=kwargs['back_count']
-            else:
-                self.back_count=10
+            self.file_size=100 * 1024 * 1024
+        if 'back_count' in kwargs.keys():
+            self.back_count=kwargs['back_count']
+        else:
+            self.back_count=10
         # self.log_formatter='%(asctime)s %(levelname)s %(module)s.%(funcName)s Line:%(lineno)d %(message)s'
         self.log_formatter='%(asctime)s %(levelname)s %(message)s'
         self.init()

@@ -29,7 +29,11 @@ class CI_Application(object):
 
     def init(self):
         if self.config_file!=None:
-            execfile(self.config_file,{},self.config)
+            PY2 = sys.version_info[0] == 2
+            if PY2:
+                execfile(self.config_file,{},self.config)
+            else:
+                exec(compile(open(self.config_file).read(), self.config_file, 'exec'))
         else:
             sys.path.insert(0,self.application_path+os.path.sep+'config')
             config=__import__('config')

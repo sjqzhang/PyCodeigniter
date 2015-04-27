@@ -62,9 +62,9 @@ class CI_DBActiveRec():
         #super(DBActiveRec, self).__init__(cursorclass=cursorclass)
 
         self.app=kwargs['app']
-        if kwargs.has_key('conn'):
+        if 'conn' in kwargs.keys():
             self.conn=kwargs['conn']
-        if kwargs.has_key('auto_close'):
+        if 'auto_close' in kwargs.keys():
             self.auto_close=kwargs['auto_close']
         else:
             self.auto_close=True

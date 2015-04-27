@@ -21,7 +21,7 @@ class CI_Input(object):
     def parse(self,env):
         env['__FORM__DATA__']={}
         data={}
-        if env.has_key('REQUEST_METHOD') and env['REQUEST_METHOD']=='POST':
+        if 'REQUEST_METHOD' in env.keys() and env['REQUEST_METHOD']=='POST':
             try:
                 request_body_size = int(env.get('CONTENT_LENGTH', 0))
                 request_body = env['wsgi.input'].read(request_body_size)

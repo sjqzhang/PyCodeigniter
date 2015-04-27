@@ -34,14 +34,14 @@ class CI_Memory_Cache(object):
     def put(self,key,value,ttl=3600):
         self.cache_dict[key]={'t':int(time.time())+ttl,'v':value}
     def get(self,key,ttl):
-        if self.cache_dict.has_key(key):
+        if key in self.cache_dict.keys():
             obj=self.cache_dict[key]
             if int(time.time())- obj['t']>0:
                 return None
             else:
                 return obj['v']
     def delete(self,key):
-        if self.cache_dict.has_key(key):
+        if key in self.cache_dict.keys():
             del self.cache_dict[key]
     def check(self):
         while True:
@@ -54,9 +54,9 @@ class CI_Memory_Cache(object):
             except Exception as e:
                 self.app.logger.error(e)
 
-REGEX_KEY=re.compile(r'\#p\[(\d+)\]([^,}]+)?',re.IGNORECASE)
-class CI_Cache(object):
 
+class CI_Cache(object):
+    REGEX_KEY=re.compile(r'\#p\[(\d+)\]([^,}]+)?',re.IGNORECASE)
     def __init__(self,**kwargs):
         globals()['ci']=kwargs['app']
         self.cache_conf=kwargs['cache']
@@ -64,7 +64,6 @@ class CI_Cache(object):
             self.cache_instance=CI_Memory_Cache(**kwargs)
         else:
             self.cache_instance=None
-
 
 
     def set_cache(self,cache):
@@ -75,7 +74,7 @@ class CI_Cache(object):
     def get_cache_key(prefix,tpl,func,*args):
         key=prefix+'$'+func.__name__
         # match= re.findall(r'\#p\[(\d+)\]([^,}]+)?',tpl)
-        match=REGEX_KEY.findall(tpl)
+        match=CI_Cache.REGEX_KEY.findall(tpl)
         # match=[]
         # return key
         if len(match)<=len(args):

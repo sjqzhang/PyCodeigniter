@@ -34,11 +34,11 @@ class CI_Router(object):
     def wsgi_route(self,env):
         data=self.app.input.parse(env)
         try:
-            if data.has_key('__ctrl_name__'):
+            if '__ctrl_name__' in data.keys():
                 ctrl=data['__ctrl_name__']
                 del data['__ctrl_name__']
 
-            if data.has_key('__func_name__'):
+            if '__func_name__' in data.keys():
                 func=data['__func_name__']
                 del data['__func_name__']
             ctrl_instance=self.app.loader.ctrl(ctrl)
