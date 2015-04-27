@@ -16,6 +16,7 @@ codeigniter\application\models\IndexModel.py
 codeigniter\application\models\__init__.py
 codeigniter\system\__init__.py
 codeigniter\system\core\CI_Application.py
+codeigniter\system\core\CI_Cache.py
 codeigniter\system\core\CI_DB.py
 codeigniter\system\core\CI_DBActiveRec.py
 codeigniter\system\core\CI_Input.py

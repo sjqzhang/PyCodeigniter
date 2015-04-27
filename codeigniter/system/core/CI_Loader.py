@@ -40,9 +40,15 @@ class CI_Loader(object):
         return self._load('helpers',name)
     def library(self,name):
         return self._load('library',name)
+    def get_module_name(self,name,categroy):
+        for key in self.modules[categroy].keys():
+            if name.lower()==key.lower():
+                return key
+
     def _load(self,categroy,name):
         try:
-            return self.modules[categroy][name]['instance']
+            mname=self.get_module_name(name,categroy)
+            return self.modules[categroy][mname]['instance']
         except KeyError as e:
             self.app.logger.error(name+" not found")
     def load_file(self,filename):

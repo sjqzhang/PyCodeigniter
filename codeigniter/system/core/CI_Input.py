@@ -3,8 +3,14 @@
 __author__ = 'xiaozhang'
 
 
-from urlparse import parse_qs
-from urllib import quote,unquote
+import sys
+PY2 = sys.version_info[0] == 2
+if PY2:
+    from urlparse import parse_qs
+    from urllib import quote,unquote
+else:
+    import urllib.parse
+
 
 
 class CI_Input(object):

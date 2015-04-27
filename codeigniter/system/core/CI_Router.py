@@ -25,7 +25,7 @@ class CI_Router(object):
             if(f.startswith('_')):
                 continue
             else:
-                if re.match(func,f,re.IGNORECASE)!=None and len(f)==len(func):
+                if f.lower()==func.lower():
                     return f
         return None
 

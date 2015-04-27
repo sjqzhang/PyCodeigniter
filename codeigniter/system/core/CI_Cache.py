@@ -13,7 +13,11 @@ __author__ = 'xiaozhang'
 
 import re
 import time
-import thread
+
+try:
+    import thread
+except ImportError as e:
+    import _thread
 
 
 class CI_Memory_Cache(object):
@@ -22,29 +26,35 @@ class CI_Memory_Cache(object):
         self.cache_conf=kwargs['cache']
         self.app=kwargs['app']
         try:
-            thread.start_new_thread(self.check)
+            thread.start_new_thread(self.check,())
         except Exception as e:
             self.app.logger.error(e)
 
 
     def put(self,key,value,ttl=3600):
-        self.cache_dict[key]={'t':int(time.time()),'v':value}
+        self.cache_dict[key]={'t':int(time.time())+ttl,'v':value}
     def get(self,key,ttl):
         if self.cache_dict.has_key(key):
             obj=self.cache_dict[key]
-            if int(time.time())- obj['t']>ttl:
+            if int(time.time())- obj['t']>0:
                 return None
             else:
                 return obj['v']
+    def delete(self,key):
+        if self.cache_dict.has_key(key):
+            del self.cache_dict[key]
     def check(self):
         while True:
             try:
                 if len( self.cache_dict)>int(self.cache_conf['max_count']):
                     self.cache_dict.clear()
+                else:
+                    pass
                 time.sleep(30)
             except Exception as e:
                 self.app.logger.error(e)
 
+REGEX_KEY=re.compile(r'\#p\[(\d+)\]([^,}]+)?',re.IGNORECASE)
 class CI_Cache(object):
 
     def __init__(self,**kwargs):
@@ -64,7 +74,10 @@ class CI_Cache(object):
     @staticmethod
     def get_cache_key(prefix,tpl,func,*args):
         key=prefix+'$'+func.__name__
-        match= re.findall(r'\#p\[(\d+)\]([^,}]+)?',tpl)
+        # match= re.findall(r'\#p\[(\d+)\]([^,}]+)?',tpl)
+        match=REGEX_KEY.findall(tpl)
+        # match=[]
+        # return key
         if len(match)<=len(args):
             for m in match:
                 if int(m[0])<len(args):
@@ -79,21 +92,30 @@ class CI_Cache(object):
                     continue
         return key
     @staticmethod
-    def Cache(prefix='', ttl=3600,key=''):
+    def Cache(prefix='', ttl=3600,key='',op='select'):
         def handle_func(func):
             def handle_args(*args, **kwargs):
                 if 'ci' in globals().keys():
                     if  ci.cache.cache_instance==None:
                         ci.logger.error('cache not implment,you can implment it and setting it')
                         return func(*args, **kwargs)
-                    ckey=CI_Cache.get_cache_key(prefix,key,func,*args)
-                    obj=ci.cache.cache_instance.get(ckey,ttl)
-                    if obj==None:
-                        result=func(*args, **kwargs)
-                        ci.cache.cache_instance.put(ckey,result,ttl)
                     else:
-                        return obj
-                    return result
+                        # op dispatch
+                        ckey=CI_Cache.get_cache_key(prefix,key,func,*args)
+                        if op=='select':
+                            obj=ci.cache.cache_instance.get(ckey,ttl)
+                            if obj==None:
+                                result=func(*args, **kwargs)
+                                ci.cache.cache_instance.put(ckey,result,ttl)
+                                return result
+                            else:
+                                return obj
+                        elif op=='del' or op=='delete' or op=='remove':
+                            ci.cache.cache_instance.delete(ckey)
+                        elif op=='insert' or op=='update':
+                            result=func(*args, **kwargs)
+                            ci.cache.cache_instance.put(ckey,result,ttl)
+                            return result
                 else:
                     return func(*args, **kwargs)
             return handle_args
@@ -104,7 +126,7 @@ class CI_Cache(object):
 
 @CI_Cache.Cache('abc',key='#p[0].index,#p[1],#p[2]')
 def abc(a,b,c):
-    print a,b,c
+    print (a,b,c)
 
 
 
