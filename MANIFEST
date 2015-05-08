@@ -4,7 +4,6 @@ __init__.py
 app.py
 setup.py
 codeigniter\__init__.py
-codeigniter\application\__init__.py
 codeigniter\application\config\__init__.py
 codeigniter\application\config\config.py
 codeigniter\application\controllers\Index.py

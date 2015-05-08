@@ -10,6 +10,7 @@ import logging
 import inspect
 import re
 import imp
+import  types
 
 
 def init_instace(self,app):
@@ -47,13 +48,30 @@ class CI_Loader(object):
 
     def _load(self,categroy,name):
         try:
-            mname=self.get_module_name(name,categroy)
+            shortname=os.path.basename(name)
+            mname=self.get_module_name(shortname,categroy)
             return self.modules[categroy][mname]['instance']
         except KeyError as e:
-            self.app.logger.error(name+" not found")
+            dirctory=os.path.dirname(name)
+            module_name=os.path.basename(name)
+            path=self.application_path+os.path.sep+categroy+os.path.sep+dirctory
+            file_name='';
+            for file in os.listdir(path):
+                if file.split('.')[0].lower()==module_name.lower():
+                    file_name=path+os.path.sep+file
+                    break
+            if file_name!='':
+                module=self.load_file(file_name)
+                for m in dir(module):
+                    if (isinstance(getattr(module,m),type) or type(getattr(module,m)).__name__=='classobj')  and module!=None:
+                        self._register_instance(module,m,categroy)
+                return self._load(categroy,name)
+            else:
+                self.app.logger.error(name+" not found")
     def load_file(self,filename):
         try:
-            name=filename.replace('.py','')
+            # print(filename)
+            name=filename.replace('.pyc','').replace('.py','')
             name=os.path.basename(name)
             fn_, path, desc = imp.find_module(name, [os.path.dirname(filename)])
             mod = imp.load_module(name, fn_, path, desc)
@@ -109,10 +127,128 @@ class CI_Loader(object):
     def regcls(self,name,aclass):
         self.classes[name]=aclass
 
-
-
-
     def _load_application(self,module_name,path=None):
+        if path==None:
+            path=self.application_path
+        module_path=path+os.path.sep+module_name
+        if not os.path.isdir(module_path):
+            self.app.logger.log(module_path+' not exists')
+            return
+        if module_path not in sys.path:
+            sys.path=self.sys_path
+            sys.path.insert(0,module_path)
+        files=os.listdir(path+os.path.sep+module_name)
+        is_autoload=True
+        autoload={}
+        for file in files:
+            file_path=path+os.path.sep+module_name+os.path.sep+ file
+            if file=='__init__.py':
+                module=self.load_file(file_path)
+                if hasattr(module,'__autoload__'):
+                    autoload=getattr(module,'__autoload__')
+                    if not isinstance(autoload,dict):
+                        autoload={}
+                    elif isinstance(autoload,dict):
+                        is_autoload=False
+                        break
+                    else:
+                        self._load_application3(module_name,path)
+                        return;
+
+        if is_autoload:
+            self._load_application3(module_name,path)
+            return;
+
+        if len(autoload)==0:
+            return;
+
+        for file in files:
+            file_path=path+os.path.sep+module_name+os.path.sep+ file
+            if os.path.isfile(file_path) and (file.endswith('.py') or file.endswith('.pyc')) and file!='__init__.py':
+                for m in autoload.keys():
+                    if m==file.split('.')[0]:
+                        module=self.load_file(file_path)
+                        self._register_instance(module,autoload[m],module_name)
+                        break;
+
+    def _load_application3(self,module_name,path=None):
+        if path==None:
+            path=self.application_path
+        module_path=path+os.path.sep+module_name
+        if not os.path.isdir(module_path):
+            self.app.logger.log(module_path+' not exists')
+            return
+        if module_path not in sys.path:
+            sys.path=self.sys_path
+            sys.path.insert(0,module_path)
+        files=os.listdir(path+os.path.sep+module_name)
+
+        for file in files:
+            file_path=path+os.path.sep+module_name+os.path.sep+ file
+            if os.path.isfile(file_path) and (file.endswith('.py') or file.endswith('.pyc')) and file!='__init__.py':
+                module=self.load_file(file_path)
+                for m in dir(module):
+                    if (isinstance(getattr(module,m),type) or type(getattr(module,m)).__name__=='classobj')  and module!=None:
+                        self._register_instance(module,m,module_name)
+
+
+
+    def _register_instance(self, module, module_name, module_category_name):
+
+        aclass = getattr(module, module_name)
+        # print(aclass)
+        # aclass.init__instance=init_instace
+        # print(dir(aclass))
+        has_init = hasattr(aclass, '__init__')
+        if has_init:
+            init_member = getattr(aclass, '__init__')
+            arginfo = str(init_member)
+            if re.match(r'^<unbound method', arginfo):
+                arginfo = inspect.getargspec(init_member)
+            else:
+                arginfo = ''
+        else:
+            arginfo = ''
+        if module_name not in self.modules[module_category_name].keys():
+            _instance = None
+            try:
+
+                if str(arginfo).find('kwargs') > 0:
+
+                    # _instance = eval(module_name + '(**self.kwargs)')
+                    init=getattr(module,module_name)
+                    _instance=init(**self.kwargs)
+
+                else:
+                    # _instance = eval(module_name + '()')
+                    init=getattr(module,module_name)
+                    _instance=init()
+
+                # instace_metho= getattr(_instance,'init__instance',None)
+                # print(instace_metho)
+                # if instace_metho!=None:
+                # instace_metho(self.app)
+
+                if not hasattr(_instance, 'app'):
+                    setattr(_instance, 'app', self.app)
+                if not hasattr(_instance, 'db'):
+                    setattr(_instance, 'db', self.app.db)
+                if not hasattr(_instance, 'logger'):
+                    setattr(_instance, 'logger', self.app.logger)
+                if _instance != None and module_category_name == 'controllers' and not hasattr(_instance, 'model') and \
+                        self.modules['models'].has_key(module_name + 'Model'):
+                    setattr(_instance, 'model', self.model(module_name + 'Model'))
+                    # print(self.model(module+'Model'))
+                    # print(self.model(module+'Model').search())
+
+            except Exception as e:
+                self.app.logger.error('create ' + module_name + ' failed ,please check parameters, ' + str(e))
+                # print(file_path, e)
+
+            self.modules[module_category_name][module_name] = {'aclass': getattr(module, module_name), 'instance': _instance}
+            self.classes[module_name] = getattr(module, module_name)
+
+    def _load_application2(self,module_name,path=None):
         if path==None:
             path=self.application_path
         module_path=path+os.path.sep+module_name
@@ -135,53 +271,7 @@ class CI_Loader(object):
                     # exec("from "+module+" import *")
                     cmodule=__import__(module)
 
-                    aclass= getattr(cmodule,module)
-                    # print(aclass)
-                    # aclass.init__instance=init_instace
-                    # print(dir(aclass))
-
-                    has_init=hasattr(aclass,'__init__')
-                    if has_init:
-                        init_member=getattr(aclass,'__init__')
-                        arginfo= str(init_member)
-                        if re.match(r'^<unbound method',arginfo):
-                            arginfo= inspect.getargspec(init_member)
-                        else:
-                            arginfo=''
-                    else:
-                        arginfo=''
-                    if module not in self.modules[module_name].keys():
-                        _instance=None
-                        try:
-
-                            if str(arginfo).find('kwargs')>0:
-
-                                _instance= eval(module+'(**self.kwargs)')
-                            else:
-                                _instance= eval(module+'()')
-
-                            # instace_metho= getattr(_instance,'init__instance',None)
-                            # print(instace_metho)
-                            # if instace_metho!=None:
-                            #     instace_metho(self.app)
-
-                            if not hasattr(_instance,'app'):
-                                setattr(_instance,'app',self.app)
-                            if not hasattr(_instance,'db'):
-                                setattr(_instance,'db',self.app.db)
-                            if not hasattr(_instance,'logger'):
-                                setattr(_instance,'logger',self.app.logger)
-                            if _instance!=None and module_name=='controllers' and not hasattr(_instance,'model') and self.modules['models'].has_key(module+'Model'):
-                                setattr(_instance,'model',self.model(module+'Model'))
-                                # print(self.model(module+'Model'))
-                                # print(self.model(module+'Model').search())
-
-                        except Exception as e:
-                            self.app.logger.error('create '+ module+ ' failed ,please check parameters, '+str(e))
-                            # print(file_path, e)
-
-                        self.modules[module_name][module]={'aclass':getattr( cmodule ,module),'instance':_instance}
-                        self.classes[module]=getattr(cmodule ,module)
+                    self._register_instance(cmodule, module, module_name)
 
                 except Exception as e:
                     self.app.logger.error("load "+module+" module error "+str(e))

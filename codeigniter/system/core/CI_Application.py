@@ -88,7 +88,8 @@ class CI_Application(object):
         for file in ['__init__.py','__init__.pyc']:
             initfile=sys_app_path+ os.path.sep+file
             if os.path.isfile(initfile):
-                os.unlink(initfile)
+                pass
+                # os.unlink(initfile)
 
         floder_list=['controllers','models','helpers','library','config']
         for folder in floder_list:
