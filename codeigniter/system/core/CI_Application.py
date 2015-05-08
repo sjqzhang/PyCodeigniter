@@ -10,7 +10,17 @@ import imp
 
 
 
+__application__={}
+
+
+def get_application():
+    if 'app' in __application__.keys():
+        return __application__['app']
+    else:
+        return None
+
 class CI_Application(object):
+    application_instance=None
     def __init__(self,application_path=None,system_path=None,config_file=None):
         if system_path==None:
             system_path=os.path.dirname( os.path.dirname(__file__))
@@ -24,9 +34,17 @@ class CI_Application(object):
         self.cache=None
         self._app_create(application_path)
         self.init()
+        __application__['app']=self
 
 
 
+
+    @staticmethod
+    def get_application():
+        if 'app' in __application__.keys():
+            return __application__['app']
+        else:
+            return None
     def init(self):
         if self.config_file!=None:
             PY2 = sys.version_info[0] == 2

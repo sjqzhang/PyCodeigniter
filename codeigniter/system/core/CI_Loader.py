@@ -6,16 +6,17 @@ __author__ = 'xiaozhang'
 
 import os
 import sys
-import logging
+import time
 import inspect
 import re
 import imp
-import  types
 
 
-def init_instace(self,app):
-    print('xxxxxxxxxxxxxxxxxxxxxxxxxx')
-    globals()['ci']=app
+try:
+    import thread
+except ImportError as e:
+    import _thread as thread
+
 
 class CI_Loader(object):
     def __init__(self,**kwargs):
@@ -26,10 +27,44 @@ class CI_Loader(object):
         self.app_modules_list=['helpers','library','models','controllers']
         self.modules={}
         self.classes={}
+        self.files={}
         self.sys_path=sys.path
         for m in self.app_modules_list:
             self.modules[m]={}
         map(self._load_application,self.app_modules_list)
+
+        try:
+            if self.app.config['server']['envroment']=='development' or self.app.config['server']['envroment']=='dev':
+                thread.start_new_thread(self.check,(),)
+        except Exception as e:
+            self.app.logger.error(e)
+
+
+    def check(self):
+        try:
+            while True:
+                for path in self.files.keys():
+                    # print(path)
+                    if os.stat(path).st_mtime> self.files[path]:
+                        filename=os.path.basename(path)
+                        category=os.path.basename(os.path.dirname(path))
+                        # print(filename)
+                        # print(category)
+                        name=filename.split('.')[0]
+                        if category in self.modules.keys() and name in self.modules[category]:
+                            del self.modules[category][name]
+                        self._load(category,name,True)
+                        self.files[path]=os.stat(path).st_mtime
+
+
+
+
+                time.sleep(2)
+
+        except Exception as e:
+            self.app.logger.error(e)
+
+
 
     def cls(self,name):
         return self.classes[name]
@@ -46,15 +81,21 @@ class CI_Loader(object):
             if name.lower()==key.lower():
                 return key
 
-    def _load(self,categroy,name):
+    def _load(self,categroy,name,is_reload=False):
         try:
-            shortname=os.path.basename(name)
-            mname=self.get_module_name(shortname,categroy)
-            return self.modules[categroy][mname]['instance']
+            if not is_reload:
+                shortname=os.path.basename(name)
+                mname=self.get_module_name(shortname,categroy)
+                return self.modules[categroy][mname]['instance']
+            else:
+                raise KeyError('reload')
         except KeyError as e:
             dirctory=os.path.dirname(name)
             module_name=os.path.basename(name)
-            path=self.application_path+os.path.sep+categroy+os.path.sep+dirctory
+            if dirctory!='':
+                path=self.application_path+os.path.sep+categroy+os.path.sep+dirctory
+            else:
+                path=self.application_path+os.path.sep+categroy
             file_name='';
             for file in os.listdir(path):
                 if file.split('.')[0].lower()==module_name.lower():
@@ -62,6 +103,7 @@ class CI_Loader(object):
                     break
             if file_name!='':
                 module=self.load_file(file_name)
+                # reload(module)
                 for m in dir(module):
                     if (isinstance(getattr(module,m),type) or type(getattr(module,m)).__name__=='classobj')  and module!=None:
                         self._register_instance(module,m,categroy)
@@ -71,7 +113,14 @@ class CI_Loader(object):
     def load_file(self,filename):
         try:
             # print(filename)
+            if filename.endswith('.py') and filename not in self.files.keys():
+
+                self.files[filename]=os.stat(filename).st_mtime
+                # print(filename)
+                # print(os.stat(filename).st_ctime)
+
             name=filename.replace('.pyc','').replace('.py','')
+
             name=os.path.basename(name)
             fn_, path, desc = imp.find_module(name, [os.path.dirname(filename)])
             mod = imp.load_module(name, fn_, path, desc)

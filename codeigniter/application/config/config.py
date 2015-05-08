@@ -37,7 +37,7 @@ mail={
 server={
     'port':8005,
     'host':'0.0.0.0',
-    'envroment':'develoment'
+    'envroment':'development'
 }
 
 cache={

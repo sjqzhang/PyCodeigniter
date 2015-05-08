@@ -17,7 +17,7 @@ import time
 try:
     import thread
 except ImportError as e:
-    import _thread
+    import _thread as thread
 
 
 class CI_Memory_Cache(object):
