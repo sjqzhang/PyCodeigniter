@@ -52,16 +52,18 @@ class CI_Loader(object):
                         module=self.load_file(path)
                         if module.__name__ in dir(module):
                             m=module.__name__
+                            self.files[path]=os.stat(path).st_mtime
                             del self.modules[category][m]
                             self._register_instance(module,m,category)
-                            self.files[path]=os.stat(path).st_mtime
                             continue
 
                         for m in dir(module):
                             if (isinstance(getattr(module,m),type) or type(getattr(module,m)).__name__=='classobj')  and module!=None:
-                                del self.modules[category][m]
-                                self._register_instance(module,m,category)
                                 self.files[path]=os.stat(path).st_mtime
+                                if not m.startswith('CI_'):
+                                    del self.modules[category][m]
+                                    self._register_instance(module,m,category)
+
 
                         # name=filename.split('.')[0]
                         # if category in self.modules.keys() and name in self.modules[category]:
@@ -110,10 +112,23 @@ class CI_Loader(object):
             else:
                 path=self.application_path+os.path.sep+categroy
             file_name='';
-            for file in os.listdir(path):
+            files=os.listdir(path)
+            for file in files:
                 if file.split('.')[0].lower()==module_name.lower():
                     file_name=path+os.path.sep+file
                     break
+            if file_name=='':
+
+                 for file in files:
+                    module= self.load_file(path+os.path.sep+file)
+                    for m in dir(module):
+                        if m.lower()==module_name.lower() and (isinstance(getattr(module,m),type) or type(getattr(module,m)).__name__=='classobj'):
+                            file_name=path+os.path.sep+file
+                            break
+                    if file_name!='':
+                        break
+
+
             if file_name!='':
                 module=self.load_file(file_name)
                 if module.__name__ in dir(module):
@@ -124,7 +139,8 @@ class CI_Loader(object):
 
                 for m in dir(module):
                     if (isinstance(getattr(module,m),type) or type(getattr(module,m)).__name__=='classobj')  and module!=None:
-                        self._register_instance(module,m,categroy)
+                        if not m.startswith('CI_'):
+                            self._register_instance(module,m,categroy)
                 return self._load(categroy,name,count=count+1)
             else:
                 self.app.logger.error(name+" not found")
@@ -315,7 +331,8 @@ class CI_Loader(object):
                     setattr(_instance, 'model', self.model(module_name + 'Model'))
                     # print(self.model(module+'Model'))
                     # print(self.model(module+'Model').search())
-                self.app.logger.info('load module '+ module_name+ ' of '+ module_category_name+ ' successfull')
+                # print(str(_instance))
+                self.app.logger.info('load module '+ module_name+ ' of '+ module_category_name+ " successfull. \t"+str(_instance))
 
             except Exception as e:
                 self.app.logger.error('create ' + module_name + ' of  '+ module_category_name + ' failed ,please check parameters, ' + str(e))
