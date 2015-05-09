@@ -50,7 +50,7 @@ class CI_Loader(object):
                         filename=os.path.basename(path)
                         category=os.path.basename(os.path.dirname(path))
                         module=self.load_file(path)
-                        if module.__name__ in dir(module):
+                        if module!=None and module.__name__ in dir(module):
                             m=module.__name__
                             self.files[path]=os.stat(path).st_mtime
                             del self.modules[category][m]
@@ -105,46 +105,47 @@ class CI_Loader(object):
             else:
                 raise KeyError('reload')
         except KeyError as e:
-            dirctory=os.path.dirname(name)
-            module_name=os.path.basename(name)
-            if dirctory!='':
-                path=self.application_path+os.path.sep+categroy+os.path.sep+dirctory
-            else:
-                path=self.application_path+os.path.sep+categroy
-            file_name='';
-            files=os.listdir(path)
-            for file in files:
-                if file.split('.')[0].lower()==module_name.lower():
-                    file_name=path+os.path.sep+file
-                    break
-            if file_name=='':
-
-                 for file in files:
-                    module= self.load_file(path+os.path.sep+file)
-                    for m in dir(module):
-                        if m.lower()==module_name.lower() and (isinstance(getattr(module,m),type) or type(getattr(module,m)).__name__=='classobj'):
-                            file_name=path+os.path.sep+file
-                            break
-                    if file_name!='':
-                        break
-
-
-            if file_name!='':
-                module=self.load_file(file_name)
-                if module.__name__ in dir(module):
-                    m=module.__name__
-                    if (isinstance(getattr(module,m),type) or type(getattr(module,m)).__name__=='classobj')  and module!=None and not m.startswith('_'):
-                        self._register_instance(module,m,categroy)
-                        return self._load(categroy,name,count=count+1)
-
-                for m in dir(module):
-                    if (isinstance(getattr(module,m),type) or type(getattr(module,m)).__name__=='classobj')  and module!=None:
-                        if not m.startswith('CI_'):
-                            self._register_instance(module,m,categroy)
-                return self._load(categroy,name,count=count+1)
-            else:
-                self.app.logger.error(name+" not found")
-                return None
+            pass
+            # dirctory=os.path.dirname(name)
+            # module_name=os.path.basename(name)
+            # if dirctory!='':
+            #     path=self.application_path+os.path.sep+categroy+os.path.sep+dirctory
+            # else:
+            #     path=self.application_path+os.path.sep+categroy
+            # file_name='';
+            # files=os.listdir(path)
+            # for file in files:
+            #     if file.split('.')[0].lower()==module_name.lower():
+            #         file_name=path+os.path.sep+file
+            #         break
+            # if file_name=='':
+            #
+            #      for file in files:
+            #         module= self.load_file(path+os.path.sep+file)
+            #         for m in dir(module):
+            #             if m.lower()==module_name.lower() and (isinstance(getattr(module,m),type) or type(getattr(module,m)).__name__=='classobj'):
+            #                 file_name=path+os.path.sep+file
+            #                 break
+            #         if file_name!='':
+            #             break
+            #
+            #
+            # if file_name!='':
+            #     module=self.load_file(file_name)
+            #     if module.__name__ in dir(module):
+            #         m=module.__name__
+            #         if (isinstance(getattr(module,m),type) or type(getattr(module,m)).__name__=='classobj')  and module!=None and not m.startswith('_'):
+            #             self._register_instance(module,m,categroy)
+            #             return self._load(categroy,name,count=count+1)
+            #
+            #     for m in dir(module):
+            #         if (isinstance(getattr(module,m),type) or type(getattr(module,m)).__name__=='classobj')  and module!=None:
+            #             if not m.startswith('CI_'):
+            #                 self._register_instance(module,m,categroy)
+            #     return self._load(categroy,name,count=count+1)
+            # else:
+            #     self.app.logger.error(name+" not found")
+            #     return None
     def load_file(self,filename):
         try:
             # print(filename)
