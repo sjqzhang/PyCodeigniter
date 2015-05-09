@@ -12,6 +12,7 @@ import re
 import imp
 
 
+
 try:
     import thread
 except ImportError as e:
@@ -55,12 +56,7 @@ class CI_Loader(object):
                             del self.modules[category][name]
                         self._load(category,name,True)
                         self.files[path]=os.stat(path).st_mtime
-
-
-
-
                 time.sleep(2)
-
         except Exception as e:
             self.app.logger.error(e)
 
@@ -81,8 +77,11 @@ class CI_Loader(object):
             if name.lower()==key.lower():
                 return key
 
-    def _load(self,categroy,name,is_reload=False):
+    def _load(self,categroy,name,is_reload=False,count=0):
         try:
+            if count>1:
+                self.app.logger.error( "load "+ categroy+"  "+ name+" fail")
+                return None
             if not is_reload:
                 shortname=os.path.basename(name)
                 mname=self.get_module_name(shortname,categroy)
@@ -103,13 +102,19 @@ class CI_Loader(object):
                     break
             if file_name!='':
                 module=self.load_file(file_name)
-                # reload(module)
+                if module.__name__ in dir(module):
+                    m=module.__name__
+                    if (isinstance(getattr(module,m),type) or type(getattr(module,m)).__name__=='classobj')  and module!=None and not m.startswith('_'):
+                        self._register_instance(module,m,module_name)
+                        return self._load(categroy,name,count=count+1)
+
                 for m in dir(module):
                     if (isinstance(getattr(module,m),type) or type(getattr(module,m)).__name__=='classobj')  and module!=None:
                         self._register_instance(module,m,categroy)
-                return self._load(categroy,name)
+                return self._load(categroy,name,count=count+1)
             else:
                 self.app.logger.error(name+" not found")
+                return None
     def load_file(self,filename):
         try:
             # print(filename)
@@ -193,8 +198,8 @@ class CI_Loader(object):
             file_path=path+os.path.sep+module_name+os.path.sep+ file
             if file=='__init__.py':
                 module=self.load_file(file_path)
-                if hasattr(module,'__autoload__'):
-                    autoload=getattr(module,'__autoload__')
+                if hasattr(module,'autoload'):
+                    autoload=getattr(module,'autoload')
                     if not isinstance(autoload,dict):
                         autoload={}
                     elif isinstance(autoload,dict):
@@ -236,8 +241,15 @@ class CI_Loader(object):
             file_path=path+os.path.sep+module_name+os.path.sep+ file
             if os.path.isfile(file_path) and (file.endswith('.py') or file.endswith('.pyc')) and file!='__init__.py':
                 module=self.load_file(file_path)
+                # print((module.__name__))
+                if module.__name__ in dir(module):
+                    m=module.__name__
+                    if (isinstance(getattr(module,m),type) or type(getattr(module,m)).__name__=='classobj')  and module!=None and not m.startswith('_'):
+                        self._register_instance(module,m,module_name)
+                        continue
+
                 for m in dir(module):
-                    if (isinstance(getattr(module,m),type) or type(getattr(module,m)).__name__=='classobj')  and module!=None:
+                    if (isinstance(getattr(module,m),type) or type(getattr(module,m)).__name__=='classobj')  and module!=None and not m.startswith('_'):
                         self._register_instance(module,m,module_name)
 
 
@@ -285,13 +297,14 @@ class CI_Loader(object):
                 if not hasattr(_instance, 'logger'):
                     setattr(_instance, 'logger', self.app.logger)
                 if _instance != None and module_category_name == 'controllers' and not hasattr(_instance, 'model') and \
-                        self.modules['models'].has_key(module_name + 'Model'):
+                        (module_name + 'Model' in self.modules['models'].keys() or module_name + '_model' in self.modules['models'].keys()):
                     setattr(_instance, 'model', self.model(module_name + 'Model'))
                     # print(self.model(module+'Model'))
                     # print(self.model(module+'Model').search())
+                self.app.logger.info('load module '+ module_name+ ' of '+ module_category_name+ ' successfull')
 
             except Exception as e:
-                self.app.logger.error('create ' + module_name + ' failed ,please check parameters, ' + str(e))
+                self.app.logger.error('create ' + module_name + ' of  '+ module_category_name + ' failed ,please check parameters, ' + str(e))
                 # print(file_path, e)
 
             self.modules[module_category_name][module_name] = {'aclass': getattr(module, module_name), 'instance': _instance}
