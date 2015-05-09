@@ -42,23 +42,37 @@ class CI_Loader(object):
 
 
     def check(self):
-        try:
-            while True:
+        while True:
+            try:
                 for path in self.files.keys():
                     # print(path)
                     if os.stat(path).st_mtime> self.files[path]:
                         filename=os.path.basename(path)
                         category=os.path.basename(os.path.dirname(path))
-                        # print(filename)
-                        # print(category)
-                        name=filename.split('.')[0]
-                        if category in self.modules.keys() and name in self.modules[category]:
-                            del self.modules[category][name]
-                        self._load(category,name,True)
-                        self.files[path]=os.stat(path).st_mtime
+                        module=self.load_file(path)
+                        if module.__name__ in dir(module):
+                            m=module.__name__
+                            del self.modules[category][m]
+                            self._register_instance(module,m,category)
+                            self.files[path]=os.stat(path).st_mtime
+                            continue
+
+                        for m in dir(module):
+                            if (isinstance(getattr(module,m),type) or type(getattr(module,m)).__name__=='classobj')  and module!=None:
+                                del self.modules[category][m]
+                                self._register_instance(module,m,category)
+                                self.files[path]=os.stat(path).st_mtime
+
+                        # name=filename.split('.')[0]
+                        # if category in self.modules.keys() and name in self.modules[category]:
+                        #     del self.modules[category][name]
+                        # self._load(category,name,True)
+                        # self.files[path]=os.stat(path).st_mtime
                 time.sleep(2)
-        except Exception as e:
-            self.app.logger.error(e)
+            except Exception as e:
+                self.app.logger.error(e)
+
+
 
 
 
@@ -105,7 +119,7 @@ class CI_Loader(object):
                 if module.__name__ in dir(module):
                     m=module.__name__
                     if (isinstance(getattr(module,m),type) or type(getattr(module,m)).__name__=='classobj')  and module!=None and not m.startswith('_'):
-                        self._register_instance(module,m,module_name)
+                        self._register_instance(module,m,categroy)
                         return self._load(categroy,name,count=count+1)
 
                 for m in dir(module):
