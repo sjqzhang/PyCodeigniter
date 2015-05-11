@@ -40,9 +40,30 @@ server={
     'envroment':'development'
 }
 
+
 cache={
     'type':'memory',
-    'max_count':10*10000
+    'cache_instance':'',
+    'max_count':100
+}
+
+
+autoload={
+    'controllers':{
+        "Index":"Index",
+        'Test':'tpl'
+    },
+    'models':{
+       'test_model':'TestModel'
+
+    },
+    'library':{
+
+    },
+    'helps':{
+
+    }
+
 }
 
 config={
@@ -51,7 +72,8 @@ config={
 'db':db,
 'mail':mail,
 'server':server,
-'cache':cache
+'cache':cache,
+'autoload':autoload
 
 }
 

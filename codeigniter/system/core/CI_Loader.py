@@ -106,6 +106,7 @@ class CI_Loader(object):
                 raise KeyError('reload')
         except KeyError as e:
             pass
+            return None
             # dirctory=os.path.dirname(name)
             # module_name=os.path.basename(name)
             # if dirctory!='':
@@ -216,6 +217,17 @@ class CI_Loader(object):
         if path==None:
             path=self.application_path
         module_path=path+os.path.sep+module_name
+        # print(self.app.config['autoload'])
+        autoload={}
+        is_autoload=True
+        if not 'autoload' in self.app.config.keys():
+            is_autoload=True
+        else:
+            if module_name in self.app.config['autoload'].keys():
+                autoload=self.app.config['autoload'][module_name]
+                if len(autoload)>0:
+                    is_autoload=False
+
         if not os.path.isdir(module_path):
             self.app.logger.log(module_path+' not exists')
             return
@@ -223,22 +235,22 @@ class CI_Loader(object):
             sys.path=self.sys_path
             sys.path.insert(0,module_path)
         files=os.listdir(path+os.path.sep+module_name)
-        is_autoload=True
-        autoload={}
-        for file in files:
-            file_path=path+os.path.sep+module_name+os.path.sep+ file
-            if file=='__init__.py':
-                module=self.load_file(file_path)
-                if hasattr(module,'autoload'):
-                    autoload=getattr(module,'autoload')
-                    if not isinstance(autoload,dict):
-                        autoload={}
-                    elif isinstance(autoload,dict):
-                        is_autoload=False
-                        break
-                    else:
-                        self._load_application3(module_name,path)
-                        return;
+
+
+        # for file in files:
+        #     file_path=path+os.path.sep+module_name+os.path.sep+ file
+        #     if file=='__init__.py':
+        #         module=self.load_file(file_path)
+        #         if hasattr(module,'autoload'):
+        #             autoload=getattr(module,'autoload')
+        #             if not isinstance(autoload,dict):
+        #                 autoload={}
+        #             elif isinstance(autoload,dict):
+        #                 is_autoload=False
+        #                 break
+        #             else:
+        #                 self._load_application3(module_name,path)
+        #                 return;
 
         if is_autoload:
             self._load_application3(module_name,path)
@@ -372,12 +384,6 @@ class CI_Loader(object):
 
             elif os.path.isdir(file_path):
                 self._load(module_name,file_path)
-
-
-
-
-
-
 
 
 
