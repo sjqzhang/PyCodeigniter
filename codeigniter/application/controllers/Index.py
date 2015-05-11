@@ -13,11 +13,12 @@ class Index:
 
     @CI_Cache.Cache()
     def index(self):
-        print('xxxxxxxx')
+        print('xxxxxx')
         return "hello world"
 
     def _abc(self):
         return "_abc"
+
 
     def abc(self):
         return "abbc"

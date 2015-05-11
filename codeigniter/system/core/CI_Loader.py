@@ -393,6 +393,8 @@ if __name__=='__main__':
     #loader=CI_Loader(r'E:\python\study\Codeigniter\system',r'E:\python\study\Codeigniter\application')
     loader=CI_Loader(application_path=r'E:\python\study\Codeigniter\application',app=None)
 
+    
+
     print(loader.model('SearchModel'))
 
 

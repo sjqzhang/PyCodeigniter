@@ -14,6 +14,8 @@ __author__ = 'xiaozhang'
 import re
 import time
 
+from CI_Application import CI_Application
+
 try:
     import thread
 except ImportError as e:
@@ -58,13 +60,12 @@ class CI_Memory_Cache(object):
 class CI_Cache(object):
     REGEX_KEY=re.compile(r'\#p\[(\d+)\]([^,}]+)?',re.IGNORECASE)
     def __init__(self,**kwargs):
-        globals()['ci']=kwargs['app']
+        # globals()['ci']=kwargs['app']
         self.cache_conf=kwargs['cache']
         if self.cache_conf['type']=='memory':
             self.cache_instance=CI_Memory_Cache(**kwargs)
         else:
             self.cache_instance=None
-
 
     def set_cache(self,cache):
         self.cache_instance=cache
@@ -94,7 +95,8 @@ class CI_Cache(object):
     def Cache(prefix='', ttl=3600,key='',op='select'):
         def handle_func(func):
             def handle_args(*args, **kwargs):
-                if 'ci' in globals().keys():
+                ci=CI_Application.get_application()
+                if ci!=None:
                     if  ci.cache.cache_instance==None:
                         ci.logger.error('cache not implment,you can implment it and setting it')
                         return func(*args, **kwargs)

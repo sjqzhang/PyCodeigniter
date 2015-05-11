@@ -51,10 +51,8 @@ cache={
 autoload={
     'controllers':{
         "Index":"Index",
-        'Test':'tpl'
     },
     'models':{
-       'test_model':'TestModel'
 
     },
     'library':{
