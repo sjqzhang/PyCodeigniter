@@ -285,7 +285,7 @@ class CI_Loader(object):
             if os.path.isfile(file_path) and (file.endswith('.py') or file.endswith('.pyc')) and file!='__init__.py':
                 module=self.load_file(file_path)
                 # print((module.__name__))
-                if module.__name__ in dir(module):
+                if module!=None and module.__name__ in dir(module):
                     m=module.__name__
                     if (isinstance(getattr(module,m),type) or type(getattr(module,m)).__name__=='classobj')  and module!=None and not m.startswith('_'):
                         self._register_instance(module,m,module_name)
