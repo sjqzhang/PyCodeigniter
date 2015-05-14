@@ -76,8 +76,11 @@ class CI_Logger(object):
         if level==logging.ERROR:
             errorlist=traceback.format_stack()
             errorlist.pop()
-            # errorlist.pop()
-            self.logger.log(level,"\n".join(errorlist))
+            errorlist.pop()
+            errorlist.pop()
+            # print(type(errorlist))
+            errorlist.reverse()
+            self.logger.log(level,"".join(errorlist))
         else:
             loginfo=self._get_log_back()
             message = str( self._get_msg( loginfo)[0])+" "+str(message)

@@ -30,6 +30,7 @@ class CI_Loader(object):
         self.classes={}
         self.files={}
         self.sys_path=sys.path
+	sys.path.insert(0, os.path.abspath(self.application_path))
         for m in self.app_modules_list:
             self.modules[m]={}
         map(self._load_application,self.app_modules_list)
@@ -45,7 +46,6 @@ class CI_Loader(object):
         while True:
             try:
                 for path in self.files.keys():
-                    # print(path)
                     if os.stat(path).st_mtime> self.files[path]:
                         filename=os.path.basename(path)
                         category=os.path.basename(os.path.dirname(path))
@@ -149,33 +149,35 @@ class CI_Loader(object):
             #     return None
     def load_file(self,filename):
         try:
-            if not os.path.isfile(filename):
+            if not os.path.exists(os.path.abspath(filename)):
+                self.app.logger.warn('file %s not exist' % filename)
                 return None
 
-            # print(type(filename))
-            # filename=os.path.abspath(filename)
             if filename.endswith('.py') and filename not in self.files.keys():
+
                 self.files[filename]=os.stat(filename).st_mtime
-
+            filename = os.path.abspath(filename)
             name=filename.replace('.pyc','').replace('.py','')
-
-            print(os.path.dirname(filename))
-            if not os.path.isfile(os.path.join(os.path.dirname(filename),'__init__.py')):
-                # print('xxxxxxxx')
-                # print(os.path.dirname(filename))
-
-                sys.path.insert(0,os.path.dirname(filename))
-
-            name=os.path.basename(name)
-            fn_, path, desc = imp.find_module(name, [os.path.dirname(filename)])
-            mod = imp.load_module(name, fn_, path, desc)
+            if not os.path.exists(os.path.join(os.path.dirname(name), '__init__.py')) and not os.path.exists(os.path.join(os.path.dirname(name), '__init__.pyc')):
+                sys.path.insert(0, os.path.join(os.path.dirname(name)))
+                name=os.path.basename(name)
+                fn_, path, desc = imp.find_module(name, [os.path.dirname(filename)])
+                mod = imp.load_module("%s" %( name), fn_, os.path.abspath(path), desc)
+            else:
+                dname = os.path.basename(os.path.dirname(name))
+                name=os.path.basename(name)
+                _fn_, _path, _desc = imp.find_module(dname, [os.path.dirname(os.path.dirname(filename))])
+                imp.load_module(dname, _fn_, os.path.abspath(_path), _desc)
+                fn_, path, desc = imp.find_module(name, [os.path.dirname(filename)])
+                dname = os.path.basename(os.path.dirname(path))
+                mod = imp.load_module("%s.%s" %(dname, name), fn_, os.path.abspath(path), desc)
+            #mod = imp.load_module(name, fn_, path, desc)
+            # print 'mod', mod
+            # raise Exception('sdfasdf')
+            # self.app.logger.error('xxxxxxxxxxxx')
             return mod
         except Exception as e:
-            print('error')
-
-            self.app.logger.error("load module error filename:"+ filename)
-
-
+            self.app.logger.error("load module error filename:"+ filename +str(e))
 
     def load_module(self,mod_dir):
         try:
@@ -229,7 +231,6 @@ class CI_Loader(object):
         if path==None:
             path=self.application_path
         module_path=path+os.path.sep+module_name
-        # print(self.app.config['autoload'])
         autoload={}
         is_autoload=True
         if not 'autoload' in self.app.config.keys():
@@ -245,7 +246,7 @@ class CI_Loader(object):
             return
         if module_path not in sys.path:
             sys.path=self.sys_path
-            # sys.path.insert(0,module_path)
+            #sys.path.insert(0,module_path)
         files=os.listdir(path+os.path.sep+module_name)
 
 
@@ -289,15 +290,15 @@ class CI_Loader(object):
             return
         if module_path not in sys.path:
             sys.path=self.sys_path
-            # sys.path.insert(0,module_path)
+            #sys.path.insert(0,module_path)
         files=os.listdir(path+os.path.sep+module_name)
 
         for file in files:
             file_path=path+os.path.sep+module_name+os.path.sep+ file
             if os.path.isfile(file_path) and (file.endswith('.py') or file.endswith('.pyc')) and file!='__init__.py':
+            #if os.path.isfile(file_path) and (file.endswith('.py') or file.endswith('.pyc')):
                 module=self.load_file(file_path)
-                # print((module.__name__))
-                if module!=None and module.__name__ in dir(module):
+                if module!=None and  module.__name__ in dir(module):
                     m=module.__name__
                     if (isinstance(getattr(module,m),type) or type(getattr(module,m)).__name__=='classobj')  and module!=None and not m.startswith('_'):
                         self._register_instance(module,m,module_name)
@@ -310,11 +311,8 @@ class CI_Loader(object):
 
 
     def _register_instance(self, module, module_name, module_category_name):
-
         aclass = getattr(module, module_name)
-        # print(aclass)
         # aclass.init__instance=init_instace
-        # print(dir(aclass))
         has_init = hasattr(aclass, '__init__')
         if has_init:
             init_member = getattr(aclass, '__init__')
@@ -341,7 +339,6 @@ class CI_Loader(object):
                     _instance=init()
 
                 # instace_metho= getattr(_instance,'init__instance',None)
-                # print(instace_metho)
                 # if instace_metho!=None:
                 # instace_metho(self.app)
 
@@ -354,14 +351,10 @@ class CI_Loader(object):
                 if _instance != None and module_category_name == 'controllers' and not hasattr(_instance, 'model') and \
                         (module_name + 'Model' in self.modules['models'].keys() or module_name + '_model' in self.modules['models'].keys()):
                     setattr(_instance, 'model', self.model(module_name + 'Model'))
-                    # print(self.model(module+'Model'))
-                    # print(self.model(module+'Model').search())
-                # print(str(_instance))
                 self.app.logger.info('load module '+ module_name+ ' of '+ module_category_name+ " successfull. \t"+str(_instance))
 
             except Exception as e:
                 self.app.logger.error('create ' + module_name + ' of  '+ module_category_name + ' failed ,please check parameters, ' + str(e))
-                # print(file_path, e)
 
             self.modules[module_category_name][module_name] = {'aclass': getattr(module, module_name), 'instance': _instance}
             self.classes[module_name] = getattr(module, module_name)
@@ -375,7 +368,7 @@ class CI_Loader(object):
             return
         if module_path not in sys.path:
             sys.path=self.sys_path
-            # sys.path.insert(0,module_path)
+            #sys.path.insert(0,module_path)
         files=os.listdir(path+os.path.sep+module_name)
 
         for file in files:
@@ -405,7 +398,7 @@ if __name__=='__main__':
     #loader=CI_Loader(r'E:\python\study\Codeigniter\system',r'E:\python\study\Codeigniter\application')
     loader=CI_Loader(application_path=r'E:\python\study\Codeigniter\application',app=None)
 
-    
+
 
     print(loader.model('SearchModel'))
 
