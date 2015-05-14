@@ -73,9 +73,15 @@ class CI_Logger(object):
         return list.pop()
 
     def _log(self,message,level=logging.INFO):
-        loginfo=self._get_log_back()
-        message = str( self._get_msg( loginfo)[0])+" "+str(message)
-        self.logger.log(level,message)
+        if level==logging.ERROR:
+            errorlist=traceback.format_stack()
+            errorlist.pop()
+            # errorlist.pop()
+            self.logger.log(level,"\n".join(errorlist))
+        else:
+            loginfo=self._get_log_back()
+            message = str( self._get_msg( loginfo)[0])+" "+str(message)
+            self.logger.log(level,message)
 
     # def log(self,message,level=logging.INFO):
     #     loginfo=self._get_log_back()

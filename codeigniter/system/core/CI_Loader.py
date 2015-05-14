@@ -149,21 +149,33 @@ class CI_Loader(object):
             #     return None
     def load_file(self,filename):
         try:
-            # print(filename)
-            if filename.endswith('.py') and filename not in self.files.keys():
+            if not os.path.isfile(filename):
+                return None
 
+            # print(type(filename))
+            # filename=os.path.abspath(filename)
+            if filename.endswith('.py') and filename not in self.files.keys():
                 self.files[filename]=os.stat(filename).st_mtime
-                # print(filename)
-                # print(os.stat(filename).st_ctime)
 
             name=filename.replace('.pyc','').replace('.py','')
+
+            print(os.path.dirname(filename))
+            if not os.path.isfile(os.path.join(os.path.dirname(filename),'__init__.py')):
+                # print('xxxxxxxx')
+                # print(os.path.dirname(filename))
+
+                sys.path.insert(0,os.path.dirname(filename))
 
             name=os.path.basename(name)
             fn_, path, desc = imp.find_module(name, [os.path.dirname(filename)])
             mod = imp.load_module(name, fn_, path, desc)
             return mod
         except Exception as e:
-            self.app.logger.error("load module error filename:"+ filename +str(e))
+            print('error')
+
+            self.app.logger.error("load module error filename:"+ filename)
+
+
 
     def load_module(self,mod_dir):
         try:
@@ -233,7 +245,7 @@ class CI_Loader(object):
             return
         if module_path not in sys.path:
             sys.path=self.sys_path
-            sys.path.insert(0,module_path)
+            # sys.path.insert(0,module_path)
         files=os.listdir(path+os.path.sep+module_name)
 
 
@@ -277,7 +289,7 @@ class CI_Loader(object):
             return
         if module_path not in sys.path:
             sys.path=self.sys_path
-            sys.path.insert(0,module_path)
+            # sys.path.insert(0,module_path)
         files=os.listdir(path+os.path.sep+module_name)
 
         for file in files:
@@ -363,7 +375,7 @@ class CI_Loader(object):
             return
         if module_path not in sys.path:
             sys.path=self.sys_path
-            sys.path.insert(0,module_path)
+            # sys.path.insert(0,module_path)
         files=os.listdir(path+os.path.sep+module_name)
 
         for file in files:
