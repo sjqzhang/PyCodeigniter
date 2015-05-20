@@ -156,6 +156,11 @@ class CI_DBActiveRec():
         self.ar_distinct = val if isinstance(val, bool) else True
         return self
 
+    def table(self,from_str):
+        return self.from_(from_str)
+    def _from(self,from_str):
+        return self.from_(from_str)
+
     def from_(self, from_str):
         if isinstance(from_str, str):
             from_str = from_str.split(',')
@@ -265,22 +270,22 @@ class CI_DBActiveRec():
             field = {field: match}
         for k, v in field.iteritems():
             k = self._protect_identifiers(k)
-            prefix = '' if len(self.ar_like)==0 else _type
-            v = self.escape_like_str(v)
+            prefix = "" if len(self.ar_like)==0 else _type
+            # v = self.escape_like_str(v)
+            # print(v)
             if side == 'none':
-                like_statement = prefix+" %s %s LIKE '{%s}'" % (k, not_, v)
+                like_statement = prefix+" %s %s LIKE '%s'" % (k, not_, v)
             elif side == 'before':
-                like_statement = prefix+" %s %s LIKE '%%{%s}'" % (k, not_, v)
+                like_statement = prefix+" %s %s LIKE '%%%s'" % (k, not_, v)
             elif side == 'after':
-                like_statement = prefix+" %s %s LIKE '{%s}%%'" % (k, not_, v)
+                like_statement = prefix+" %s %s LIKE '%s%%'" % (k, not_, v)
             else:
-                like_statement = prefix+" %s %s LIKE '%%{%s}%%'" % (k, not_, v)
+                like_statement = prefix+" %s %s LIKE '%%%s%%'" % (k, not_, v)
 
             self.ar_like.append(like_statement)
             if self.ar_caching is True:
                 self.ar_cache_like.append(like_statement)
                 self.ar_cache_exists.append('like')
-
         return self
 
     def group_by(self, by):
@@ -591,7 +596,7 @@ class CI_DBActiveRec():
     def _update(self, table, values, where, orderby=None, limit=False):
         valstr = []
         for key in values.keys():
-            value=values[key]
+            value=str(values[key])
             valstr.append(key+' = '+value)
         limit = ' LIMIT %s' % limit if limit is not False else ''
         if not isinstance(orderby, (list, tuple)):
@@ -689,9 +694,12 @@ class CI_DBActiveRec():
             sql += '\n'.join(self.ar_where)
 
         if len(self.ar_like) > 0:
-            if len(self.ar_where) > 0:
-                sql += "\nAND "
-            sql += "\n".join(self.ar_like)
+                    if len(self.ar_where) > 0:
+                        sql += "\nAND "
+                    else:
+                        sql += "\nWHERE "
+                    sql += "\n".join(self.ar_like)
+
 
         if len(self.ar_groupby) > 0:
             sql += "\nGROUP BY "

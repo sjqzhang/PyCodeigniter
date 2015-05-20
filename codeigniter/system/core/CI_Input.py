@@ -16,7 +16,7 @@ else:
 class CI_Input(object):
 
     def __init__(self,**kwargs):
-        pass
+        self.app=kwargs['app']
 
     def parse(self,env):
         env['__FORM__DATA__']={}

@@ -30,7 +30,7 @@ class CI_Loader(object):
         self.classes={}
         self.files={}
         self.sys_path=sys.path
-	sys.path.insert(0, os.path.abspath(self.application_path))
+        sys.path.insert(0, os.path.abspath(self.application_path))
         for m in self.app_modules_list:
             self.modules[m]={}
         map(self._load_application,self.app_modules_list)

@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='PyCodeigniter',
-    version='0.2.5',
+    version='0.2.7',
     packages=[ 'codeigniter', 'codeigniter.system', 'codeigniter.system.core', 'codeigniter.application',
               'codeigniter.application.config', 'codeigniter.application.models',
               'codeigniter.application.controllers','codeigniter.application.helpers','codeigniter.application.library'],

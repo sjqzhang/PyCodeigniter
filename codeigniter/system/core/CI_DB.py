@@ -82,7 +82,7 @@ class CI_DB(object):
     def query(self,sql,param=tuple(),conn=None):
         auto_close=True
         # print(type(conn))
-        if type(param) is types.DictType:
+        if isinstance(param,dict) and len(param)>0:
             sql,param=self.format(sql,param)
             # print(param)
         if conn==None:
@@ -91,7 +91,10 @@ class CI_DB(object):
             auto_close=False
         try:
             cursor=conn.cursor()
-            result=cursor.execute(sql,param)
+            if len(param)>0:
+                result=cursor.execute(sql,param)
+            else:
+                result=cursor.execute(sql)
             self.queries.append(sql)
             if len(self.queries)>100:
                del self.queries[0]
