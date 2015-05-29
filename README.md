@@ -4,12 +4,13 @@
 + `logging`
 + `pymysql`
 + `DBUtils`
++ `gevent`
 
 ###1.2 how to install
 ```
-pip install pymysql
-pip install DBUtils
-pip install --upgrade PyCodeigniter
+git clone https://github.com/sjqzhang/PyCodeigniter.git
+
+pip install -r requirements.txt
 
 
 ```
@@ -103,7 +104,7 @@ def application(env, start_response):
     html=''
 
     code,obj=ci.router.wsgi_route(env)
-    if not isinstance(obj,str):
+    if not isinstance(obj,str) and not isinstance(obj,unicode):
         html=json.dumps(obj)
         start_response(str(code), [('Content-Type', 'application/json')])
     else:
