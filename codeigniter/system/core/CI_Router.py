@@ -30,6 +30,20 @@ class CI_Router(object):
         return None
 
 
+    def route(self,ctrl,func,data={},request=None):
+        try:
+            return '200 OK',eval('self.app.loader.ctrl(ctrl).'+func+'(**data)')
+        except TypeError as e:
+            self.app.logger.error('when call controller %s function %s error,%s'%(ctrl,func,str(e)))
+            return '200 OK',{'message':str(e),'code':500}
+        except Exception as e:
+            self.app.logger.error('when call controller %s function %s error,%s'%(ctrl,func,str(e)))
+            return  "500 Internal server error","Server Error,Please see log file"
+
+
+
+
+
 
     def wsgi_route(self,env):
         data=self.app.input.parse(env)
