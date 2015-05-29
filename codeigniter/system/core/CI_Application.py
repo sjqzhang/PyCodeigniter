@@ -32,6 +32,7 @@ class CI_Application(object):
         self.logger=None
         self.db=None
         self.cache=None
+        self.cron=None
         self._app_create(application_path)
         self.init()
         __application__['app']=self
@@ -72,7 +73,7 @@ class CI_Application(object):
         # exec('from CI_DBActiveRec import CI_DBActiveRec')
         # exec('from CI_Router import CI_Router')
         # exec('from CI_Mail import CI_Mail')
-        module_list=['CI_Logger','CI_Loader','CI_Mail','CI_Router','CI_DB','CI_DBActiveRec','CI_Input','CI_Cache']
+        module_list=['CI_Logger','CI_Loader','CI_Mail','CI_Router','CI_DB','CI_DBActiveRec','CI_Input','CI_Cache','CI_Cron']
         for m in module_list:
             exec('from '+ m +' import '+m)
         self.logger= eval('CI_Logger(**self.config["log"])')
@@ -88,6 +89,8 @@ class CI_Application(object):
             self.mail= eval('CI_Mail(**self.config["mail"])')
         if 'cache' in self.config.keys():
             self.cache= eval('CI_Cache(**self.config)')
+        if 'cron' in self.config.keys():
+            self.cron= eval('CI_Cron(**self.config)')
         sys.path.remove(self.system_path+os.path.sep+'core')
         if self.config_file==None:
             sys.path.remove(self.application_path+os.path.sep+'config')

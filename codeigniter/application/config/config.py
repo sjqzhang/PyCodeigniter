@@ -64,6 +64,16 @@ autoload={
 
 }
 
+
+
+cron={
+ 'threadpool':20,
+ 'processpool':5,
+ 'jobs':[
+   #  {'cron':'0/5 * * * * *','command':'Index._abc','callback':'Index.out'}
+ ]
+}
+
 config={
 
 'log':log,
@@ -71,7 +81,8 @@ config={
 'mail':mail,
 'server':server,
 'cache':cache,
-'autoload':autoload
+'autoload':autoload,
+'cron':cron
 
 }
 
