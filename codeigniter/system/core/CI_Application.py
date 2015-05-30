@@ -10,7 +10,7 @@ import imp
 
 
 
-CI={}
+CI={'app':None}
 
 
 def get_application():
@@ -35,8 +35,10 @@ class CI_Application(object):
         self.cron=None
         self.server=None
         self._app_create(application_path)
-        self.init()
         CI['app']=self
+        self.init()
+
+
 
 
 

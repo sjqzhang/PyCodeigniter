@@ -830,21 +830,26 @@ class WrapFastPyServer(object):
         self.server_ip=self.app.config['server']['host']
         if 'cache_dir' in self.app.config['server']:
             read_cache_dir=self.app.config['server']['cache_dir']
-            globals()['read_cache_dir']=self.app.config['server']['cache_dir']
+            if not read_cache_dir.startswith('/'):
+                static_dir=self.app.application_path+os.path.sep+read_cache_dir
+            globals()['read_cache_dir']=read_cache_dir
         else:
-            read_cache_dir='cache'
+            read_cache_dir=self.app.application_path+os.path.sep+'cache'
         if not os.path.exists(read_cache_dir):
             os.makedirs(read_cache_dir)
         if 'static_dir' in self.app.config['server']:
             static_dir=self.app.config['server']['static_dir']
-            globals()['static_dir']=self.app.config['server']['static_dir']
+            if not static_dir.startswith('/'):
+                static_dir=self.app.application_path+os.path.sep+static_dir
+            globals()['static_dir']=static_dir
         else:
-            static_dir='static'
+            static_dir=self.app.application_path+os.path.sep+'static'
         if not os.path.exists(static_dir):
             os.makedirs(static_dir)
-        self.init()
+
 
     def start(self):
+        self.init()
         run_main(self.listen_fd)
 
     def init(self):
