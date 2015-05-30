@@ -32,6 +32,13 @@ class CI_Router(object):
 
     def route(self,ctrl,func,data={},request=None):
         try:
+            ctrl_instance=self.app.loader.ctrl(ctrl)
+            #print(dir(ctrl_instance))
+            f=self.get_func(ctrl_instance,func)
+            if f!=None:
+                func=f
+            if not hasattr(ctrl_instance,func) or str(func).startswith('_'):
+                 return "404 Not Found", "Not Found"
             return '200 OK',eval('self.app.loader.ctrl(ctrl).'+func+'(**data)')
         except TypeError as e:
             self.app.logger.error('when call controller %s function %s error,%s'%(ctrl,func,str(e)))

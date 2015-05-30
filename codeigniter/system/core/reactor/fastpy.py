@@ -101,7 +101,7 @@ for l in listfile:
         try:
             __import__(prefixname)
         except Exception as e:
-            CI['logger'].error(e)
+            # CI['logger'].error(e)
             continue
         mtime = os.path.getmtime(l)
         action_time[prefixname] = mtime
@@ -179,7 +179,7 @@ class QuickHTTPRequest():
             if "read_cache_name" in self.data:
                 os.remove(self.data["read_cache_name"])
                 del self.data["read_cache_name"]
-            self.ev_fd.modify(self.fd, ev_fd.EV_OUT | ev_fd.EV_IN | ev_fd.EV_DISCONNECTED)
+            self.ev_fd.modify(self.fd, self.ev_fd.EV_OUT | self.ev_fd.EV_IN | self.ev_fd.EV_DISCONNECTED)
         except Exception as e:
             CI['logger'].error(e)
             pass
@@ -365,55 +365,63 @@ class Worker(object):
         self._mtime_dict = {}
         self.log = FeimatLog("access.log")
 
-        for l in listfile:
-            if l == str(__file__):
-                continue
-            key, extname = os.path.splitext(l)
-            if extname == ".py" and key in sys.modules:
-                try:
-                    action = sys.modules[key]
-                    self._obj_dict[key] = eval("action.%s()" % key)
-                except Exception as e:
-                    CI['logger'].error(e)
-                    continue
-                self._mtime_dict[key] = action_time[key]
+        # for l in listfile:
+        #     if l == str(__file__):
+        #         continue
+        #     key, extname = os.path.splitext(l)
+        #     if extname == ".py" and key in sys.modules:
+        #         try:
+        #             action = sys.modules[key]
+        #             self._obj_dict[key] = eval("action.%s()" % key)
+        #         except Exception as e:
+        #             CI['logger'].error(e)
+        #             continue
+        #         self._mtime_dict[key] = action_time[key]
 
-    def getGloalAction(self, action_key):
-        action = sys.modules.get(action_key, None)
-        auto_update = False
-        if action == None:
-            auto_update = True
-        else:
-            try:
-                auto_update = action.FastpyAutoUpdate
-            except Exception, e:
-                pass
-        if not auto_update:
-            return auto_update,None,None
-        if action == None:
-            action = __import__(action_key)
-            mtime = os.path.getmtime("./%s.py" % action_key)
-            action_time[action_key] = mtime
-        else:
-            load_time = action_time[action_key]
-            mtime = os.path.getmtime("./%s.py" % action_key)
-            if mtime>load_time:
-                try:
-                    del sys.modules[action_key]
-                    del action
-                except Exception, e:
-                    pass
-                action = __import__(action_key)
-                action_time[action_key] = mtime
-        return auto_update,action,mtime
+    # def getGloalAction(self, action_key):
+    #     action = sys.modules.get(action_key, None)
+    #     auto_update = False
+    #     if action == None:
+    #         auto_update = True
+    #     else:
+    #         try:
+    #             auto_update = action.FastpyAutoUpdate
+    #         except Exception, e:
+    #             pass
+    #     if not auto_update:
+    #         return auto_update,None,None
+    #     if action == None:
+    #         action = __import__(action_key)
+    #         mtime = os.path.getmtime("./%s.py" % action_key)
+    #         action_time[action_key] = mtime
+    #     else:
+    #         load_time = action_time[action_key]
+    #         mtime = os.path.getmtime("./%s.py" % action_key)
+    #         if mtime>load_time:
+    #             try:
+    #                 del sys.modules[action_key]
+    #                 del action
+    #             except Exception, e:
+    #                 pass
+    #             action = __import__(action_key)
+    #             action_time[action_key] = mtime
+    #     return auto_update,action,mtime
 
     def process(self, data, ev_fd, fd):
         res = ""
         add_head = ""
         headers = {}
+        is_authorized=True
         try:
             request = QuickHTTPRequest(headers,self.log,data,ev_fd,fd)
             request.parse(data)
+            if CI['app'].server.pre_route_callback!=None:
+                # print(request.getdic)
+                if not CI['app'].server.pre_route_callback(request):
+                    is_authorized=False
+                    code="403 Forbidden"
+                    res="403 Forbidden"
+
         except Exception as e:
             CI['logger'].error(e)
 
@@ -435,10 +443,17 @@ class Worker(object):
             #     self._obj_dict[action_key] = obj
 
             # method = getattr(obj, request.method)
-
+            code="500 Internal server error"
             ctrl=request.baseuri.split(r'/')
-            if len(ctrl)==3:
+
+            if len(ctrl)==3 and is_authorized:
                 code,res=CI['router'].route(ctrl[1],ctrl[2],request.getdic)
+                if not isinstance(res,str) and not isinstance(res,unicode):
+                    res=str(json.dumps(res))
+                else:
+                    res=str(unicode(res).encode('utf-8'))
+
+
             # res = method(request, headers)
             if res == None:
                 return None
@@ -459,8 +474,10 @@ class Worker(object):
             headers["Content-Length"] = res_len
             for key in headers:
                 add_head += "%s: %s\r\n" % (key, headers[key])
-            if res == "404 Not Found":
+            if code == "404 Not Found":
                 data["writedata"] = "HTTP/1.1 404 Not Found\r\n%s\r\n%s" % (add_head, res)
+            elif code=="500 Internal server error":
+                data["writedata"] = "HTTP/1.1 500 Internal server error\r\n%s\r\n%s" % (add_head, res)
             else:
                 data["writedata"] = "HTTP/1.1 200 OK\r\n%s\r\n%s" % (add_head, res)
             if "read_cache_name" in data:
@@ -854,41 +871,3 @@ class WrapFastPyServer(object):
         self.listen_fd=listen_fd
 
 
-if __name__ == "__main__":
-    reload(sys)
-    sys.setdefaultencoding('utf8')
-    InitLog()
-    if len(sys.argv)<2:
-        sys.argv.append(8005)
-    port = int(sys.argv[1])
-    try:
-        listen_fd = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
-    except socket.error, msg:
-        logger.error("create socket failed")
-    try:
-        listen_fd.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    except socket.error, msg:
-        logger.error("setsocketopt SO_REUSEADDR failed")
-    try:
-        listen_fd.bind(('', port))
-    except socket.error as  e:
-        CI['logger'].error(e)
-        logger.error("bind failed")
-    try:
-        listen_fd.listen(10240)
-        listen_fd.setblocking(0)
-    except socket.error, msg:
-        logger.error(msg)
-
-    child_num = cpu_count()
-    c = 0
-    while c < child_num:
-        c = c + 1
-        if 'Linux' in platform.system():
-            newpid = os.fork()
-            if newpid == 0:
-                run_main(listen_fd)
-        else:
-            pass
-            #thread.start_new_thread(run_main, (listen_fd,))
-    run_main(listen_fd)

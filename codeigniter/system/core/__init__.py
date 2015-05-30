@@ -2,7 +2,7 @@
 # -*- coding:utf8 -*-
 __author__ = 'xiaozhang'
 
-__all__=[]
+__all__=['reactor']
 
 if __name__=='__main__':
     pass

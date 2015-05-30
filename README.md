@@ -4,10 +4,11 @@
 + `logging`
 + `pymysql`
 + `DBUtils`
-+ `gevent`
++ `apscheduler`
 
 ###1.2 how to install
 ```
+
 git clone https://github.com/sjqzhang/PyCodeigniter.git
 
 pip install -r requirements.txt
@@ -16,10 +17,12 @@ pip install -r requirements.txt
 ```
 
 
-##2. How to use? (if you want to have high performance, recommand using `gevent`)
+##2. How to use? 
 
 
-####2.1 simple example (just for test)
+####2.1 simple example (integrate with fastpy http server)
+
+
 ```python
 
 #!/usr/bin/env python
@@ -28,9 +31,9 @@ __author__ = 'xiaozhang'
 from codeigniter.system.core.CI_Application import CI_Application
 
 def main():
-    app=CI_Application(application_path=r'./')
+    app=CI_Application(r'./')
 
-    app.start_server()
+    app.server.start()
 
 if __name__ == '__main__':
     main()
@@ -82,9 +85,10 @@ if __name__ == "__main__":
 ```
 
 
-####2.3 how to integrate with  `gevent`　(recommed）
+####2.3 how to integrate with `gevent`
 
 ```python
+
 #!/usr/bin/python
 """A web.py application powered by gevent"""
 
@@ -120,7 +124,9 @@ if __name__ == "__main__":
 
 
 
+
 ```
+
 
 
 
@@ -172,6 +178,8 @@ app.loader.model('classname')
 
 ```
 #you can use active record.
+
+app.db.ar().select('*').table('test').limit(10).get()
 
 app.db.query('select * from test')
 

@@ -75,7 +75,7 @@ class CI_Application(object):
         # exec('from CI_DBActiveRec import CI_DBActiveRec')
         # exec('from CI_Router import CI_Router')
         # exec('from CI_Mail import CI_Mail')
-        module_list=['CI_Logger','CI_Loader','CI_Mail','CI_Router','CI_DB','CI_DBActiveRec','CI_Input','CI_Cache','CI_Cron','CI_Server']
+        module_list=['CI_Logger','CI_Loader','CI_Mail','CI_Router','CI_DB','CI_DBActiveRec','CI_Input','CI_Cache','CI_Cron']
         for m in module_list:
             exec('from '+ m +' import '+m)
         self.logger= eval('CI_Logger(**self.config["log"])')
@@ -94,6 +94,8 @@ class CI_Application(object):
         if 'cron' in self.config.keys():
             self.cron= eval('CI_Cron(**self.config)')
         if 'server' in self.config.keys():
+            exec('from CI_Server import CI_Server')
+            # print self.loader.load_file('CI_Server')
             self.server= eval('CI_Server(**self.config)')
         sys.path.remove(self.system_path+os.path.sep+'core')
         if self.config_file==None:
