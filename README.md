@@ -217,11 +217,29 @@ app.mail.send('to','subject','message',false)
 ```
 
 
-+how to set timer
++ how to set timer?
 
 ```
 app.cron.add_cron('*/1 * * * * *','class.method')
 for exmaple
 app.cron.add_cron('*/1 * * * * *','Index.acc')
+
+```
+
+
++ how to cache result?
+
+```
+	description:
+    
+    
+    ttl:expire (second)
+    prefix:group
+    key:key
+
+    @CI_Cache.Cache(prefix='abc',ttl=3,key='#p[0]')
+    def abc(self,id="0"):
+        return "test cache"
+
 
 ```

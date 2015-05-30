@@ -19,9 +19,9 @@ class Index:
     def _abc(self):
         return "_abc"
 
-
-    def abc(self):
-        return "abbc"
+    @CI_Cache.Cache(prefix='abc',ttl=3,key='#p[0]')
+    def abc(self,id="0"):
+        return "test cache"
 
     def search(self):
         return self.model.search()
