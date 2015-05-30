@@ -7,7 +7,7 @@ setup(
      packages=['codeigniter', 'codeigniter.system',
               'codeigniter.system.core', 'codeigniter.system.core.reactor', 'codeigniter.application',
               'codeigniter.application.config', 'codeigniter.application.models', 'codeigniter.application.helpers',
-              'codeigniter.application.library', 'codeigniter.application.controllers', 'controllers'],
+              'codeigniter.application.library', 'codeigniter.application.controllers'],
     url='https://github.com/sjqzhang/PyCodeigniter',
     license='GPL',
     # install_requires = ['setuptools','pymysql','DBUtils'],
