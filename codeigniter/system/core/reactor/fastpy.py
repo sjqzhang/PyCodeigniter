@@ -43,7 +43,7 @@ else:
     print "There is no reactor can be used."
 
 
-CI={'static_dir':'','app':None,'logger':None,'router':None}
+CI={'static_dir':'','app':None,'logger':None,'router':None,'access_log_dir':None}
 
 from multiprocessing import cpu_count
 
@@ -60,6 +60,9 @@ MaxReadSize = 1024*1024*1024
 
 static_dir = "/%s/" % static_file_dir
 read_cache_dir = "read_cache"
+static_pattern=r'*.jpg'
+static_prefix=''
+access_log_dir='logs'
 cache_static_dir = "cache_%s" % static_file_dir
 if not os.path.exists(cache_static_dir):
     pass
@@ -114,7 +117,8 @@ class FeimatLog():
         logtime = time.strftime(".%Y-%m-%d")
         self.curlogname = filename + logtime
         self.f = open(self.curlogname, "a")
-        self.basename = filename
+        self.basename = access_log_dir + os.path.sep+ filename
+
 
     def __del__(self):
         self.f.close()
@@ -162,7 +166,7 @@ class QuickHTTPRequest():
                 f.write(res)
                 f.close()
                 res = buf.getvalue()
-            self.aclog.log(" success: %s" % (self.path))
+            self.aclog.log(" success: %s size:" % (self.path,len(res)))
         except Exception as e:
             CI['logger'].error(e)
             self.aclog.log(" fail: %s %s" % (self.path, str(e)+getTraceStackMsg()))
@@ -263,9 +267,9 @@ class QuickHTTPRequest():
 
 def sendfilejob(aclog, request, data, ev_fd, fd):
     try:
-        base_filename = request.baseuri[request.baseuri.find(static_dir):]
-        cache_filename = "./cache_"+base_filename
-        filename = "./"+base_filename
+        base_filename = request.baseuri[request.baseuri.find(static_prefix):]
+        cache_filename = cache_static_dir+ os.path.sep +base_filename
+        filename = os.path.dirname( static_dir)+os.path.sep+base_filename
         return_content_type = None
         if not os.path.exists(filename) or ".." in base_filename:
             res = "404 Not Found"
@@ -278,6 +282,7 @@ def sendfilejob(aclog, request, data, ev_fd, fd):
             timestr = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime(filemd5))
             curtime = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime(time.time()))
             sock = data["connections"]
+            filesize=0
             if lasttimestr == timestr and "range" not in request.headers:
                 data["writedata"] = "HTTP/1.1 304 Not Modified\r\nLast-Modified: %s\r\nETag: \"%s\"\r\nDate: %s\r\nConnection:keep-alive\r\n\r\n" % (timestr,filemd5,curtime)
             else:
@@ -348,7 +353,7 @@ def sendfilejob(aclog, request, data, ev_fd, fd):
                 data["f"] = f
                 data["totalsenlen"] = totalsenlen
                 data["writedata"] = headstr
-            aclog.log(" success: %s" % (request.path))
+            aclog.log(" success: %s size:%s" % (request.path,filesize))
     except Exception, e:
         aclog.log(" fail: %s %s" % (request.path, str(e)+getTraceStackMsg()))
         res = "404 Not Found"
@@ -423,16 +428,14 @@ class Worker(object):
                     is_authorized=False
                     code="403 Forbidden"
                     res="403 Forbidden"
-
         except Exception as e:
             CI['logger'].error(e)
-
         try:
             headers["Content-Type"] = "text/html;charset=utf-8"
             headers["Connection"] = "keep-alive"
             if request.baseuri == "/favicon.ico":
                 request.baseuri = "/"+static_file_dir+request.baseuri
-            if static_dir in request.baseuri or "favicon.ico" in request.baseuri:
+            if static_prefix in request.baseuri or "favicon.ico" in request.baseuri:
                 sendfilejob(self.log,request,data,ev_fd,fd)
                 return None
             # action_key = request.action
@@ -463,10 +466,11 @@ class Worker(object):
             if headers.get("Content-Encoding","") == "gzip":
                 buf = StringIO()
                 f = gzip.GzipFile(mode='wb', fileobj=buf)
+
                 f.write(res)
                 f.close()
                 res = buf.getvalue()
-            self.log.log(" success: %s" % (request.path))
+            self.log.log(" success: %s size:%s" % (request.path,len(res)))
         except Exception, e:
             CI['logger'].error(e)
             # self.log.log(" fail: %s %s" % (request.path, str(e)+getTraceStackMsg()))
@@ -828,6 +832,8 @@ class WrapFastPyServer(object):
         # print(globals())
         self.port=self.app.config['server']['port']
         self.server_ip=self.app.config['server']['host']
+
+
         if 'cache_dir' in self.app.config['server']:
             read_cache_dir=self.app.config['server']['cache_dir']
             if not read_cache_dir.startswith('/'):
@@ -836,6 +842,8 @@ class WrapFastPyServer(object):
             read_cache_dir=self.app.application_path+os.path.sep+'cache'
         if not os.path.exists(read_cache_dir):
             os.makedirs(read_cache_dir)
+
+
         if 'static_dir' in self.app.config['server']:
             static_dir=self.app.config['server']['static_dir']
             if not static_dir.startswith('/'):
@@ -844,8 +852,23 @@ class WrapFastPyServer(object):
             static_dir=self.app.application_path+os.path.sep+'static'
         if not os.path.exists(static_dir):
             os.makedirs(static_dir)
-        globals()['static_dir']=static_dir
-        globals()['static_dir']=static_dir
+
+
+        if 'access_log_dir' in self.app.config['server']:
+            access_log_dir=self.app.config['server']['access_log_dir']
+            if not access_log_dir.startswith('/'):
+                access_log_dir=self.app.application_path+os.path.sep+access_log_dir
+        else:
+            access_log_dir=self.app.application_path+os.path.sep+'logs'
+        if not os.path.exists(access_log_dir):
+            os.makedirs(access_log_dir)
+
+
+        globals()['static_dir']= os.path.abspath(static_dir)
+        globals()['read_cache_dir']=os.path.abspath( read_cache_dir)
+        globals()['static_prefix']=os.path.basename(os.path.abspath( static_dir))
+        globals()['cache_static_dir']=os.path.abspath(static_dir)+ os.path.sep+'_cache_'
+        globals()['access_log_dir']=os.path.abspath(access_log_dir)
 
 
     def start(self):

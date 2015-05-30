@@ -185,6 +185,11 @@ app.db.query('select * from test')
 
 app.db.insert('test',{'name':'test'})
 
+app.db.delete('test',{'id':'5'})
+
+app.db.update('test',{'name':'test'},{'id':'5'})
+
+
 ```
 
 + how to write log in your application ?
@@ -208,5 +213,15 @@ app.mail.send('to','subject','message',true)
 #send text
 app.mail.send('to','subject','message',false)
 
+
+```
+
+
++how to set timer
+
+```
+app.cron.add_cron('*/1 * * * * *','class.method')
+for exmaple
+app.cron.add_cron('*/1 * * * * *','Index.acc')
 
 ```
