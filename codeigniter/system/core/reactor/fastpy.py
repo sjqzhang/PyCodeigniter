@@ -62,9 +62,11 @@ static_dir = "/%s/" % static_file_dir
 read_cache_dir = "read_cache"
 cache_static_dir = "cache_%s" % static_file_dir
 if not os.path.exists(cache_static_dir):
-    os.makedirs(cache_static_dir)
+    pass
+    # os.makedirs(cache_static_dir)
 if not os.path.exists(read_cache_dir):
-    os.makedirs(read_cache_dir)
+    pass
+    # os.makedirs(read_cache_dir)
 gzipdic = {"HTM":"text/html",
         "HTML":"text/html",
         "CSS":"text/css",
@@ -261,7 +263,7 @@ class QuickHTTPRequest():
 
 def sendfilejob(aclog, request, data, ev_fd, fd):
     try:
-        base_filename = request.baseuri[request.baseuri.find(static_dir)+1:]
+        base_filename = request.baseuri[request.baseuri.find(static_dir):]
         cache_filename = "./cache_"+base_filename
         filename = "./"+base_filename
         return_content_type = None
@@ -450,6 +452,7 @@ class Worker(object):
                 code,res=CI['router'].route(ctrl[1],ctrl[2],request.getdic)
                 if not isinstance(res,str) and not isinstance(res,unicode):
                     res=str(json.dumps(res))
+
                 else:
                     res=str(unicode(res).encode('utf-8'))
 
@@ -465,7 +468,8 @@ class Worker(object):
                 res = buf.getvalue()
             self.log.log(" success: %s" % (request.path))
         except Exception, e:
-            self.log.log(" fail: %s %s" % (request.path, str(e)+getTraceStackMsg()))
+            CI['logger'].error(e)
+            # self.log.log(" fail: %s %s" % (request.path, str(e)+getTraceStackMsg()))
             res = "404 Not Found"
         try:
             if headers.get("Connection","") != "close":
@@ -821,20 +825,29 @@ class WrapFastPyServer(object):
         CI['router']=self.app.router
         CI['logger']=self.app.logger
         # globals()['logger']=self.app.logger
+        # print(globals())
         self.port=self.app.config['server']['port']
         self.server_ip=self.app.config['server']['host']
+        if 'cache_dir' in self.app.config['server']:
+            read_cache_dir=self.app.config['server']['cache_dir']
+            globals()['read_cache_dir']=self.app.config['server']['cache_dir']
+        else:
+            read_cache_dir='cache'
+        if not os.path.exists(read_cache_dir):
+            os.makedirs(read_cache_dir)
+        if 'static_dir' in self.app.config['server']:
+            static_dir=self.app.config['server']['static_dir']
+            globals()['static_dir']=self.app.config['server']['static_dir']
+        else:
+            static_dir='static'
+        if not os.path.exists(static_dir):
+            os.makedirs(static_dir)
         self.init()
 
     def start(self):
         run_main(self.listen_fd)
 
     def init(self):
-        # reload(sys)
-        # sys.setdefaultencoding('utf8')
-        # InitLog()
-        # if len(sys.argv)<2:
-        #     sys.argv.append(8005)
-        # port = int(sys.argv[1])
         port=self.port
         self.listen_fd=None
 

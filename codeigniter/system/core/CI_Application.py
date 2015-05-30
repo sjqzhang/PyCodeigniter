@@ -10,12 +10,12 @@ import imp
 
 
 
-__application__={}
+CI={}
 
 
 def get_application():
-    if 'app' in __application__.keys():
-        return __application__['app']
+    if 'app' in CI.keys():
+        return CI['app']
     else:
         return None
 
@@ -36,15 +36,15 @@ class CI_Application(object):
         self.server=None
         self._app_create(application_path)
         self.init()
-        __application__['app']=self
+        CI['app']=self
 
 
 
 
     @staticmethod
     def get_application():
-        if 'app' in __application__.keys():
-            return __application__['app']
+        if 'app' in CI.keys():
+            return CI['app']
         else:
             return None
     def init(self):
