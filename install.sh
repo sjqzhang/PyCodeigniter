@@ -18,7 +18,7 @@ yum install -y unzip
 install_ubuntu(){
 
 apt-get install -y build-essential
-apt-get install -y python-devel
+apt-get install -y python-dev
 apt-get install -y unzip
 
 
