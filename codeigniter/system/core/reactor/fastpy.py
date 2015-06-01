@@ -115,7 +115,7 @@ for l in listfile:
 class FeimatLog():
     def __init__(self, filename):
         logtime = time.strftime(".%Y-%m-%d")
-        self.curlogname = filename + logtime
+        self.curlogname = access_log_dir + os.path.sep+filename + logtime
         self.f = open(self.curlogname, "a")
         self.basename = access_log_dir + os.path.sep+ filename
 
