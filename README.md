@@ -9,9 +9,16 @@
 ###1.2 how to install
 ```
 
+
+sh install.sh
+
+or
+
 git clone https://github.com/sjqzhang/PyCodeigniter.git
 
 pip install -r requirements.txt
+
+python setup.py install
 
 
 ```
@@ -95,7 +102,6 @@ if __name__ == "__main__":
 from gevent import monkey; monkey.patch_all()
 from gevent.pywsgi import WSGIServer
 import time
-import web
 import json
 
 from codeigniter.system.core.CI_Application import CI_Application
