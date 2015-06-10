@@ -3,7 +3,7 @@
 __author__ = 'xiaozhang'
 
 
-import sys
+import sys,cgi
 PY2 = sys.version_info[0] == 2
 if PY2:
     from urlparse import parse_qs
@@ -18,14 +18,34 @@ class CI_Input(object):
     def __init__(self,**kwargs):
         self.app=kwargs['app']
 
+
+
+    def readfile(self,environ):
+        form = cgi.FieldStorage(fp=environ['wsgi.input'], environ=environ, keep_blank_values=True)
+        data={}
+        if hasattr(form,'list') and len(form.list)>0:
+            for elem in form.list:
+                if hasattr(elem,'file') and str(elem.file).lower().find('string')!=-1:
+                    try:
+                        data[elem.name]=elem.file.read()
+                    except Exception as e:
+                        pass
+                else:
+                    data[elem.name]=elem
+        return data
+
+
+
+
     def parse(self,env):
         env['__FORM__DATA__']={}
         data={}
         if 'REQUEST_METHOD' in env.keys() and env['REQUEST_METHOD']=='POST':
             try:
                 request_body_size = int(env.get('CONTENT_LENGTH', 0))
-                request_body = env['wsgi.input'].read(request_body_size)
-                d = parse_qs(request_body)
+                # request_body = env['wsgi.input'].read(request_body_size)
+                # d = parse_qs(request_body)
+                d = self.readfile(env)
                 env['__FORM__DATA__']=d
             except (ValueError):
                 request_body_size = 0
@@ -53,7 +73,14 @@ class CI_Input(object):
             except Exception as e:
                 self.app.logger.warn(e)
 
+       # print(type(env['__FORM__DATA__']))
         data=dict( data.items()+env['__FORM__DATA__'].items())
+
+
+
+        #print(data)
+
+
         try:
             for k in data.keys():
                 if k.find('[]')!=-1:
@@ -63,6 +90,7 @@ class CI_Input(object):
                     data[k]=unicode( data[k][0],'utf-8').encode("utf-8")
         except UnicodeDecodeError as e:
             self.app.logger.warn(str(e)+str(data))
+            return data
         except Exception as e:
             self.app.logger.error(e)
         data['__ctrl_name__']=ctrl
