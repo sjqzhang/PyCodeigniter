@@ -30,6 +30,8 @@ class CI_Input(object):
                         data[elem.name]=elem.file.read()
                     except Exception as e:
                         pass
+                elif elem.file==None:
+                    data[elem.name]=elem.value
                 else:
                     data[elem.name]=elem
         return data
