@@ -452,7 +452,7 @@ class Worker(object):
             ctrl=request.baseuri.split(r'/')
 
             if len(ctrl)==3 and is_authorized:
-                code,res=CI['router'].route(ctrl[1],ctrl[2],request.getdic,request)
+                code,res=CI['router'].route(ctrl[1],ctrl[2],dict( request.getdic.items() +request.form.items()+ request.filedic.items() ),request)
                 if not isinstance(res,str) and not isinstance(res,unicode):
                     res=str(json.dumps(res))
 

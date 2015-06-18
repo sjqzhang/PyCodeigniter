@@ -12,7 +12,7 @@ class CI_Server(object):
         import sys
         # print sys.path
         self.app=kwargs['app']
-        from codeigniter.system.core.reactor.fastpy import WrapFastPyServer
+        from reactor.fastpy import WrapFastPyServer
         self.server=WrapFastPyServer(**kwargs)
         self.pre_route_callback=None
         self.post_route_callback=None

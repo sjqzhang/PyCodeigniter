@@ -10,6 +10,8 @@ import imp
 
 
 
+import pdb
+
 CI={'app':None}
 
 
@@ -22,6 +24,7 @@ def get_application():
 class CI_Application(object):
     application_instance=None
     def __init__(self,application_path=None,system_path=None,config_file=None):
+        # pdb.set_trace()
         if system_path==None:
             system_path=os.path.dirname( os.path.dirname(__file__))
         self.system_path=system_path
@@ -98,7 +101,7 @@ class CI_Application(object):
         if 'server' in self.config.keys():
             exec('from CI_Server import CI_Server')
             # print self.loader.load_file('CI_Server')
-            self.server= eval('CI_Server(**self.config)')
+            # self.server= eval('CI_Server(**self.config)')
         sys.path.remove(self.system_path+os.path.sep+'core')
         if self.config_file==None:
             sys.path.remove(self.application_path+os.path.sep+'config')

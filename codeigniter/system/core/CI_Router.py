@@ -39,11 +39,11 @@ class CI_Router(object):
             if not hasattr(ctrl_instance,func) or str(func).startswith('_'):
                  return "404 Not Found", "Not Found"
 
-            if request!=None:
-                if 'req' not in data.keys():
-                    data['req']=request
-                else:
-                    data['__request__']=request
+            # if request!=None:
+                # if 'req' not in data.keys():
+                #     data['req']=request
+                # else:
+                #     data['__request__']=request
 
             return '200 OK',eval('self.app.loader.ctrl(ctrl).'+func+'(**data)')
         except TypeError as e:
