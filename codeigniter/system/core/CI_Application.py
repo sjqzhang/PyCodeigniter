@@ -101,7 +101,9 @@ class CI_Application(object):
         if 'server' in self.config.keys():
             exec('from CI_Server import CI_Server')
             # print self.loader.load_file('CI_Server')
-            # self.server= eval('CI_Server(**self.config)')
+            import platform
+            if platform.system()!='Windows':
+                self.server= eval('CI_Server(**self.config)')
         sys.path.remove(self.system_path+os.path.sep+'core')
         if self.config_file==None:
             sys.path.remove(self.application_path+os.path.sep+'config')
