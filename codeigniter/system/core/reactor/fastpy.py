@@ -97,19 +97,19 @@ def getTraceStackMsg():
 
 #action_dic = {}
 action_time = {}
-listfile = os.listdir("./")
-for l in listfile:
-    if l == str(__file__):
-        continue
-    prefixname, extname = os.path.splitext(l)
-    if extname == ".py":
-        try:
-            __import__(prefixname)
-        except Exception as e:
-            # CI['logger'].error(e)
-            continue
-        mtime = os.path.getmtime(l)
-        action_time[prefixname] = mtime
+# listfile = os.listdir("./")
+# for l in listfile:
+#     if l == str(__file__):
+#         continue
+#     prefixname, extname = os.path.splitext(l)
+#     if extname == ".py":
+#         try:
+#             __import__(prefixname)
+#         except Exception as e:
+#             # CI['logger'].error(e)
+#             continue
+#         mtime = os.path.getmtime(l)
+#         action_time[prefixname] = mtime
         #action_dic[prefixname] = action
 
 class FeimatLog():
