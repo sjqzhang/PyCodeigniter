@@ -44,8 +44,6 @@ class CI_Application(object):
 
 
 
-
-
     @staticmethod
     def get_application():
         if 'app' in CI.keys():
