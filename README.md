@@ -213,11 +213,9 @@ app.logger.error('message')
 
 ```
 
-#send html
-app.mail.send('to','subject','message',true)
+#send mail with attachment
+app.mail.send('to','subject','message',['/tmp/sendfile'])
 
-#send text
-app.mail.send('to','subject','message',false)
 
 
 ```
