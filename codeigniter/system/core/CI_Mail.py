@@ -41,7 +41,7 @@ class CI_Mail(object):
                 else:
                     self.app.logger.warn('attach fail '+file_name+' not exist!')
         try:
-            s = smtplib.SMTP()
+            s = smtplib.SMTP(timeout=10)
             s.connect(self.host)
             s.login(self.user,self.password)
             s.sendmail(me, to, msg.as_string())
