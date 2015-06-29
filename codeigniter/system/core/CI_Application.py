@@ -89,7 +89,6 @@ class CI_Application(object):
             self.db= eval('CI_DB(**self.config["db"])')
         else:
             self.logger.warn('db not config')
-        self.loader= eval('CI_Loader(**self.config)')
         self.router= eval('CI_Router(**self.config)')
         if 'mail' in self.config.keys():
             self.mail= eval('CI_Mail(**self.config["mail"])')
@@ -99,6 +98,8 @@ class CI_Application(object):
             self.cron= eval('CI_Cron(**self.config)')
         if 'server' in self.config.keys():
             self.server= eval('CI_Server(**self.config)')
+
+        self.loader= eval('CI_Loader(**self.config)')
 
         sys.path.remove(self.system_path+os.path.sep+'core')
         if self.config_file==None:
