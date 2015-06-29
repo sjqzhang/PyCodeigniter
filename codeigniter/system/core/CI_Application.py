@@ -94,12 +94,13 @@ class CI_Application(object):
             self.mail= eval('CI_Mail(**self.config["mail"])')
         if 'cache' in self.config.keys():
             self.cache= eval('CI_Cache(**self.config)')
-        if 'cron' in self.config.keys():
-            self.cron= eval('CI_Cron(**self.config)')
         if 'server' in self.config.keys():
             self.server= eval('CI_Server(**self.config)')
-
         self.loader= eval('CI_Loader(**self.config)')
+        if 'cron' in self.config.keys():
+            self.cron= eval('CI_Cron(**self.config)')
+
+
 
         sys.path.remove(self.system_path+os.path.sep+'core')
         if self.config_file==None:
