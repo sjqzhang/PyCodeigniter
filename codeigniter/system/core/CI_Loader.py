@@ -338,16 +338,17 @@ class CI_Loader(object):
                     init=getattr(module,module_name)
                     _instance=init()
 
-                # instace_metho= getattr(_instance,'init__instance',None)
-                # if instace_metho!=None:
-                # instace_metho(self.app)
-
-                if not hasattr(_instance, 'app'):
-                    setattr(_instance, 'app', self.app)
-                if not hasattr(_instance, 'db'):
-                    setattr(_instance, 'db', self.app.db)
-                if not hasattr(_instance, 'logger'):
-                    setattr(_instance, 'logger', self.app.logger)
+                for p in ['app','db','logger','loader','config','cache']:
+                    if p=='app':
+                        setattr(_instance, 'app', self.app)
+                    elif not hasattr(_instance,p):
+                        setattr(_instance,p,getattr( self.app,p))
+                # if not hasattr(_instance, 'app'):
+                #     setattr(_instance, 'app', self.app)
+                # if not hasattr(_instance, 'db'):
+                #     setattr(_instance, 'db', self.app.db)
+                # if not hasattr(_instance, 'logger'):
+                #     setattr(_instance, 'logger', self.app.logger)
                 if _instance != None and module_category_name == 'controllers' and not hasattr(_instance, 'model') and \
                         (module_name + 'Model' in self.modules['models'].keys() or module_name + '_model' in self.modules['models'].keys()):
                     setattr(_instance, 'model', self.model(module_name + 'Model'))

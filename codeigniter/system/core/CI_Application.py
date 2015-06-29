@@ -36,6 +36,7 @@ class CI_Application(object):
         self.db=None
         self.cache=None
         self.cron=None
+        self.mail=None
         self.server=None
         self._app_create(application_path)
         CI['app']=self
