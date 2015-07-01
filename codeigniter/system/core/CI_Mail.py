@@ -12,6 +12,7 @@ from email.mime.multipart import MIMEMultipart
 
 class CI_Mail(object):
     def __init__(self,**kwargs):
+        self.app=kwargs['app'];
         self.host=kwargs['host'];
         self.user=kwargs['user'];
         self.password=kwargs['password'];
