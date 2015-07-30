@@ -76,6 +76,14 @@ cron={
  ]
 }
 
+zookeeper={
+    'url':'',
+    'path':'/tmp',
+    'user':'',
+   'password':'',
+   'timeout':10
+}
+
 config={
 
 'log':log,
@@ -84,7 +92,8 @@ config={
 'server':server,
 'cache':cache,
 'autoload':autoload,
-'cron':cron
+# 'cron':cron,
+# 'zookeeper':zookeeper
 
 }
 
