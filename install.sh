@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 
 
 sys=`grep -Eio "(centos|ubuntu)" /etc/issue`
@@ -10,6 +11,7 @@ install_centos(){
 
 yum install -y "Development tools"
 yum install -y python-devel
+yum install -y wget
 yum install -y unzip
 
 
@@ -19,6 +21,7 @@ install_ubuntu(){
 
 apt-get install -y build-essential
 apt-get install -y python-dev
+apt-get install -y wget
 apt-get install -y unzip
 
 
@@ -39,7 +42,7 @@ is_install(){
 
   return 1
 
- fi 
+ fi
 
 }
 
@@ -50,11 +53,11 @@ is_install pip
 
 if [ $? -eq 0 ];then
 
-wget https://github.com/sjqzhang/pylib/raw/master/setuptools-0.6c11.tar.gz -O /tmp/setuptools-0.6c11.tar.gz 
+wget --no-check-certificate  https://github.com/sjqzhang/pylib/raw/master/setuptools-0.6c11.tar.gz -O /tmp/setuptools-0.6c11.tar.gz
 
 tar xzvf /tmp/setuptools-0.6c11.tar.gz
 
-wget https://github.com/sjqzhang/pylib/raw/master/pip-6.1.1.tar.gz  -O /tmp/pip-6.1.1.tar.gz
+wget --no-check-certificate  https://github.com/sjqzhang/pylib/raw/master/pip-6.1.1.tar.gz  -O /tmp/pip-6.1.1.tar.gz
 
 tar xzvf /tmp/pip-6.1.1.tar.gz
 
@@ -69,7 +72,7 @@ cd pip-6.1.1
 python setup.py install
 
 
-fi 
+fi
 
 }
 
@@ -91,4 +94,4 @@ cd PyCodeigniter-master
 
 pip install -r requirements.txt
 
-python setup.py install 
+python setup.py install
