@@ -9,8 +9,7 @@
 ###1.2 how to install
 ```
 
-
-sh install.sh
+wget --no-check-certificate https://raw.githubusercontent.com/sjqzhang/PyCodeigniter/master/install.sh -O- |sh
 
 or
 
@@ -24,7 +23,7 @@ python setup.py install
 ```
 
 
-##2. How to use? 
+##2. How to use?
 
 
 ####2.1 simple example (integrate with fastpy http server)
@@ -45,7 +44,7 @@ def main():
 if __name__ == '__main__':
     main()
 
-    
+
 ```
 
 
@@ -142,7 +141,7 @@ if __name__ == "__main__":
 + how to config your application?
 
 ```
-#you can edit application/config/config.py 
+#you can edit application/config/config.py
 
 config.py
 
@@ -235,8 +234,8 @@ app.cron.add_cron('*/1 * * * * *','Index.acc')
 
 ```
 	description:
-    
-    
+
+
     ttl:expire (second)
     prefix:group
     key:key
