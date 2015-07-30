@@ -23,6 +23,10 @@ class Index:
     def abc(self,id="0"):
         return "test cache"
 
+    def _timer(self):
+        import datetime
+        print('timer'+ datetime.datetime.now())
+
     def search(self):
         return self.model.search()
 

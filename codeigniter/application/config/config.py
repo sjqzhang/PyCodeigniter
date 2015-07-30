@@ -72,7 +72,7 @@ cron={
  'threadpool':20,
  'processpool':5,
  'jobs':[
-   #  {'cron':'0/5 * * * * *','command':'Index._abc','callback':'Index.out'}
+   #  {'cron':'0/5 * * * * *','command':'Index._abc','callback':'Index._timer'}
  ]
 }
 
