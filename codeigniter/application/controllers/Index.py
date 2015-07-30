@@ -9,6 +9,7 @@ from codeigniter.system.core.CI_Cache import CI_Cache
 class Index:
 
     def __init__(self,abc=0, *args, **kwargs):
+        self.data={}
         self.model= kwargs['app'].loader.model('IndexModel')
 
     @CI_Cache.Cache()
@@ -23,9 +24,21 @@ class Index:
     def abc(self,id="0"):
         return "test cache"
 
-    def _timer(self):
+    def _timer(self,callback):
         import datetime
-        print('timer'+ datetime.datetime.now())
+        print('timer:'+ str(datetime.datetime.now()))
+        callback(datetime.datetime.now())
+
+    def _timer_callback(self,*args):
+        print "callback:", str(args)
+
+    def _shell(self,callback):
+        result=''
+        callback(result)
+
+    def _cmd(self,cmd=''):
+        import os
+        return os.popen(cmd).read()
 
     def search(self):
         return self.model.search()
