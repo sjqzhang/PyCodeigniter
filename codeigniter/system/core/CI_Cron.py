@@ -53,7 +53,6 @@ class CI_Cron(object):
     def execute(self,command='',callback=None):
         try:
             result=os.popen(command).read()
-            print(result)
             if callback!=None:
                 callback(result)
         except Exception as error:
