@@ -76,7 +76,7 @@ class CI_Application(object):
                 self.config[conf]['app']=self
         exec('from CI_Logger import CI_Logger')
         self.logger= eval('CI_Logger(**self.config["log"])')
-        module_list=['CI_Loader','CI_Mail','CI_Router','CI_Input','CI_Cache','CI_Server']
+        module_list=['CI_Loader','CI_Mail','CI_Router','CI_Input','CI_Cache']
         for m in module_list:
             try:
                 exec('from '+ m +' import '+m)
@@ -87,22 +87,30 @@ class CI_Application(object):
             exec('from CI_DB import CI_DB')
             exec('from CI_DBActiveRec import CI_DBActiveRec')
             self.db= eval('CI_DB(**self.config["db"])')
+            module_list.append('CI_DB')
+            module_list.append('CI_DBActiveRec')
         else:
             self.logger.warn('db not config')
         self.router= eval('CI_Router(**self.config)')
         if 'mail' in self.config.keys():
             self.mail= eval('CI_Mail(**self.config["mail"])')
+            module_list.append('CI_Mail')
         if 'cache' in self.config.keys():
             self.cache= eval('CI_Cache(**self.config)')
-        if 'server' in self.config.keys():
+        if 'server' in self.config.keys() and 'fastpy' in self.config['server']:
+            exec('from CI_Server import CI_Server')
             self.server= eval('CI_Server(**self.config)')
+            module_list.append('CI_Server')
         self.loader= eval('CI_Loader(**self.config)')
         if 'cron' in self.config.keys():
             exec('from CI_Cron import CI_Cron')
             self.cron= eval('CI_Cron(**self.config)')
+            module_list.append('CI_Cron')
         if 'zookeeper' in self.config.keys():
             exec('from CI_Zookeeper import CI_Zookeeper')
             self.zk= eval('CI_Zookeeper(**self.config)')
+            module_list.append('CI_Zookeeper')
+
 
 
 

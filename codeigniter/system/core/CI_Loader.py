@@ -80,6 +80,8 @@ class CI_Loader(object):
 
     def cls(self,name):
         return self.classes[name]
+    def get_cls(self,name):
+        return self.classes[name]
     def model(self,name):
         return self._load('models',name)
     def ctrl(self,name):
