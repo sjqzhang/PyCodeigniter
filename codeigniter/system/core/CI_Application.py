@@ -97,7 +97,7 @@ class CI_Application(object):
             module_list.append('CI_Mail')
         if 'cache' in self.config.keys():
             self.cache= eval('CI_Cache(**self.config)')
-        if 'server' in self.config.keys() and 'fastpy' in self.config['server']:
+        if 'server' in self.config.keys() and 'fastpy' in self.config['server'] and  self.config['server']['fastpy'] :
             exec('from CI_Server import CI_Server')
             self.server= eval('CI_Server(**self.config)')
             module_list.append('CI_Server')
