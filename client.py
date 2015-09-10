@@ -15,6 +15,7 @@ import json
 import tempfile
 import threading
 import getopt
+from logging.handlers import RotatingFileHandler
 
 
 
@@ -28,18 +29,13 @@ client_script_path= tempfile.gettempdir()+ os.path.sep+'script'
 
 
 
-
-
-
-
-
 logger = logging.getLogger()
 logging.basicConfig(level=logging.DEBUG,
                 format='%(asctime)-25s %(module)s:%(lineno)d  %(levelname)-8s %(message)s',
-                #datefmt='%a, %d %b %Y %H:%M:%S',
+                # datefmt='%a, %d %b %Y %H:%M:%S',
                 filename=client_log_filename,
                 filemode='a')
-
+logger.addHandler(RotatingFileHandler(filename=client_log_filename,maxBytes=100 * 1024 * 1024, backupCount=3))
 
 
 
@@ -110,7 +106,8 @@ class ClientUtil(object):
             qrcont=resp.read()
             print qrcont
         except Exception,e:
-            print 'http error'
+            logger.error(e)
+
 
     def url_fetch(self,url,data=None,timeout=4):
         html='';
