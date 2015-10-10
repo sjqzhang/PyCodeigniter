@@ -133,7 +133,7 @@ class CI_DB(object):
 
     def scalar(self,sql,param=tuple(),conn=None):
         rows=self.query(sql,param,conn)
-        if isinstance(rows,list) and len(row)>0:
+        if isinstance(rows,list) and len(rows)>0:
             return rows[0]
         else:
             return None
