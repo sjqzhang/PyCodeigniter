@@ -131,6 +131,16 @@ class CI_DB(object):
     def delete(self, table='', where='',conn=None):
         return self.ar(conn).delete(table,where)
 
+    def scalar(self,sql,param=tuple(),conn=None):
+        rows=self.query(sql,param,conn)
+        if isinstance(rows,list) and len(row)>0:
+            return rows[0][rows[0].keys()[0]]
+        else:
+            return None
+
+
+
+
     def ar(self,conn=None):
         kwargs={}
         if conn==None:
