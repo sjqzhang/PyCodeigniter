@@ -134,9 +134,11 @@ class CI_DB(object):
     def scalar(self,sql,param=tuple(),conn=None):
         rows=self.query(sql,param,conn)
         if isinstance(rows,list) and len(row)>0:
-            return rows[0][rows[0].keys()[0]]
+            return rows[0]
         else:
             return None
+
+
 
 
 
