@@ -41,6 +41,7 @@ server={
     'envroment':'development',
     'static_dir':'static',
     'cache_dir':'cache',
+    'access_log':'./access.log'
 }
 
 
