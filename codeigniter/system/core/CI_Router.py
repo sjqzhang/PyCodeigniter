@@ -92,7 +92,7 @@ class CI_Router(object):
         addr=env['REMOTE_ADDR']
         path=env['PATH_INFO']
         protol=env['SERVER_PROTOCOL']
-        message="%s - - [%s] '%s %s %s' %s %s" % (addr,dt,method,path,protol,str(code),etime)
+        message="%s - - [%s] \"%s %s %s\" %s %s" % (addr,dt,method,path,protol,str(code),etime)
         self.access_log.info(message)
 
 
