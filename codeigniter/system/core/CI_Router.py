@@ -39,9 +39,9 @@ class CI_Router(object):
         self._methods={}
         acchandler = RotatingFileHandler(filename=self.access_log_file, maxBytes=1024*1024*1024, backupCount=10)
         errhandler = RotatingFileHandler(filename=self.access_log_file, maxBytes=1024*1024*1024, backupCount=10)
-        format='%(asctime)s %(message)s'
-        acchandler.setFormatter(format)
-        errhandler.setFormatter(format)
+        # format='%(asctime)s %(message)s'
+        # acchandler.setFormatter(format)
+        # errhandler.setFormatter(format)
         self.access_log.addHandler(acchandler)
         self.error_log.addHandler(errhandler)
 
@@ -82,14 +82,17 @@ class CI_Router(object):
 
 
 
-    def _log(self,env,code,etime):
+    def _log(self,env,code,stime):
+        etime=time.time()
+        etime=etime-stime
+        etime="%0.6f" % etime
         now = datetime.datetime.now()
         dt=now.strftime('%Y-%m-%d %H:%M:%S')
         method=env['REQUEST_METHOD']
         addr=env['REMOTE_ADDR']
         path=env['PATH_INFO']
         protol=env['SERVER_PROTOCOL']
-        message="'%s - - [%s] %s %s %s %s %s'" % (addr,dt,method,path,protol,str(code),etime)
+        message="%s - - [%s] '%s %s %s' %s %s" % (addr,dt,method,path,protol,str(code),etime)
         self.access_log.info(message)
 
 
@@ -113,16 +116,18 @@ class CI_Router(object):
             if not hasattr(ctrl_instance,func) or str(func).startswith('_'):
                  return "404 Not Found", "Not Found"
         except Exception as err:
+            self._log(env,404,stime)
             return "404 Not Found", "Not Found"
         try:
             ret=eval('self.app.loader.ctrl(ctrl).'+func+'(**data)')
-            etime=time.time()
-            self._log(env,200,etime-stime)
+            self._log(env,200,stime)
             return '200 OK',ret
         except TypeError as e:
             self.app.logger.error('when call controller %s function %s error,%s'%(ctrl,func,str(e)))
+            self._log(env,500,stime)
             return '200 OK',{'message':str(e),'code':500}
         except Exception as e:
+            self._log(env,500,stime)
             self.app.logger.error('when call controller %s function %s error,%s'%(ctrl,func,str(e)))
             return  "500 Internal server error","Server Error,Please see log file"
 
