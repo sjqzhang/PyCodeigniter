@@ -117,7 +117,7 @@ class CI_Router(object):
         try:
             ret=eval('self.app.loader.ctrl(ctrl).'+func+'(**data)')
             etime=time.time()
-            self._log(env,etime-stime)
+            self._log(env,200,etime-stime)
             return '200 OK',ret
         except TypeError as e:
             self.app.logger.error('when call controller %s function %s error,%s'%(ctrl,func,str(e)))
