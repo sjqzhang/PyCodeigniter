@@ -76,13 +76,15 @@ class CI_Application(object):
                 self.config[conf]['app']=self
         exec('from CI_Logger import CI_Logger')
         self.logger= eval('CI_Logger(**self.config["log"])')
-        module_list=['CI_Loader','CI_Mail','CI_Router','CI_Input','CI_Cache']
+        module_list=['CI_Loader','CI_Mail','CI_Router','CI_Input','CI_Cache','CI_Cookie']
         for m in module_list:
             try:
                 exec('from '+ m +' import '+m)
             except Exception as err:
                 self.logger.error(err)
         self.input= eval('CI_Input(**self.config)')
+
+        self.cookie= eval('CI_Cookie(**self.config)')
         if 'db' in self.config.keys():
             exec('from CI_DB import CI_DB')
             exec('from CI_DBActiveRec import CI_DBActiveRec')
@@ -110,6 +112,10 @@ class CI_Application(object):
             exec('from CI_Zookeeper import CI_Zookeeper')
             self.zk= eval('CI_Zookeeper(**self.config)')
             module_list.append('CI_Zookeeper')
+        if 'session' in self.config.keys():
+            exec('from CI_Session import CI_Session')
+            self.session= eval('CI_Session(**self.config)')
+            module_list.append('CI_Session')
 
 
 

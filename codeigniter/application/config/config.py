@@ -87,6 +87,13 @@ zookeeper={
    'timeout':10
 }
 
+session = {
+    'type':'local',## redis|local
+    'expire':86400,
+    # 'host': "127.0.0.1:6379",
+    # 'passwd':""
+}
+
 config={
 
 'log':log,
@@ -95,6 +102,7 @@ config={
 'server':server,
 'cache':cache,
 'autoload':autoload,
+'session':session
 # 'cron':cron,
 # 'zookeeper':zookeeper
 

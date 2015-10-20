@@ -15,11 +15,6 @@ except Exception as e:
     pass
 
 
-
-
-
-
-
 class CI_Router(object):
     def __init__(self,**kwargs):
         self.app=kwargs['app']
@@ -101,6 +96,8 @@ class CI_Router(object):
         stime=time.time()
         data=self.app.input.parse(env)
         try:
+            self.app.cookie.parse_cookie(env)
+            self.app.session.pre_parse_uuid()
             if '__ctrl_name__' in data.keys():
                 ctrl=data['__ctrl_name__']
                 del data['__ctrl_name__']
@@ -130,6 +127,9 @@ class CI_Router(object):
             self._log(env,500,stime)
             self.app.logger.error('when call controller %s function %s error,%s'%(ctrl,func,str(e)))
             return  "500 Internal server error","Server Error,Please see log file"
+        finally:
+            self.app.session.release()
+            
 
 
     def webpy_route(self):

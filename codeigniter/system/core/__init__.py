@@ -14,3 +14,13 @@ else:
     # ctrls= os.listdir( os.path.dirname(__file__) )
     # for c in ctrls:
     #         __all__.append(os.path.basename(c).split('.')[0])
+
+
+import StringIO,traceback
+def PushTraceback():
+    fstring = StringIO.StringIO()
+    traceback.print_exc(file=fstring)
+    message = fstring.getvalue()
+    print message
+    return message
+
