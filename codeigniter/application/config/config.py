@@ -102,7 +102,7 @@ config={
 'server':server,
 'cache':cache,
 'autoload':autoload,
-'session':session
+#'session':session
 # 'cron':cron,
 # 'zookeeper':zookeeper
 
