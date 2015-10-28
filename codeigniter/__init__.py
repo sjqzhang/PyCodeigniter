@@ -132,4 +132,6 @@ __all__=['system','application']
 from system.core.CI_Application import CI
 from system.core.CI_Application import CI as ci
 from system.core.CI_Application import CI_Application
+from system.core.CI_Application import CI_Application as ci_application
 from system.core.CI_Cache import CI_Cache
+from system.core.CI_Cache import CI_Cache as ci_cache
