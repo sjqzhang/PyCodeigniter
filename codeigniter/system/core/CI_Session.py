@@ -54,11 +54,8 @@ class ResdisAdaptor(multiprocessing.Process):
 
     def exec_command(self,com,v):
         
-        print self.queue
         self.queue.put( (com,v) )
-        print "put",com,v
         v = self.queue.get()
-        print "get",v
         return v
                 
 
@@ -66,11 +63,8 @@ class ResdisAdaptor(multiprocessing.Process):
         
         while True:
             try:
-                print "start ququq"
-                print self.queue
                 rsp= None
                 va = self.queue.get()
-                print "set",com , v 
                 com , v = va
                 
                 if com == "set":
@@ -82,7 +76,6 @@ class ResdisAdaptor(multiprocessing.Process):
                 self.queue.put( rsp )
             except BaseException as e:
                 self.app.logger.error( "%s:%s" % ( PushTraceback(),e ) )
-                print PushTraceback(),e 
 
 
 class LocalAdaptor(object):

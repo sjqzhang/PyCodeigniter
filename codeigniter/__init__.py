@@ -129,4 +129,4 @@ __author__ = 'xiaozhang'
 
 __all__=['system','application']
 
-
+from system.core.CI_Application import CI 

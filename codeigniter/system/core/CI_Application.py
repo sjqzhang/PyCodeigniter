@@ -12,14 +12,16 @@ import imp
 
 import pdb
 
-CI={'app':None}
+class CI_CLASS(object):
 
-
-def get_application():
-    if 'app' in CI.keys():
-        return CI['app']
-    else:
+    def __getattr__(self,attr):
+        ci = CI_Application.application_instance
+        if hasattr(ci,attr):
+            return getattr(ci,attr)
         return None
+
+CI = CI_CLASS()
+
 
 class CI_Application(object):
     application_instance=None
@@ -40,18 +42,12 @@ class CI_Application(object):
         self.server=None
         self.zk=None
         self._app_create(application_path)
-        CI['app']=self
+        CI_Application.application_instance = self
         self.init()
 
 
 
 
-    @staticmethod
-    def get_application():
-        if 'app' in CI.keys():
-            return CI['app']
-        else:
-            return None
     def init(self):
         if self.config_file!=None:
             PY2 = sys.version_info[0] == 2
@@ -177,9 +173,6 @@ class CI_Application(object):
         self.logger.info(msg)
         print(msg)
         httpd.serve_forever()
-
-
-
 
 
 

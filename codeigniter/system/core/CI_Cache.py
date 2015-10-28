@@ -14,7 +14,7 @@ __author__ = 'xiaozhang'
 import re
 import time
 
-from CI_Application import CI_Application
+import CI_Application 
 
 try:
     import thread
@@ -95,7 +95,7 @@ class CI_Cache(object):
     def Cache(prefix='', ttl=3600,key='',op='select'):
         def handle_func(func):
             def handle_args(*args, **kwargs):
-                ci=CI_Application.get_application()
+                ci=CI_Application.CI
                 if ci!=None:
                     if  ci.cache.cache_instance==None:
                         ci.logger.error('cache not implment,you can implment it and setting it')

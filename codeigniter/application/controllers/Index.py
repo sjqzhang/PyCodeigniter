@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding:utf8 -*-
 __author__ = 'xiaozhang'
-
+from codeigniter import CI
 
 
 from codeigniter.system.core.CI_Cache import CI_Cache
