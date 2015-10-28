@@ -130,5 +130,6 @@ __author__ = 'xiaozhang'
 __all__=['system','application']
 
 from system.core.CI_Application import CI
+from system.core.CI_Application import CI as ci
 from system.core.CI_Application import CI_Application
 from system.core.CI_Cache import CI_Cache
