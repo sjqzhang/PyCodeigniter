@@ -94,6 +94,11 @@ session = {
     # 'passwd':""
 }
 
+template={
+    'path':"./view",
+    'engine':'jinja2' # or Tenjin
+}
+
 config={
 
 'log':log,
@@ -102,6 +107,7 @@ config={
 'server':server,
 'cache':cache,
 'autoload':autoload,
+'template':template
 #'session':session
 # 'cron':cron,
 # 'zookeeper':zookeeper

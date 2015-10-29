@@ -40,6 +40,7 @@ class CI_Application(object):
         self.cron=None
         self.mail=None
         self.server=None
+        self.tpl=None
         self.zk=None
         self._app_create(application_path)
         CI_Application.application_instance = self
@@ -116,6 +117,10 @@ class CI_Application(object):
             exec('from CI_Session import CI_Session')
             self.session= eval('CI_Session(**self.config)')
             module_list.append('CI_Session')
+        if 'template' in self.config.keys():
+            exec('from CI_Template import CI_Template')
+            self.tpl= eval('CI_Template(**self.config)')
+            module_list.append('CI_Template')
 
 
 
