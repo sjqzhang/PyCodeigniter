@@ -5,6 +5,9 @@ __author__ = 'xiaozhang'
 
 import re
 import types
+import collections
+
+
 
 from CI_DBActiveRec import CI_DBActiveRec
 
@@ -60,7 +63,7 @@ class CI_DB(object):
             title.append({idx:i[0]})
             idx=idx+1
         for row in rows:
-            row2={}
+            row2=collections.OrderedDict()
             for i in title:
                 for k in i.keys():
                     row2[i[k]]=row[k]
