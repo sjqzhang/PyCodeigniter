@@ -95,7 +95,7 @@ session = {
 }
 
 template={
-    'path':"./view",
+    'path':"./views",
     'engine':'jinja2' # or Tenjin
 }
 
