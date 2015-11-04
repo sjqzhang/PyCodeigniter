@@ -146,7 +146,7 @@ class CI_Application(object):
                 pass
                 # os.unlink(initfile)
 
-        floder_list=['controllers','models','helpers','library','config']
+        floder_list=['controllers','views','models','helpers','library','config']
         for folder in floder_list:
             folder_path=application_path+os.path.sep+folder
             if not os.path.isdir( folder_path):
@@ -162,13 +162,15 @@ class CI_Application(object):
     def request_hander(self, environ, start_response):
         html=''
         code,obj=self.router.wsgi_route(environ)
-        if not isinstance(obj,str):
+        if not isinstance(obj,str) and not isinstance(obj,unicode):
             html=json.dumps(obj)
-            start_response(str(code), [('Content-Type', 'application/json')])
+            start_response(str(code), [('Content-Type', 'application/json')] )
         else:
-            start_response(str(code), [('Content-Type', 'text/html')])
-            html=obj
-        return [str(html)]
+            start_response(str(code), [('Content-Type', 'text/html')] )
+            if isinstance(obj,unicode):
+                html=unicode.encode(obj,'utf-8')
+            else:
+                html=obj
 
 
     def start_server(self):
