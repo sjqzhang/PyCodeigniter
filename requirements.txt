@@ -2,3 +2,5 @@ pymysql
 DBUtils
 apscheduler
 gevent
+jinja2
+tenjin
