@@ -30,7 +30,7 @@ class CI_Input(object):
                         data[elem.name]=elem.file.read()
                     except Exception as e:
                         pass
-                elif elem.file==None or str(elem.type).lower().strip() in ['text/plain']:
+                elif elem.file==None or str(elem.type).lower().strip() in ['text/plain'] or (not 'filename' in elem.disposition_options):
                     data[elem.name]=elem.value
                 else:
                     data[elem.name]=elem
