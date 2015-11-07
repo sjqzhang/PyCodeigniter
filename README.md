@@ -117,8 +117,11 @@ def application(env, start_response):
         html=json.dumps(obj)
         start_response(str(code), [('Content-Type', 'application/json')])
     else:
-        start_response(str(code), [('Content-Type', 'text/html')])
-        html=obj
+        start_response(str(code), [('Content-Type', 'text/html')] )
+        if isinstance(obj,unicode):
+            html=unicode.encode(obj,'utf-8')
+        else:
+            html=obj
     return [str(html)]
 
 
