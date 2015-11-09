@@ -58,3 +58,9 @@ table.gridtable td {
 </body>
 </html>
 '''
+
+
+template='''
+{% for row in rows %}
+{% for colname  in row %}{{row[colname]}}       {% endfor %}{% endfor %}
+'''
