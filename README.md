@@ -139,6 +139,28 @@ if __name__ == "__main__":
 
 
 ##3. Q&A
++ how to user pycodeigniter in your application?
+
+```
+
+step 1: create instace
+
+from codeigniter.system.core.CI_Application import CI_Application
+
+app=CI_Application(application_path=r'./')
+
+
+
+
+step 2: import singleton ci 
+
+from codeigniter import ci
+
+
+```
+
+
+
 
 
 + how to config your application?
@@ -169,7 +191,7 @@ http://127.0.0.1:8005/Index/index
 + how to get controller class instance?
 
 ```
-app.loader.ctrl('classname')
+ci.loader.ctrl('classname')
 
 ```
 
@@ -177,7 +199,7 @@ app.loader.ctrl('classname')
 + how to get model class instance?
 
 ```
-app.loader.model('classname')
+ci.loader.model('classname')
 
 ```
 
@@ -187,15 +209,15 @@ app.loader.model('classname')
 ```
 #you can use active record.
 
-app.db.ar().select('*').table('test').limit(10).get()
+ci.db.ar().select('*').table('test').limit(10).get()
 
-app.db.query('select * from test')
+ci.db.query('select * from test')
 
-app.db.insert('test',{'name':'test'})
+ci.db.insert('test',{'name':'test'})
 
-app.db.delete('test',{'id':'5'})
+ci.db.delete('test',{'id':'5'})
 
-app.db.update('test',{'name':'test'},{'id':'5'})
+ci.db.update('test',{'name':'test'},{'id':'5'})
 
 
 ```
@@ -203,11 +225,11 @@ app.db.update('test',{'name':'test'},{'id':'5'})
 + how to write log in your application ?
 
 ```
-app.logger.info('message')
+ci.logger.info('message')
 
-app.logger.warn('message')
+ci.logger.warn('message')
 
-app.logger.error('message')
+ci.logger.error('message')
 
 ```
 
@@ -216,7 +238,7 @@ app.logger.error('message')
 ```
 
 #send mail with attachment
-app.mail.send('to','subject','message',['/tmp/sendfile'])
+ci.mail.send('to','subject','message',['/tmp/sendfile'])
 
 
 
@@ -226,9 +248,9 @@ app.mail.send('to','subject','message',['/tmp/sendfile'])
 + how to set timer?
 
 ```
-app.cron.add_cron('*/1 * * * * *','class.method')
+ci.cron.add_cron('*/1 * * * * *','class.method')
 for exmaple
-app.cron.add_cron('*/1 * * * * *','Index.acc')
+ci.cron.add_cron('*/1 * * * * *','Index.acc')
 
 ```
 
@@ -247,5 +269,29 @@ app.cron.add_cron('*/1 * * * * *','Index.acc')
     def abc(self,id="0"):
         return "test cache"
 
+
+```
+
+
++ how to cache result in redis or other cache container?
+
+```
+
+
+## cache must be impliment function "put" "get" "delete"
+## function prototype as bellow
+
+class B(object):
+    def __init__(self):
+        self._cache=redis.StrictRedis('172.16.3.92')
+
+    def put(self,key,value,ttl=3600):
+        self._cache.setex(key,ttl,value)
+
+    def get(self,key,ttl):
+        self._cache.get(key)
+
+#how to use
+ci.cache.set_cache(B())
 
 ```
