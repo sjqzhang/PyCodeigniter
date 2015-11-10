@@ -85,6 +85,8 @@ class CI_DB(object):
     def query(self,sql,param=tuple(),conn=None):
         auto_close=True
         # print(type(conn))
+        if param==None:
+            param=tuple()
         if isinstance(param,dict) and len(param)>0:
             sql,param=self.format(sql,param)
             # print(param)
