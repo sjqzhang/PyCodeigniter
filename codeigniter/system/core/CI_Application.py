@@ -174,6 +174,8 @@ class CI_Application(object):
                 html=obj
         return [str(html)]
 
+    def get_logger(self,name):
+        return self.getLogger(name)
 
     def getLogger(self,name):
         if name in self.loggers:
