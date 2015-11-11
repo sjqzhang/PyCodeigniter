@@ -42,6 +42,7 @@ class CI_Application(object):
         self.server=None
         self.tpl=None
         self.zk=None
+        self.loggers={}
         self._app_create(application_path)
         CI_Application.application_instance = self
         self.init()
@@ -172,6 +173,24 @@ class CI_Application(object):
             else:
                 html=obj
         return [str(html)]
+
+
+    def getLogger(self,name):
+        if name in self.loggers:
+            return self.loggers[name]
+        if name in self.config:
+            cfg=self.config[name]
+            cfg['name']=name
+            exec('from CI_Logger import CI_Logger')
+            # logger=self.loader.cls('CI_Logger')(**cfg)
+            logger= eval('CI_Logger(**cfg)')
+            self.loggers[name]=logger
+            return logger
+        else:
+            self.logger.warn('config for %s not found'%(name) )
+
+
+
 
 
     def start_server(self):

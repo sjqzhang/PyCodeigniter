@@ -25,14 +25,22 @@ class CI_Logger(object):
             self.back_count=kwargs['back_count']
         else:
             self.back_count=10
+
+        if 'name' in kwargs.keys():
+            self.name=kwargs['name']
+        else:
+            self.name=None
         # self.log_formatter='%(asctime)s %(levelname)s %(module)s.%(funcName)s Line:%(lineno)d %(message)s'
         self.log_formatter='%(asctime)s %(levelname)s %(message)s'
-        self.init()
+        self.init(self.name)
         self.loggers={}
         self.log_pattern=re.compile(r'(\w+\.py)",\s*line\s*(\d+)\,\s*in\s\<?(\w+)\>?',re.IGNORECASE)
 
-    def init(self):
-        self.logger=logging.getLogger()
+    def init(self,name):
+        if name!=None:
+            self.logger=logging.getLogger(name)
+        else:
+            self.logger=logging.getLogger()
         self.set_handlers(self.log_file_path)
 
     def _init(self,name):
@@ -50,6 +58,9 @@ class CI_Logger(object):
                 return self._init(info[0][0])
            else:
                return self.logger
+
+
+
 
 
 
