@@ -23,7 +23,8 @@ class CI_Mail(object):
     def send(self,to,subject,content,attachs=[]):
         msg=MIMEMultipart('related')
         if isinstance(to,basestring):
-            to=[to]
+            to=to.replace(',',';')
+            to=to.split(";")
         if isinstance(attachs,basestring):
             attachs=[attachs]
         me=self.user+"<"+self.user+"@"+self.postfix+">"
