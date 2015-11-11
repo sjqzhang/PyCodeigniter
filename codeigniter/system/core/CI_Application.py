@@ -171,6 +171,7 @@ class CI_Application(object):
                 html=unicode.encode(obj,'utf-8')
             else:
                 html=obj
+        return [str(html)]
 
 
     def start_server(self):
