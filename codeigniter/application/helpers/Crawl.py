@@ -10,7 +10,11 @@ import re
 from  urlparse import urlparse
 
 
+table=u'''
 
+
+
+'''
 
 
 class Crawl(object):
@@ -69,36 +73,59 @@ class Crawl(object):
         import pyquery
         return pyquery.PyQuery(obj)
 
+    def table(self,obj):
+        import collections
+        rows=[]
+        table=self.pq(obj)
+        for tr in pyquery.PyQuery('tr',table):
+            row=collections.OrderedDict()
+            ri=0
+            for td in pyquery.PyQuery('td',tr):
+                row[ri]=pyquery.PyQuery(td).text()
+                ri=ri+1
+            if len(row)>0:
+                rows.append(row)
+        return rows
+
+
 
 if __name__=='__main__':
     pass
     import pyquery
     crawl=Crawl();
+    rows= crawl.table(table)
+
+    # for row in rows:
+    #     print row.get(3)
+
+
+
+
 
 
     # href=crawl.url_query('http://quote.eastmoney.com/stocklist.html','.quotebody').html()
     # print(href)
-    href=crawl.url_query('http://quote.eastmoney.com/stocklist.html','.quotebody li a')
-    d={}
-    sql='''INSERT INTO stock.stock_code
-	(stockno,
-	NAME
-	)
-	VALUES
-	('%s',
-	'%s'
-	);
-  '''
-    for url in href:
-        text=crawl.pq(url).text()
-        code=re.findall(r'\d{6}', crawl.pq(url).text())
-        name=text.replace('('+code[0]+')','')
-        # print(name)
-        # print(code[0])
-        # d[code[0][0:3]]='abc'
-        print(sql % (code[0],name))
-
-    print(d.keys())
+  #   href=crawl.url_query('http://quote.eastmoney.com/stocklist.html','.quotebody li a')
+  #   d={}
+  #   sql='''INSERT INTO stock.stock_code
+	# (stockno,
+	# NAME
+	# )
+	# VALUES
+	# ('%s',
+	# '%s'
+	# );
+  # '''
+  #   for url in href:
+  #       text=crawl.pq(url).text()
+  #       code=re.findall(r'\d{6}', crawl.pq(url).text())
+  #       name=text.replace('('+code[0]+')','')
+  #       # print(name)
+  #       # print(code[0])
+  #       # d[code[0][0:3]]='abc'
+  #       print(sql % (code[0],name))
+  #
+  #   print(d.keys())
     # aa=""
     #
     # url_info='http://www.baidu.com'
