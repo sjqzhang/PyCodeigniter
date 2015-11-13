@@ -36,7 +36,7 @@ class CI_Cron(object):
         }
         job_defaults = {
             'coalesce': False,
-            'max_instances': 3
+            'max_instances': 60
         }
         scheduler = BackgroundScheduler(executors=executors, job_defaults=job_defaults)
         self.scheduler= scheduler
