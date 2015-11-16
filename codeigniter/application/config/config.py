@@ -80,7 +80,7 @@ cron={
 }
 
 zookeeper={
-    'url':'',
+    'url':'127.0.0.1:2181',
     'path':'/tmp',
     'user':'',
    'password':'',
