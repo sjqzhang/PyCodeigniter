@@ -297,7 +297,7 @@ ci.cache.set_cache(B())
 ```
 
 
-## how to use zookeeper ?
+## how to use zookeeper (is_leader) ?
 
 ```
 while True:
@@ -306,3 +306,11 @@ while True:
     else:
         pass
 ```
+
+
+## how to get zookeeper instance (kazoo) ?
+```
+ zk=ci.zk.get_zk()
+ 
+```
+
