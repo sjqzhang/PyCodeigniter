@@ -295,3 +295,14 @@ class B(object):
 ci.cache.set_cache(B())
 
 ```
+
+
+## how to use zookeeper ?
+
+```
+while True:
+    if ci.zk.is_leader():
+        pass
+    else:
+        pass
+```
