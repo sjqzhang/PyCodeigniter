@@ -52,6 +52,14 @@ cache={
 }
 
 
+redis={
+'host':'127.0.0.1',
+'port':6379,
+'db':0,
+'password':None,
+}
+
+
 autoload={
     'controllers':{
         "Index":"Index",
@@ -110,7 +118,8 @@ config={
 # 'template':template
 #'session':session
 # 'cron':cron,
-# 'zookeeper':zookeeper
+# 'zookeeper':zookeeper,
+#'redis':redis
 
 }
 

@@ -43,12 +43,17 @@ class CI_Application(object):
         self.tpl=None
         self.zk=None
         self.loggers={}
+        self.instances={}
         self._app_create(application_path)
         CI_Application.application_instance = self
         self.init()
 
 
-
+    def get(self,key):
+        if key in self.instances.keys():
+            return self.instances[key]
+    def set(self,key,value):
+        self.instances[key]=value
 
     def init(self):
         if self.config_file!=None:
