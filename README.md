@@ -308,9 +308,3 @@ while True:
 ```
 
 
-## how to get zookeeper instance (kazoo) ?
-```
- zk=ci.zk.get_zk()
- 
-```
-
