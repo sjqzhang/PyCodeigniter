@@ -340,7 +340,7 @@ class CI_Loader(object):
                     init=getattr(module,module_name)
                     _instance=init()
 
-                for p in ['app','db','logger','loader','config','cache','mail','zk']:
+                for p in ['app','db','logger','loader','config','cache','mail','zk','redis']:
                     if p=='app':
                         setattr(_instance, 'app', self.app)
                     elif not hasattr(_instance,p):

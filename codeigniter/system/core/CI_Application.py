@@ -42,6 +42,7 @@ class CI_Application(object):
         self.server=None
         self.tpl=None
         self.zk=None
+        self.redis=None
         self.loggers={}
         self.instances={}
         self._app_create(application_path)
@@ -110,7 +111,6 @@ class CI_Application(object):
             exec('from CI_Server import CI_Server')
             self.server= eval('CI_Server(**self.config)')
             module_list.append('CI_Server')
-        self.loader= eval('CI_Loader(**self.config)')
         if 'cron' in self.config.keys():
             exec('from CI_Cron import CI_Cron')
             self.cron= eval('CI_Cron(**self.config)')
@@ -127,6 +127,14 @@ class CI_Application(object):
             exec('from CI_Template import CI_Template')
             self.tpl= eval('CI_Template(**self.config)')
             module_list.append('CI_Template')
+        if 'redis' in self.config.keys():
+            exec('from CI_Redis import CI_Redis')
+            self.redis= eval('CI_Redis(**self.config)')
+            module_list.append('CI_Redis')
+
+        #must be instance last
+        self.loader= eval('CI_Loader(**self.config)')
+
 
 
 
