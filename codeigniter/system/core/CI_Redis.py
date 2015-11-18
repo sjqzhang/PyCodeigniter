@@ -14,8 +14,9 @@ class CI_Redis(object):
         self.init()
 
     def init(self):
-        conf=self.app.merge_conf(self.redis_conf,{'db':0,'password':None,'port':6379})
-        self.redis=redis.Redis(**conf)
+        conf=self.app.merge_conf(self.redis_conf,{'db':0,'password':None,'port':6379,'cls':'StrictRedis'})
+        cls= conf.pop('cls')
+        self.redis=getattr(redis,cls)(**conf)
 
     def __getattr__(self, item):
         if hasattr(self.redis,item):
