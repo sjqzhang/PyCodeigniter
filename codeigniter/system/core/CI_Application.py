@@ -171,6 +171,13 @@ class CI_Application(object):
                     if not os.path.isfile(target_file):
                         open(target_file,"wb").write(open(os.path.join(cur_path,file),"rb").read())
 
+    def merge_conf(self,input_config={},default_config={}):
+        for key,value in default_config.iteritems():
+            if not key in input_config.keys():
+                input_config[key]=value
+        if 'app' in input_config and isinstance(input_config['app'],CI_Application):
+            del input_config['app']
+        return input_config
 
 
     def request_hander(self, environ, start_response):
