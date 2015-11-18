@@ -57,6 +57,7 @@ redis={
 'port':6379,
 'db':0,
 'password':None,
+'cls':'StrictRedis' # StrictRedis or Redis
 }
 
 
