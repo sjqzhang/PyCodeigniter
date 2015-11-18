@@ -5,6 +5,9 @@ sys=`grep -Eio "(centos|ubuntu)" /etc/issue`
 
 sys=$(echo $sys|tr '[A-Z]' '[a-z]')
 
+URL=http://git.oschina.net/sjqzhang/pylib/raw/master
+#URL=https://github.com/sjqzhang/pylib/raw/master/
+
 
 
 install_centos(){
@@ -53,11 +56,11 @@ is_install pip
 
 if [ $? -eq 0 ];then
 
-wget --no-check-certificate  https://github.com/sjqzhang/pylib/raw/master/setuptools-0.6c11.tar.gz -O /tmp/setuptools-0.6c11.tar.gz
+wget --no-check-certificate  $URL/setuptools-0.6c11.tar.gz -O /tmp/setuptools-0.6c11.tar.gz
 
 tar xzvf /tmp/setuptools-0.6c11.tar.gz
 
-wget --no-check-certificate  https://github.com/sjqzhang/pylib/raw/master/pip-6.1.1.tar.gz  -O /tmp/pip-6.1.1.tar.gz
+wget --no-check-certificate  $URL/pip-6.1.1.tar.gz  -O /tmp/pip-6.1.1.tar.gz
 
 tar xzvf /tmp/pip-6.1.1.tar.gz
 
