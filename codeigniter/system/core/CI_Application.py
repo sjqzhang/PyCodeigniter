@@ -11,6 +11,17 @@ import urllib
 import urllib2
 
 
+is_gevent=False
+
+try:
+    from gevent import monkey; monkey.patch_all()
+    from gevent.pywsgi import WSGIServer
+    is_gevent=True
+except Exception as er:
+    pass
+
+
+
 import pdb
 
 class CI_CLASS(object):
@@ -255,12 +266,19 @@ class CI_Application(object):
             return html
 
     def start_server(self):
-        from wsgiref.simple_server import make_server
-        httpd=make_server(self.config['server']['host'],self.config['server']['port'],self.request_hander)
         msg="server listen to : "+str(self.config['server']['port'])
-        self.logger.info(msg)
         print(msg)
-        httpd.serve_forever()
+        self.logger.info(msg)
+        if is_gevent:
+            port=self.config['server']['port']
+            host=self.config['server']['host']
+            WSGIServer((host, port), self.request_hander).serve_forever()
+        else:
+            from wsgiref.simple_server import make_server
+            httpd=make_server(self.config['server']['host'],self.config['server']['port'],self.request_hander)
+            httpd.serve_forever()
+
+
 
 
 
