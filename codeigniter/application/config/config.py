@@ -26,6 +26,16 @@ log={
 }
 
 
+log2={
+
+    'file':r'./log2.log',
+    'level':logging.INFO,
+    'file_size':1024*1024*100,
+    'back_count':10
+
+}
+
+
 mail={
     'host':'smtp.163.com',
     'user':'abc',
@@ -46,9 +56,9 @@ server={
 
 
 cache={
-    'type':'memory',
+    'type':'memory', # memory or redis or memcache
     'cache_instance':'',
-    'max_count':100
+    'max_count':100  # just for memory
 }
 
 
@@ -61,6 +71,12 @@ redis={
 }
 
 
+memcache={
+     'servers':['127.0.0.1:11211'],
+}
+
+
+# autho load config
 autoload={
     'controllers':{
         "Index":"Index",
@@ -120,7 +136,8 @@ config={
 #'session':session
 # 'cron':cron,
 # 'zookeeper':zookeeper,
-#'redis':redis
+#'redis':redis,
+# 'memcache':memcache
 
 }
 

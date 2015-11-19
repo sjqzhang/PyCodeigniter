@@ -31,7 +31,8 @@ class CI_Memory_Cache(object):
             thread.start_new_thread(self.check,())
         except Exception as e:
             self.app.logger.error(e)
-
+    def set(self,key,value,ttl=3600):
+        self.put(key,value,ttl)
 
     def put(self,key,value,ttl=3600):
         self.cache_dict[key]={'t':int(time.time())+ttl,'v':value}
@@ -71,6 +72,11 @@ class CI_Cache(object):
         self.cache_instance=cache
 
 
+    def __getattr__(self, item):
+        if hasattr(self.cache_instance,item):
+            return getattr(self.cache_instance,item)
+
+
     @staticmethod
     def get_cache_key(prefix,tpl,func,*args):
         key=prefix+'$'+func.__name__
@@ -107,7 +113,7 @@ class CI_Cache(object):
                             obj=ci.cache.cache_instance.get(ckey,ttl)
                             if obj==None:
                                 result=func(*args, **kwargs)
-                                ci.cache.cache_instance.put(ckey,result,ttl)
+                                ci.cache.cache_instance.set(ckey,result,ttl)
                                 return result
                             else:
                                 return obj

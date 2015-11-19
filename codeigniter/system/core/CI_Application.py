@@ -7,7 +7,8 @@ import sys
 import os
 import json
 import imp
-
+import urllib
+import urllib2
 
 
 import pdb
@@ -45,9 +46,21 @@ class CI_Application(object):
         self.redis=None
         self.loggers={}
         self.instances={}
+        self.memcache=None
         self._app_create(application_path)
         CI_Application.application_instance = self
         self.init()
+
+
+    # def __setitem__(self, key, value):
+    #     if not key in ['loader','tpl','instances','db','config','mail','zk','redis','memcache',
+    #                 'cron','server','cache','logger','loggers']:
+    #         self[key]=value
+    #
+    #
+    # def __getattr__(self, item):
+    #     if hasattr(self,item):
+    #         return getattr(self,item)
 
 
     def get(self,key):
@@ -81,6 +94,8 @@ class CI_Application(object):
         exec('from CI_Logger import CI_Logger')
         self.logger= eval('CI_Logger(**self.config["log"])')
         module_list=['CI_Loader','CI_Mail','CI_Router','CI_Input','CI_Cache']
+
+        cache_type='memory'
         for m in module_list:
             try:
                 exec('from '+ m +' import '+m)
@@ -107,6 +122,8 @@ class CI_Application(object):
             module_list.append('CI_Mail')
         if 'cache' in self.config.keys():
             self.cache= eval('CI_Cache(**self.config)')
+            if 'type' in self.config['cache']:
+                cache_type=self.config['cache']['type']
         if 'server' in self.config.keys() and 'fastpy' in self.config['server'] and  self.config['server']['fastpy'] :
             exec('from CI_Server import CI_Server')
             self.server= eval('CI_Server(**self.config)')
@@ -131,6 +148,15 @@ class CI_Application(object):
             exec('from CI_Redis import CI_Redis')
             self.redis= eval('CI_Redis(**self.config)')
             module_list.append('CI_Redis')
+            if cache_type=='redis':
+                self.cache.set_cache(self.redis)
+        if 'memcache' in self.config.keys():
+            exec('from CI_Memcache import CI_Memcache')
+            self.memcache= eval('CI_Memcache(**self.config)')
+            module_list.append('CI_Memcache')
+            if cache_type=='memcache':
+                self.cache.set_cache(self.memcache)
+
 
         #must be instance last
         self.loader= eval('CI_Loader(**self.config)')
@@ -211,9 +237,22 @@ class CI_Application(object):
         else:
             self.logger.warn('config for %s not found'%(name) )
 
-
-
-
+    def request( self, url,data=None,headers={}):
+            html='';
+            if not 'User-Agent' in headers.keys():
+                headers['User-Agent']='Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US; rv:1.9.1.6) Gecko/20091201 Firefox/3.5.6'
+            try:
+                if data!=None and len(data)>0:
+                    data=urllib.urlencode(data)
+                req = urllib2.Request(
+                    url =url,
+                    headers = headers,
+                    data=data
+                )
+                html=urllib2.urlopen(req,timeout=15).read()
+            except Exception as er:
+                self.logger.error(er)
+            return html
 
     def start_server(self):
         from wsgiref.simple_server import make_server
