@@ -102,7 +102,6 @@ class CI_Router(object):
             if '__ctrl_name__' in data.keys():
                 ctrl=data['__ctrl_name__']
                 del data['__ctrl_name__']
-
             if '__func_name__' in data.keys():
                 func=data['__func_name__']
                 del data['__func_name__']

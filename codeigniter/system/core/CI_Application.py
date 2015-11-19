@@ -58,6 +58,8 @@ class CI_Application(object):
         self.loggers={}
         self.instances={}
         self.memcache=None
+        self.session=None
+        self.cookie=None
         self._app_create(application_path)
         CI_Application.application_instance = self
         self.init()
@@ -219,12 +221,17 @@ class CI_Application(object):
 
     def request_hander(self, environ, start_response):
         html=''
+        cookie=[]
+
+
         code,obj=self.router.wsgi_route(environ)
+        if 'session' in self.config.keys():
+            cookie = self.cookie.result_cookie()
         if not isinstance(obj,str) and not isinstance(obj,unicode):
             html=json.dumps(obj)
-            start_response(str(code), [('Content-Type', 'application/json')] )
+            start_response(str(code), [('Content-Type', 'application/json')] +cookie )
         else:
-            start_response(str(code), [('Content-Type', 'text/html')] )
+            start_response(str(code), [('Content-Type', 'text/html')] +cookie )
             if isinstance(obj,unicode):
                 html=unicode.encode(obj,'utf-8')
             else:
