@@ -110,7 +110,7 @@ class CI_Cache(object):
                         # op dispatch
                         ckey=CI_Cache.get_cache_key(prefix,key,func,*args)
                         if op=='select':
-                            obj=ci.cache.cache_instance.get(ckey,ttl)
+                            obj=ci.cache.cache_instance.get(ckey)
                             if obj==None:
                                 result=func(*args, **kwargs)
                                 ci.cache.cache_instance.set(ckey,result,ttl)
@@ -121,7 +121,7 @@ class CI_Cache(object):
                             ci.cache.cache_instance.delete(ckey)
                         elif op=='insert' or op=='update':
                             result=func(*args, **kwargs)
-                            ci.cache.cache_instance.put(ckey,result,ttl)
+                            ci.cache.cache_instance.set(ckey,result,ttl)
                             return result
                 else:
                     return func(*args, **kwargs)
