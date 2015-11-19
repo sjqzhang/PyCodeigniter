@@ -27,7 +27,7 @@ python setup.py install
 ##2. How to use?
 
 
-####2.1 simple example (integrate with fastpy http server)
+####2.1 simple example 
 
 
 ```python
@@ -40,7 +40,7 @@ from codeigniter.system.core.CI_Application import CI_Application
 def main():
     app=CI_Application(r'./')
 
-    app.server.start()
+    app.start_server
 
 if __name__ == '__main__':
     main()
