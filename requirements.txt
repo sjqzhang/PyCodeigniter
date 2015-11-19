@@ -6,3 +6,4 @@ jinja2
 tenjin
 redis
 kazoo
+memcache_wrapper
