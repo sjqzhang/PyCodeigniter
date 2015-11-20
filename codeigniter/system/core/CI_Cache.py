@@ -13,6 +13,7 @@ __author__ = 'xiaozhang'
 
 import re
 import time
+import json
 
 import CI_Application 
 
@@ -59,7 +60,7 @@ class CI_Memory_Cache(object):
 
 
 class CI_Cache(object):
-    REGEX_KEY=re.compile(r'\#p\[(\d+)\]([^,}]+)?',re.IGNORECASE)
+    REGEX_KEY=re.compile(r'\#p\[(\w+)\]([^,}]+)?',re.IGNORECASE)
     def __init__(self,**kwargs):
         # globals()['ci']=kwargs['app']
         self.cache_conf=kwargs['cache']
@@ -77,23 +78,26 @@ class CI_Cache(object):
             return getattr(self.cache_instance,item)
 
 
+
+
+
     @staticmethod
-    def get_cache_key(prefix,tpl,func,*args):
-        key=prefix+'$'+func.__name__
+    def get_cache_key(prefix,tpl,func,*args,**kwargs):
+        key=prefix+'$'+func.__name__+'$'
         # match= re.findall(r'\#p\[(\d+)\]([^,}]+)?',tpl)
         match=CI_Cache.REGEX_KEY.findall(tpl)
         # match=[]
         # return key
         if len(match)<=len(args):
             for m in match:
-                if int(m[0])<len(args):
-                    if isinstance(args[int(m[0])],dict):
+                if m[0] in kwargs.keys():
+                    if isinstance(kwargs[(m[0])],dict):
                         if m[1]!='':
-                            key=key+str(args[int(m[0])][m[1][1:]])+'$'
+                            key=key+str(kwargs[(m[0])][m[1][1:]])+'$'
                         else:
-                            key=key+str(args[int(m[0])])+'$'
+                            key=key+str(kwargs[(m[0])])+'$'
                     else:
-                        key=key+ str(args[int(m[0])])+'$'
+                        key=key+ str(kwargs[(m[0])])+'$'
                 else:
                     continue
         return key
@@ -101,6 +105,7 @@ class CI_Cache(object):
     def Cache(prefix='', ttl=3600,key='',op='select'):
         def handle_func(func):
             def handle_args(*args, **kwargs):
+                # print args,kwargs
                 ci=CI_Application.CI
                 if ci!=None:
                     if  ci.cache.cache_instance==None:
@@ -108,25 +113,44 @@ class CI_Cache(object):
                         return func(*args, **kwargs)
                     else:
                         # op dispatch
-                        ckey=CI_Cache.get_cache_key(prefix,key,func,*args)
+                        ckey=CI_Cache.get_cache_key(prefix,key,func,*args,**kwargs)
                         if op=='select':
                             obj=ci.cache.cache_instance.get(ckey)
                             if obj==None:
                                 result=func(*args, **kwargs)
-                                ci.cache.cache_instance.set(ckey,result,ttl)
+                                cacheresult=CI_Cache.serial(result)
+                                ci.cache.cache_instance.set(ckey,cacheresult,ttl)
                                 return result
                             else:
+                                obj= CI_Cache.unserial(obj)
                                 return obj
                         elif op=='del' or op=='delete' or op=='remove':
                             ci.cache.cache_instance.delete(ckey)
                         elif op=='insert' or op=='update':
                             result=func(*args, **kwargs)
-                            ci.cache.cache_instance.set(ckey,result,ttl)
+                            cacheresult=CI_Cache.serial(result)
+                            ci.cache.cache_instance.set(ckey,cacheresult,ttl)
                             return result
                 else:
                     return func(*args, **kwargs)
             return handle_args
         return handle_func
+
+    @staticmethod
+    def serial(obj):
+        cacheresult=obj
+        if isinstance(obj,dict) or isinstance(obj,list) or isinstance(obj,tuple):
+            cacheresult='___obj___:'+json.dumps(obj)
+        else:
+            cacheresult=obj
+        return cacheresult
+
+    @staticmethod
+    def unserial(obj):
+        if str(obj).startswith('___obj___:'):
+            obj=str(obj)[len('___obj___:'):]
+        obj=json.loads(obj)
+        return obj
 
 
 
