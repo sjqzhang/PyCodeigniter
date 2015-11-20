@@ -266,7 +266,7 @@ ci.cron.add_cron('*/1 * * * * *','Index.acc')
     prefix:group
     key:key
 
-    @CI_Cache.Cache(prefix='abc',ttl=3,key='#p[0]')
+    @CI_Cache.Cache(prefix='abc',ttl=3,key='#p[id]')
     def abc(self,id="0"):
         return "test cache"
 
