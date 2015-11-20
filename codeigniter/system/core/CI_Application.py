@@ -141,10 +141,7 @@ class CI_Application(object):
             exec('from CI_Server import CI_Server')
             self.server= eval('CI_Server(**self.config)')
             module_list.append('CI_Server')
-        if 'cron' in self.config.keys():
-            exec('from CI_Cron import CI_Cron')
-            self.cron= eval('CI_Cron(**self.config)')
-            module_list.append('CI_Cron')
+
         if 'zookeeper' in self.config.keys():
             exec('from CI_Zookeeper import CI_Zookeeper')
             self.zk= eval('CI_Zookeeper(**self.config)')
@@ -173,6 +170,13 @@ class CI_Application(object):
 
         #must be instance last
         self.loader= eval('CI_Loader(**self.config)')
+
+        # cron use loader ,so must be loader behind
+        # cron use loader ,so must be loader behind
+        if 'cron' in self.config.keys():
+            exec('from CI_Cron import CI_Cron')
+            self.cron= eval('CI_Cron(**self.config)')
+            module_list.append('CI_Cron')
 
 
 
