@@ -37,7 +37,7 @@ class CI_Memory_Cache(object):
 
     def put(self,key,value,ttl=3600):
         self.cache_dict[key]={'t':int(time.time())+ttl,'v':value}
-    def get(self,key,ttl):
+    def get(self,key):
         if key in self.cache_dict.keys():
             obj=self.cache_dict[key]
             if int(time.time())- obj['t']>0:
