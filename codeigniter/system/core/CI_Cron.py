@@ -40,8 +40,7 @@ class CI_Cron(object):
         }
         scheduler = BackgroundScheduler(executors=executors, job_defaults=job_defaults)
         self.scheduler= scheduler
-        self.init()
-        self.scheduler.start()
+
 
     def init(self):
         for cron in self.config['jobs']:
@@ -49,6 +48,7 @@ class CI_Cron(object):
                 self.add_cron(cron= cron['cron'],command=cron['command'],callback=cron['callback'])
             else:
                 self.add_cron(cron= cron['cron'],command=cron['command'])
+        self.scheduler.start()
 
     def execute(self,command='',callback=None):
         try:

@@ -166,17 +166,17 @@ class CI_Application(object):
             module_list.append('CI_Memcache')
             if cache_type=='memcache':
                 self.cache.set_cache(self.memcache)
-
-
-        #must be instance last
-        self.loader= eval('CI_Loader(**self.config)')
-
-        # cron use loader ,so must be loader behind
-        # cron use loader ,so must be loader behind
         if 'cron' in self.config.keys():
             exec('from CI_Cron import CI_Cron')
             self.cron= eval('CI_Cron(**self.config)')
             module_list.append('CI_Cron')
+
+        #must be instance last
+        self.loader= eval('CI_Loader(**self.config)')
+
+        if 'cron' in self.config.keys():
+            self.cron.init()
+
 
 
 
