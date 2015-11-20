@@ -138,6 +138,8 @@ class CI_Cache(object):
 
     @staticmethod
     def serial(obj):
+        if CI_Application.CI.config['cache']['type']=='memory':
+            return obj
         cacheresult=obj
         if isinstance(obj,dict) or isinstance(obj,list) or isinstance(obj,tuple):
             cacheresult='___obj___:'+json.dumps(obj)
@@ -147,6 +149,8 @@ class CI_Cache(object):
 
     @staticmethod
     def unserial(obj):
+        if CI_Application.CI.config['cache']['type']=='memory':
+            return obj
         if str(obj).startswith('___obj___:'):
             obj=str(obj)[len('___obj___:'):]
         obj=json.loads(obj)
