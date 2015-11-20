@@ -17,8 +17,8 @@ class CI_Redis(object):
     def init(self):
         conf=self.app.merge_conf(self.redis_conf,{'db':0,'password':None,'port':6379,'cls':'StrictRedis','max_connections':10})
         cls= conf.pop('cls')
-        max_connections=conf.pop('max_connections')
-        self.pool=redis.ConnectionPool(host=conf['host'],port=conf['port'],max_connections=max_connections)
+        # max_connections=conf.pop('max_connections')
+        self.pool=redis.ConnectionPool(**conf)
         self.redis=getattr(redis,cls)(connection_pool=self.pool)
         # self.redis=getattr(redis,cls)(**conf)
 
