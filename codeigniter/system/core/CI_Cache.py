@@ -142,7 +142,7 @@ class CI_Cache(object):
         if isinstance(obj,dict) or isinstance(obj,list) or isinstance(obj,tuple):
             cacheresult='___obj___:'+json.dumps(obj)
         else:
-            cacheresult=obj
+            cacheresult=json.dumps(obj)
         return cacheresult
 
     @staticmethod

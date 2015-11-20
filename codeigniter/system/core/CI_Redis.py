@@ -11,12 +11,16 @@ class CI_Redis(object):
         self.redis_conf=kwargs['redis']
         self.app=kwargs['app']
         self.redis=None
+        self.pool=None
         self.init()
 
     def init(self):
-        conf=self.app.merge_conf(self.redis_conf,{'db':0,'password':None,'port':6379,'cls':'StrictRedis'})
+        conf=self.app.merge_conf(self.redis_conf,{'db':0,'password':None,'port':6379,'cls':'StrictRedis','max_connections':10})
         cls= conf.pop('cls')
-        self.redis=getattr(redis,cls)(**conf)
+        max_connections=conf.pop('max_connections')
+        self.pool=redis.ConnectionPool(host=conf['host'],port=conf['port'],max_connections=max_connections)
+        self.redis=getattr(redis,cls)(connection_pool=self.pool)
+        # self.redis=getattr(redis,cls)(**conf)
 
     def __getattr__(self, item):
         if hasattr(self.redis,item):
