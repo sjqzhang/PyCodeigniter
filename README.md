@@ -1,4 +1,13 @@
 
+# Feature
+
+1. Automatically generated  project structure
+
+2. integrated logger mysql redis  memcache zookeeper email cron gevent  ...
+
+3. everything is ready for you.(^_^)
+
+
 ##1.Install
 
 ###1.1 dependency
