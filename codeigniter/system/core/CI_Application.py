@@ -276,6 +276,15 @@ class CI_Application(object):
                 self.logger.error(er)
             return html
 
+    def request_query(self,url,data=None,selector=''):
+        import pyquery
+        html=self.request(url,data)
+        return pyquery.PyQuery(selector,html)
+
+    def pq(self,obj):
+        import pyquery
+        return pyquery.PyQuery(obj)
+
     def start_server(self):
         msg="server listen to : "+str(self.config['server']['port'])
         print(msg)
