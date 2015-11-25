@@ -259,6 +259,12 @@ class CI_Application(object):
         else:
             self.logger.warn('config for %s not found'%(name) )
 
+
+    def md5(self,s):
+        import hashlib
+        m=hashlib.md5()
+        m.update(s)
+        return m.hexdigest()
     def request( self, url,data=None,headers={}):
             html='';
             if not 'User-Agent' in headers.keys():
