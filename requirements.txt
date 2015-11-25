@@ -7,3 +7,4 @@ tenjin
 redis
 kazoo
 memcache_wrapper
+pyquery
