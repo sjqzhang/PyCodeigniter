@@ -263,8 +263,11 @@ class CI_Application(object):
     def md5(self,s):
         import hashlib
         m=hashlib.md5()
+        if isinstance(s,unicode):
+            s=s.encode('utf-8')
         m.update(s)
         return m.hexdigest()
+    
     def request( self, url,data=None,headers={}):
             html='';
             if not 'User-Agent' in headers.keys():
