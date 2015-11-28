@@ -9,6 +9,12 @@ import json
 import imp
 import urllib
 import urllib2
+import hashlib
+
+try:
+    import pyquery
+except Exception as er:
+    pass
 
 
 is_gevent=False
@@ -261,13 +267,12 @@ class CI_Application(object):
 
 
     def md5(self,s):
-        import hashlib
         m=hashlib.md5()
         if isinstance(s,unicode):
             s=s.encode('utf-8')
         m.update(s)
         return m.hexdigest()
-    
+
     def request( self, url,data=None,headers={}):
             html='';
             if not 'User-Agent' in headers.keys():
@@ -286,12 +291,10 @@ class CI_Application(object):
             return html
 
     def request_query(self,url,data=None,selector=''):
-        import pyquery
         html=self.request(url,data)
         return pyquery.PyQuery(selector,html)
 
     def pq(self,obj):
-        import pyquery
         return pyquery.PyQuery(obj)
 
     def start_server(self):
