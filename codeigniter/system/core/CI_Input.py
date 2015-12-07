@@ -25,9 +25,9 @@ class CI_Input(object):
         data={}
         if hasattr(form,'list') and len(form.list)>0:
             for elem in form.list:
-                if hasattr(elem,'file') and str(elem.file).lower().find('string')!=-1:
+                if hasattr(elem,'file'):
                     try:
-                        data[elem.name]=elem.file.read()
+                        data[elem.name]=elem.file
                     except Exception as e:
                         pass
                 elif elem.file==None or str(elem.type).lower().strip() in ['text/plain'] or (not 'filename' in elem.disposition_options):
