@@ -27,7 +27,7 @@ class CI_Input(object):
             for elem in form.list:
                 if hasattr(elem,'file') and elem.file!=None:
                     try:
-                        data[elem.name]=elem.file
+                        data[elem.name]=elem
                     except Exception as e:
                         pass
                 elif elem.file==None or str(elem.type).lower().strip() in ['text/plain'] or (not 'filename' in elem.disposition_options):
