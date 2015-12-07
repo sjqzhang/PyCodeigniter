@@ -25,7 +25,7 @@ class CI_Input(object):
         data={}
         if hasattr(form,'list') and len(form.list)>0:
             for elem in form.list:
-                if hasattr(elem,'file') and elem.file!=None:
+                if hasattr(elem,'file') and elem.file!=None and hasattr(elem,'filename') and elem.filename!=None:
                     try:
                         data[elem.name]=elem
                     except Exception as e:
