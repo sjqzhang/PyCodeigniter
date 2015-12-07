@@ -88,7 +88,7 @@ class CI_Cache(object):
         match=CI_Cache.REGEX_KEY.findall(tpl)
         # match=[]
         # return key
-        if len(match)<=len(args):
+        if len(match)<=len(kwargs):
             for m in match:
                 if m[0] in kwargs.keys():
                     if isinstance(kwargs[(m[0])],dict):
