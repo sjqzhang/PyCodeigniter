@@ -464,7 +464,10 @@ class CI_DBActiveRec():
             return escaped_dict
 
         # Convert tabs or multiple spaces into single spaces
+
+        # r'(\s*|<|>|!|=|is null|is not null)'
         item = re.sub(r'[\t ]+', ' ', item)
+        item = re.sub(r'(\w+)(\s*|<|>|!|=|is null|is not null)', r'\1 \2', item)
 
         if item.find(' ') != -1:
             alias = item[item.find(' '):]
@@ -494,7 +497,7 @@ class CI_DBActiveRec():
 
 
     def _has_operator(self, str_):
-        if not re.search(r'(\s|<|>|!|=|is null|is not null)', str_.strip(), re.I):
+        if not re.search(r'(\s*|<|>|!|=|is null|is not null)', str_.strip(), re.I):
             return False
         return True
 
@@ -510,6 +513,21 @@ class CI_DBActiveRec():
         result = self.query(sql)
         self._reset_select()
         return result
+
+    def to_sql(self, table='', limit=None, offset=''):
+        if table != '':
+            self._track_aliases(table)
+            self.from_(table)
+
+        if limit is not None:
+            self.limit(limit, offset)
+
+        sql = self._compile_select()
+        return sql
+
+    def to_where(self):
+        return self.ar_cache_where
+
 
     def insert(self, table='', _set=None):
         self._merge_cache()
