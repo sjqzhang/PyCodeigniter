@@ -26,6 +26,8 @@ try:
 except Exception as er:
     pass
 
+from cookielib import CookieJar
+
 
 
 import pdb
@@ -43,6 +45,8 @@ CI = CI_CLASS()
 
 class CI_Application(object):
     application_instance=None
+    cj = CookieJar()
+    proxy_handler=urllib2.ProxyHandler({})
     def __init__(self,application_path=None,system_path=None,config_file=None):
         # pdb.set_trace()
         if system_path==None:
@@ -273,22 +277,38 @@ class CI_Application(object):
         m.update(s)
         return m.hexdigest()
 
-    def request( self, url,data=None,headers={}):
-            html='';
-            if not 'User-Agent' in headers.keys():
+    # def request( self, url,data=None,headers={}):
+    #         html='';
+    #         if not 'User-Agent' in headers.keys():
+    #             headers['User-Agent']='Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US; rv:1.9.1.6) Gecko/20091201 Firefox/3.5.6'
+    #         try:
+    #             if data!=None and len(data)>0:
+    #                 data=urllib.urlencode(data)
+    #             req = urllib2.Request(
+    #                 url =url,
+    #                 headers = headers,
+    #                 data=data
+    #             )
+    #             html=urllib2.urlopen(req,timeout=15).read()
+    #         except Exception as er:
+    #             self.logger.error(er)
+    #         return html
+
+    def request( self, url,data=None,headers={},proxys={}):
+        if len(proxys)>0:
+            proxy_handler=urllib2.ProxyHandler(proxys)
+            CI_Application.proxy_handler=proxy_handler
+
+        opener = urllib2.build_opener(CI_Application.proxy_handler,urllib2.HTTPCookieProcessor(CI_Application.cj))
+        if not 'User-Agent' in headers.keys():
                 headers['User-Agent']='Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US; rv:1.9.1.6) Gecko/20091201 Firefox/3.5.6'
-            try:
-                if data!=None and len(data)>0:
-                    data=urllib.urlencode(data)
-                req = urllib2.Request(
-                    url =url,
-                    headers = headers,
-                    data=data
-                )
-                html=urllib2.urlopen(req,timeout=15).read()
-            except Exception as er:
-                self.logger.error(er)
-            return html
+        if data!=None:
+            data = urllib.urlencode(data)
+        for k,v in headers.iteritems():
+            opener.addheaders.append((k,v))
+        response = opener.open(url,data=data,timeout=15)
+        content = response.read()
+        return content
 
     def request_query(self,url,data=None,selector=''):
         html=self.request(url,data)
