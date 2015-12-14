@@ -27,6 +27,7 @@ except Exception as er:
     pass
 
 from cookielib import CookieJar
+import re
 
 
 
@@ -294,7 +295,7 @@ class CI_Application(object):
     #             self.logger.error(er)
     #         return html
 
-    def request( self, url,data=None,headers={},proxys={}):
+    def request( self, url,data=None,headers={},proxys={},timeout=15):
         if len(proxys)>0:
             proxy_handler=urllib2.ProxyHandler(proxys)
             CI_Application.proxy_handler=proxy_handler
@@ -306,9 +307,15 @@ class CI_Application(object):
             data = urllib.urlencode(data)
         for k,v in headers.iteritems():
             opener.addheaders.append((k,v))
-        response = opener.open(url,data=data,timeout=15)
-        content = response.read()
-        return content
+        response = opener.open(url,data=data,timeout=timeout)
+        if 'Content-Type' in response.headers:
+            charset=re.findall(r'charset\=(\w+)',response.headers['Content-Type'],re.IGNORECASE)
+            if len(charset)>0:
+                content = response.read().decode(charset[0],'ignore')
+                return content
+        else:
+            return response.read()
+
 
     def request_query(self,url,data=None,selector=''):
         html=self.request(url,data)
