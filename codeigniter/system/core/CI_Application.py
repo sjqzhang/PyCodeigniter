@@ -311,8 +311,9 @@ class CI_Application(object):
         if 'Content-Type' in response.headers:
             charset=re.findall(r'charset\=(\w+)',response.headers['Content-Type'],re.IGNORECASE)
             if len(charset)>0:
-                content = response.read().decode(charset[0],'ignore')
-                return content
+                return response.read().decode(charset[0],'ignore')
+            else:
+                return  response.read()
         else:
             return response.read()
 
