@@ -28,6 +28,7 @@ except Exception as er:
 
 from cookielib import CookieJar
 import re
+import zlib
 
 
 
@@ -295,27 +296,38 @@ class CI_Application(object):
     #             self.logger.error(er)
     #         return html
 
-    def request( self, url,data=None,headers={},proxys={},timeout=15):
+    def request( self, url,data=None,headers={},proxys={},timeout=15,gzip=False):
         if len(proxys)>0:
             proxy_handler=urllib2.ProxyHandler(proxys)
             CI_Application.proxy_handler=proxy_handler
 
         opener = urllib2.build_opener(CI_Application.proxy_handler,urllib2.HTTPCookieProcessor(CI_Application.cj))
-        if not 'User-Agent' in headers.keys():
-                headers['User-Agent']='Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US; rv:1.9.1.6) Gecko/20091201 Firefox/3.5.6'
+        if not 'User-agent' in headers.keys():
+            headers['User-agent']='Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/38.0.2125.104 Safari/537.36'
+        if gzip:
+            headers['Accept-Encoding']='gzip, deflate'
+            #headers['Referer']='http://www.baidu.com/link?url=pz61iBL_b6ht2-GzsEx23vZjq85yrseGCu68tKlBX_K&wd=&eqid=f91d82bf0000b8260'
         if data!=None:
             data = urllib.urlencode(data)
+        while len(opener.addheaders)>0:
+            opener.addheaders.pop()
         for k,v in headers.iteritems():
             opener.addheaders.append((k,v))
         response = opener.open(url,data=data,timeout=timeout)
+        if 'Content-Encoding' in response.headers:
+            if response.headers['Content-Encoding'].lower()=='gzip':
+                unzip=True
+        content=response.read()
+        if gzip and unzip:
+            content= zlib.decompress( content , 16+zlib.MAX_WBITS)
         if 'Content-Type' in response.headers:
             charset=re.findall(r'charset\=(\w+)',response.headers['Content-Type'],re.IGNORECASE)
             if len(charset)>0:
-                return response.read().decode(charset[0],'ignore')
+                return content.decode(charset[0],'ignore')
             else:
-                return  response.read()
+                return content
         else:
-            return response.read()
+            return content
 
 
     def request_query(self,url,data=None,selector=''):
