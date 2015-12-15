@@ -206,7 +206,7 @@ class CI_DBActiveRec():
             key = {key: value}
         for k, v in key.iteritems():
             prefix = '' if (len(self.ar_where) == 0 and len(self.ar_cache_where) == 0) else type
-            if (not v) and (not self._has_operator(k)):
+            if (v is None) and (not self._has_operator(k)):
                 k += ' IS NULL'
             if v:
                 if escape is True:
