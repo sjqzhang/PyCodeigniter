@@ -302,11 +302,10 @@ class CI_Application(object):
             CI_Application.proxy_handler=proxy_handler
 
         opener = urllib2.build_opener(CI_Application.proxy_handler,urllib2.HTTPCookieProcessor(CI_Application.cj))
-        if not 'User-agent' in headers.keys():
-            headers['User-agent']='Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/38.0.2125.104 Safari/537.36'
+        if not 'User-Agent' in headers.keys():
+            headers['User-Agent']='Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/38.0.2125.104 Safari/537.36'
         if gzip:
             headers['Accept-Encoding']='gzip, deflate'
-            #headers['Referer']='http://www.baidu.com/link?url=pz61iBL_b6ht2-GzsEx23vZjq85yrseGCu68tKlBX_K&wd=&eqid=f91d82bf0000b8260'
         if data!=None:
             data = urllib.urlencode(data)
         while len(opener.addheaders)>0:
