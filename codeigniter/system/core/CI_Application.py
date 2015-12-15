@@ -333,8 +333,11 @@ class CI_Application(object):
         html=self.request(url,data)
         return pyquery.PyQuery(selector,html)
 
-    def pq(self,obj):
-        return pyquery.PyQuery(obj)
+    def pq(self,obj,selector=None):
+        if selector==None:
+            return pyquery.PyQuery(obj)
+        else:
+            return pyquery.PyQuery(selector,obj)
 
     def start_server(self):
         msg="server listen to : "+str(self.config['server']['port'])
