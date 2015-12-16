@@ -90,6 +90,8 @@ class CI_DB(object):
         if isinstance(param,dict) and len(param)>0:
             sql,param=self.format(sql,param)
             # print(param)
+        if self.debug:
+            self.logger.info(sql)
         if conn==None:
             conn=self.get_connection()
         else:
@@ -103,8 +105,6 @@ class CI_DB(object):
             self.queries.append(sql)
             if len(self.queries)>100:
                del self.queries[0]
-            if self.debug:
-                self.logger.info(sql)
             if re.compile(r'^\s*(select|show)',re.IGNORECASE).match(sql):
                 rows=self.dict_result(cursor)
                 return rows
