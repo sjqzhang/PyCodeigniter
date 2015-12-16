@@ -316,13 +316,53 @@ class CI_Application(object):
         if 'Content-Encoding' in response.headers:
             if response.headers['Content-Encoding'].lower()=='gzip':
                 unzip=True
+
+
+        filesize=0
+        if 'Content-Length' in response.headers:
+            filesize= response.headers['Content-Length']
+            import tempfile
+            if int(filesize)>10*1024*1024:
+                tmp=None
+                try:
+                    tmp= tempfile.TemporaryFile()
+                    file_size_dl = 0
+                    block_sz = 8192
+                    while True:
+                        buffer = response.read(block_sz)
+                        if not buffer:
+                            break
+                        file_size_dl += len(buffer)
+                        tmp.write(buffer)
+                        # status = r"%10d  [%3.2f%%]" % (file_size_dl, file_size_dl * 100. / filesize)
+                        # status = status + chr(8)*(len(status)+1)
+                        # print status,
+                    tmp.seek(0)
+                    return tmp.read()
+                except Exception as er:
+                    self.logger.error(er)
+                finally:
+                    try:
+                        tmp.close()
+                    except Exception as er:
+                        pass
         content=response.read()
         if gzip and unzip:
             content= zlib.decompress( content , 16+zlib.MAX_WBITS)
+
         if 'Content-Type' in response.headers:
             charset=re.findall(r'charset\=(\w+)',response.headers['Content-Type'],re.IGNORECASE)
             if len(charset)>0:
                 return content.decode(charset[0],'ignore')
+            elif len(re.findall(r'text/html',response.headers['Content-Type'],re.IGNORECASE))>0:
+                charset= re.findall(r'<meta[\s\S]*?charset=([\w\-]+)[\s\S]*?>',content,re.IGNORECASE)
+                if len(charset)>0:
+                    if charset[0].lower()=='gb2312':
+                        charset[0]='gbk'
+                    content=content.decode(charset[0])
+                else:
+                    content=content.decode('utf-8')
+                return content
             else:
                 return content
         else:
