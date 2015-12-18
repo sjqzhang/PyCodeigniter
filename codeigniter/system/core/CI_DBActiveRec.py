@@ -497,7 +497,8 @@ class CI_DBActiveRec():
 
 
     def _has_operator(self, str_):
-        if not re.search(r'(\s*|<|>|!|=|is null|is not null)', str_.strip(), re.I):
+        ret=re.search(r'(\*<|>|!|=|is null|is not null)', str_.strip(), re.IGNORECASE)
+        if ret==None or ret.group().strip()=='':
             return False
         return True
 

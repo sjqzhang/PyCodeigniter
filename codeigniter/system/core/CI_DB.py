@@ -11,6 +11,11 @@ import collections
 
 from CI_DBActiveRec import CI_DBActiveRec
 
+
+
+
+
+
 class CI_DB(object):
     def __init__(self, **kwargs):
         import pymysql
@@ -34,10 +39,10 @@ class CI_DB(object):
     def get_connection(self):
         # print("get_connection")
         conn= self.pool.dedicated_connection()
-        cursor=conn.cursor()
+        # cursor=conn.cursor()
         # cursor.execute('set names utf8')
-        # cursor.execute('set autocommit=ON')
-        cursor.close()
+        # cursor.execute('set autocommit=OFF')
+        # cursor.close()
         return conn
 
     def last_query(self):
@@ -143,8 +148,46 @@ class CI_DB(object):
         else:
             return None
 
+    def tran(self,conn=None):
 
+        class Tran():
+            def __init__(self,db,conn=None):
+                self._db=db
+                if conn==None:
+                    self.conn=self._db.get_connection()
+                else:
+                    self.conn=conn
 
+            def __exit__(self, exc_type, exc_val, exc_tb):
+                if exc_type==None:
+                    self._db.commit(self.conn)
+                else:
+                    self._db.rollback(self.conn)
+                self.conn.close()
+
+            def __enter__(self):
+                cursor=self.conn.cursor()
+                cursor.execute('set autocommit=OFF')
+                cursor.close()
+                return self
+
+            def __getattr__(self, item):
+                return getattr(self._db,item)
+
+            def query(self,sql,param=tuple()):
+                self._db.query(sql,param,self.conn)
+            def execute(self,sql,param=tuple()):
+                self.query(sql,param,self.conn)
+            def scalar(self,sql,param=tuple()):
+                return self._db.scalar(sql,param,self.conn)
+            def insert(self, table='', _set=None):
+                return self._db.insert(table,_set,self.conn)
+            def update(self, table='', _set=None, where=None):
+                return self._db.ar(conn).update(table,_set,where,self.conn)
+            def delete(self, table='', where=''):
+                return self._db.delete(table,where,self.conn)
+
+        return Tran(self,conn)
 
 
 
