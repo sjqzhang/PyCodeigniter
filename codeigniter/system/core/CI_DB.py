@@ -100,6 +100,8 @@ class CI_DB(object):
             sql,param=self.format(sql,param)
             # print(param)
         if self.debug:
+            if isinstance(sql,unicode):
+                sql=unicode.encode(sql,'utf-8')
             self.logger.info(sql)
         if conn==None:
             conn=self.get_connection()
@@ -120,6 +122,8 @@ class CI_DB(object):
             else:
                 return result
         except Exception as  e:
+            if isinstance(sql,unicode):
+                sql=unicode.encode(sql,'utf-8')
             self.app.logger.error(str(e)+"sql:\n"+sql)
             raise e
 
