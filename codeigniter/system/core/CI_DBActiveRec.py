@@ -549,8 +549,8 @@ class CI_DBActiveRec():
 
     def _insert(self, table, keys, values):
 
-        for i in range(0,len(values)):
-            values[i]=str(values[i])
+        # for i in range(0,len(values)):
+        #     values[i]=str(values[i])
 
         return """INSERT INTO %s
                 (%s)
@@ -579,8 +579,8 @@ class CI_DBActiveRec():
         return self.query(sql)
 
     def _replace(self, table, keys, values):
-        for i in range(0,len(values)):
-            values[i]=str(values[i])
+        # for i in range(0,len(values)):
+        #     values[i]=str(values[i])
 
         return """REPLACE INTO %s
                 (%s)
@@ -615,7 +615,7 @@ class CI_DBActiveRec():
     def _update(self, table, values, where, orderby=None, limit=False):
         valstr = []
         for key in values.keys():
-            value=str(values[key])
+            value=values[key]
             valstr.append(key+' = '+value)
         limit = ' LIMIT %s' % limit if limit is not False else ''
         if not isinstance(orderby, (list, tuple)):
