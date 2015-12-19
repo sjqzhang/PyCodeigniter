@@ -30,6 +30,10 @@ class CI_DB(object):
             del kwargs['debug']
         else:
             self.debug=False
+        if 'autocommit' in kwargs.keys():
+            self.autocommit=kwargs['autocommit']
+        else:
+            self.autocommit=True
         self.pool=PooledDB(pymysql,**kwargs)
 
         self.queries=[]
@@ -163,6 +167,10 @@ class CI_DB(object):
                     self._db.commit(self.conn)
                 else:
                     self._db.rollback(self.conn)
+                if self._db.autocommit:
+                     cursor=self.conn.cursor()
+                     cursor.execute('set autocommit=ON')
+                     cursor.close()
                 self.conn.close()
 
             def __enter__(self):
