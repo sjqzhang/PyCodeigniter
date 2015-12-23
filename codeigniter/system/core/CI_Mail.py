@@ -14,13 +14,17 @@ class CI_Mail(object):
     def __init__(self,**kwargs):
         self.app=kwargs['app'];
         self.host=kwargs['host'];
+        if 'port' in kwargs:
+            self.port=kwargs['port'];
+        else:
+            self.port=25
         self.user=kwargs['user'];
         self.password=kwargs['password'];
         self.postfix=kwargs['postfix'];
 
 
 
-    def send(self,to,subject,content,attachs=[]):
+    def send(self,to,subject,content,attachs=[],html=True):
         msg=MIMEMultipart('related')
         if isinstance(to,basestring):
             to=to.replace(',',';')
@@ -28,7 +32,10 @@ class CI_Mail(object):
         if isinstance(attachs,basestring):
             attachs=[attachs]
         me=self.user+"<"+self.user+"@"+self.postfix+">"
-        tmsg = MIMEText(content,_subtype='html',_charset='utf-8')
+        if html:
+            tmsg = MIMEText(content,_subtype='html',_charset='utf-8')
+        else:
+            tmsg = MIMEText(content,_subtype='plain',_charset='utf-8')
         msg['Subject'] = subject
         msg['From'] = me
         msg['To'] = ";".join(to)
@@ -44,7 +51,7 @@ class CI_Mail(object):
                     self.app.logger.warn('attach fail '+file_name+' not exist!')
         try:
             s = smtplib.SMTP(timeout=10)
-            s.connect(self.host)
+            s.connect(self.host,self.port)
             s.login(self.user,self.password)
             s.sendmail(me, to, msg.as_string())
             s.close()

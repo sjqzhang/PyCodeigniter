@@ -64,6 +64,8 @@ class CI_Logger(object):
 
 
 
+
+
     def set_handlers(self, log_file_path):
         handler = RotatingFileHandler(filename=log_file_path, maxBytes=self.file_size, backupCount=self.back_count)
         self.logger.setLevel(self.log_level)
@@ -96,6 +98,8 @@ class CI_Logger(object):
             self.logger.log(level,"".join(errorlist))
         else:
             loginfo=self._get_log_back()
+            if isinstance(message,unicode):
+                message=unicode.encode(message,'utf-8','ignore')
             message = str( self._get_msg( loginfo)[0])+" "+str(message)
             self.logger.log(level,message)
 

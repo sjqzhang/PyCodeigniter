@@ -257,7 +257,9 @@ class CI_Application(object):
     def get_logger(self,name):
         return self.getLogger(name)
 
-    def getLogger(self,name):
+    def getLogger(self,name=None):
+        if name==None:
+            return self.logger
         if name in self.loggers:
             return self.loggers[name]
         if name in self.config:
