@@ -1,5 +1,5 @@
-# from distutils.core import setup
-from setuptools import setup, find_packages
+from distutils.core import setup
+# from setuptools import setup, find_packages
 
 setup(
     name='PyCodeigniter',
@@ -10,8 +10,8 @@ setup(
               'codeigniter.application.library', 'codeigniter.application.controllers','codeigniter.application.views'],
     url='https://github.com/sjqzhang/PyCodeigniter',
     license='GPL',
-    #install_requires = ['setuptools','pymysql','DBUtils'],
-    requires=['pymysql','DBUtils','gevent','apscheduler'],
+    # install_requires = ['setuptools','pymysql','DBUtils'],
+    # requires=['pymysql','DBUtils','gevent','apscheduler'],
     author='s_jqzhang',
     author_email='s_jqzhang@163.com',
 
