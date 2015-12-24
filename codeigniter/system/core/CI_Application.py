@@ -11,10 +11,16 @@ import urllib
 import urllib2
 import hashlib
 
+
 try:
     import pyquery
 except Exception as er:
     pass
+try:
+    import uuid
+except Exception as er:
+    pass
+
 
 
 is_gevent=False
@@ -280,6 +286,9 @@ class CI_Application(object):
             s=s.encode('utf-8')
         m.update(s)
         return m.hexdigest()
+
+    def uuid(self):
+        return uuid.uuid4()
 
     # def request( self, url,data=None,headers={}):
     #         html='';
