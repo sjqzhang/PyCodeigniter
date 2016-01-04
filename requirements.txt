@@ -6,5 +6,5 @@ jinja2
 tenjin
 redis
 kazoo
-memcache_wrapper
-pyquery
+#memcache_wrapper
+#pyquery
