@@ -336,7 +336,7 @@ class Client():
         for line in lines:
             if line.strip()!='':
                 break;
-        if line.index('python')>0:
+        if line.find('python')>0:
                 is_python=True
         if is_python:
             cmd=ClientCommand('/usr/bin/python %s %s'% (fn,self.util.command_args(args[1:])))
