@@ -2,6 +2,9 @@
 # -*- coding:utf8 -*-
 __author__ = 'xiaozhang'
 
+
+
+
 import os
 import urllib2
 import urllib
@@ -19,36 +22,34 @@ from logging.handlers import RotatingFileHandler
 
 
 
-server_url="http://127.0.0.1:8005/zbxcli"
+server_url="http://127.0.0.1:8005/index"
 
 bin_name='client'
 client_filename='/bin/%s' % bin_name
 client_log_filename= tempfile.gettempdir()+os.path.sep+ bin_name+".log"
-client_script_path= tempfile.gettempdir()+ os.path.sep+'script'
-
-
+script_path= tempfile.gettempdir()+ os.path.sep+'script'
 
 
 logger = logging.getLogger()
 logging.basicConfig(level=logging.DEBUG,
                 format='%(asctime)-25s %(module)s:%(lineno)d  %(levelname)-8s %(message)s',
-                # datefmt='%a, %d %b %Y %H:%M:%S',
-                filename=client_log_filename,
+                #datefmt='%a, %d %b %Y %H:%M:%S',
+                filename=tempfile.gettempdir()+ os.path.sep +'zbxcli.log',
                 filemode='a')
 logger.addHandler(RotatingFileHandler(filename=client_log_filename,maxBytes=100 * 1024 * 1024, backupCount=3))
 
 
 
-
-class ClientCommand(object):
+class ZbxCommand(object):
     def __init__(self, cmd):
         self.cmd = cmd
         self.process = None
         self.uuid=str(datetime.datetime.now()).replace(' ','').replace(':','').replace('-','').replace('.','')
         self.result=open(tempfile.gettempdir()+ os.path.sep +self.uuid,'a+')
 
-    def run(self, timeout=10):
+    def run(self, timeout=30):
         def target():
+            logger.info(self.cmd)
             self.process = subprocess.Popen(self.cmd, shell=True,stdout=self.result,stderr=self.result)
             self.process.communicate()
         thread = threading.Thread(target=target)
@@ -59,7 +60,7 @@ class ClientCommand(object):
             #print 'Terminating process'
             self.process.terminate()
             thread.join()
-            util=ClientUtil()
+            util=ZbxCommon()
             util.url_fetch(server_url+'/slowlog',{'param':{ 'cmd':self.cmd,'ip':util.get_one_ip()}})
             return "13800138000"
         result= open(tempfile.gettempdir()+ os.path.sep+self.uuid,'r').read()
@@ -67,7 +68,7 @@ class ClientCommand(object):
         return result
 
 
-class ClientUtil(object):
+class ZbxCommon(object):
     def urlencode(self,str):
         reprStr=repr(str).replace(r'\x','%')
         return reprStr[1:-1]
@@ -75,7 +76,7 @@ class ClientUtil(object):
     def download(self,filename):
         data={'file':filename}
         data=urllib.urlencode(data)
-        http_url='http://%s/Index/download?%s' % (server_url,data)
+        http_url='%s/download?%s' % (server_url,data)
         conn = urllib2.urlopen(http_url)
         f = open(filename,'wb')
         f.write(conn.read())
@@ -87,6 +88,9 @@ class ClientUtil(object):
         data.append('--%s' % boundary)
         fr=open(filepath,'rb')
         filename=os.path.basename(filepath)
+        data.append('Content-Disposition: form-data; name="%s"\r\n' % 'filename')
+        data.append(filename)
+        data.append('--%s' % boundary)
         data.append('Content-Disposition: form-data; name="%s"; filename="%s"' % ('file',filename))
         data.append('Content-Type: %s\r\n' % 'image/png')
         data.append(fr.read())
@@ -94,8 +98,7 @@ class ClientUtil(object):
         data.append('--%s--\r\n' % boundary)
 
 
-        http_url='http://%s/Index/upload' % server_url
-        # http_url='http://172.16.136.98:8005/Index/index'
+        http_url='%s/upload' % server_url
         http_body='\r\n'.join(data)
         try:
             req=urllib2.Request(http_url, data=http_body)
@@ -107,9 +110,10 @@ class ClientUtil(object):
             print qrcont
         except Exception,e:
             logger.error(e)
+            print e
+            print 'http error'
 
-
-    def url_fetch(self,url,data=None,timeout=4):
+    def url_fetch(self,url,data=None,timeout=30):
         html='';
         # print(url)
         try:
@@ -131,6 +135,11 @@ class ClientUtil(object):
                 html=unicode(html,charset[0])
             #print(html)
         except Exception as e:
+            if hasattr(e,'msg'):
+                print(e.msg)
+            else:
+                print e
+
             logger.error(e)
         return html
 
@@ -147,7 +156,6 @@ class ClientUtil(object):
         opts= getopt.getopt(argv,":".join(short_args)+":",long_args)
         for opt in opts[0]:
             data[opt[0].replace('-','')]=opt[1]
-
         if len(data)>0:
             return data
         else:
@@ -202,7 +210,8 @@ class ClientUtil(object):
 
 
     def get_one_ip(self):
-        ret = [x for x in self.get_all_ip_list() if x.startswith('10') or x.startswith('172') or x.startswith('192')]
+        #ret = [x for x in self.get_all_ip_list() if x.startswith('10') or x.startswith('172') or x.startswith('192')]
+        ret = [x for x in self.get_all_ip_list() if x.startswith('10.') ]
         if len(ret)>1:
             return ret[0]
         return ''.join(ret)
@@ -286,30 +295,41 @@ class ClientUtil(object):
         else:
             return str(args)
 
-class Client():
+
+
+
+
+class ZbxCli():
+
+
     def __init__(self):
         self.entry=server_url+"/%s"
-        self.util=ClientUtil()
+        self.util=ZbxCommon()
 
 
-    def upgrade(self,args):
-        pass
-        fn=self.util.exec_filename()
-        open(client_filename,'w').write(self.util.url_fetch(self.entry%'upgrade'))
+    def download(self,args):
+        self.util.download(args[0])
 
-    def restart(self,args):
-        pass
+    def upload(self,args):
+        self.util.upload(args[0])
 
-
-    def stop(self,args):
-        pass
-
-    def start(self,args):
-        pass
-
+    def help(self,args):
+        ret=self.util.url_fetch(self.entry%'help')
+        print ret
 
     def default(self,cmd,args):
         argv= self.util.parse_argv(args)
+	if isinstance(argv,list):
+            argv={}
+        if isinstance(argv,dict):
+            if not 's' in argv:
+                argv['s']=self.util.get_hostname()
+            if not 'i' in argv:
+                argv['i']=self.util.get_one_ip()
+            #if not 'g' in argv:
+            #    argv['g']="Discovered hosts"
+            #if not 't' in argv:
+            #    argv['t']="Meizu-System"
         ret=self.util.url_fetch(self.entry%cmd,{'param':json.dumps(argv)})
         print(ret)
 
@@ -318,15 +338,17 @@ class Client():
             print('ERROR: param is not enough')
             sys.exit(0)
 
-        path=client_script_path
+        #path=tempfile.gettempdir()+os.sep+'zbxcli';
+        path=script_path
         if not os.path.exists(path):
-            os.mkdir(path)
+            self.util.execute('mkdir -p %s'%path)
+
         fn=path+os.path.sep+args[0]
         src=''
         is_python=False
         result=-1
         if not os.path.exists(fn) or os.stat(fn).st_mtime<(time.time()-10*60):
-            src=self.util.url_fetch(self.entry%'shell',{ 'key':args[0], 'param': json.dumps(args[1:])})
+            src=self.util.url_fetch(self.entry%'shell',{ 'file':args[0], 'param': json.dumps(args[1:])})
         if src!='':
             open(fn,'w').write(src)
         else:
@@ -339,18 +361,21 @@ class Client():
         if line.find('python')>0:
                 is_python=True
         if is_python:
-            cmd=ClientCommand('/usr/bin/python %s %s'% (fn,self.util.command_args(args[1:])))
-            result=cmd.run(10)
+            cmd=ZbxCommand('/usr/bin/python %s %s'% (fn,self.util.command_args(args[1:])))
+            result=cmd.run(60*60*24)
         else:
-            cmd=ClientCommand('/bin/bash %s %s'% (fn,self.util.command_args(args[1:])))
-            result=cmd.run(10)
+            cmd=ZbxCommand('/bin/bash %s %s'% (fn,self.util.command_args(args[1:])))
+            result=cmd.run(60*60*24)
         print(result)
 
+
+
 if __name__ == '__main__':
-    cli=Client()
-    util=ClientUtil()
+
+    cli=ZbxCli()
+    util=ZbxCommon()
     if len(sys.argv)<2:
-        cli.default('help',['help'])
+        cli.help(sys.argv)
     else:
         cmd=sys.argv[1]
         if hasattr(cli,cmd):
