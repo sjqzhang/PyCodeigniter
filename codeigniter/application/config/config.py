@@ -81,7 +81,7 @@ memcache={
 # autho load config
 autoload={
     'controllers':{
-        "Index":"Index",
+       # "Index":"Index",
     },
     'models':{
 
