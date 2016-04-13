@@ -25,6 +25,8 @@ class CI_DB(object):
             self.app=kwargs['app']
             self.logger=self.app.logger
             del kwargs['app']
+        if 'type' in kwargs.keys():
+            del kwargs['type']
         if 'debug' in kwargs.keys():
             self.debug=kwargs['debug']
             del kwargs['debug']
