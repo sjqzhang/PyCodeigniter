@@ -1,9 +1,33 @@
 #!/usr/bin/env bash
 
+is_install(){
 
-sys=`grep -Eio "(centos|ubuntu)" /etc/issue`
+ yy=$(echo echo `which "$1"`|grep -o "$1")
 
-sys=$(echo $sys|tr '[A-Z]' '[a-z]')
+
+ if [ -z $yy ];then
+
+  return 0
+
+ else
+
+  return 1
+
+ fi
+
+}
+
+#sys=`grep -Eio "(centos|ubuntu)" /etc/issue`
+
+#sys=$(echo $sys|tr '[A-Z]' '[a-z]')
+
+is_install yum
+
+if [ $? -eq 0 ];then
+    sys=ubuntu
+else
+    sys=centos
+fi
 
 URL=http://git.oschina.net/sjqzhang/pylib/raw/master
 #URL=https://github.com/sjqzhang/pylib/raw/master/
@@ -32,22 +56,6 @@ apt-get install -y unzip
 
 
 
-is_install(){
-
- yy=$(echo echo `which "$1"`|grep -o "$1")
-
-
- if [ -z $yy ];then
-
-  return 0
-
- else
-
-  return 1
-
- fi
-
-}
 
 
 install_pip()
