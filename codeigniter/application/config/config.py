@@ -3,6 +3,7 @@ import logging
 
 
 db={
+    'type':'sqlite',
     'host':'127.0.0.1',
     'user':'root',
     'passwd':'root',
@@ -13,6 +14,9 @@ db={
     'autocommit':True,
     'debug':True
 }
+
+
+
 
 
 
