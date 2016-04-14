@@ -17,7 +17,7 @@ is_install(){
 
 }
 
-if [ -f /etc/system-release ];
+if [ -f /etc/system-release ];then
   sys=`grep -Eio "(centos|ubuntu)" /etc/system-release`
 else
  sys=`grep -Eio "(centos|ubuntu)" /etc/issue`
