@@ -17,17 +17,15 @@ is_install(){
 
 }
 
-#sys=`grep -Eio "(centos|ubuntu)" /etc/issue`
-
-#sys=$(echo $sys|tr '[A-Z]' '[a-z]')
-
-is_install yum
-
-if [ $? -eq 0 ];then
-    sys=ubuntu
+if [ -f /etc/system-release ];
+  sys=`grep -Eio "(centos|ubuntu)" /etc/system-release`
 else
-    sys=centos
+ sys=`grep -Eio "(centos|ubuntu)" /etc/issue`
 fi
+
+
+sys=$(echo $sys|tr '[A-Z]' '[a-z]')
+
 
 URL=http://git.oschina.net/sjqzhang/pylib/raw/master
 #URL=https://github.com/sjqzhang/pylib/raw/master/
