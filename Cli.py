@@ -17,11 +17,15 @@ class Cli:
 
     def help(self,param=''):
 	h='''
+        ########## 文件与shell ##############
+
         cli upgrade   更新 cli 程序
         cli shell   下载并接行shell指令
         cli listfile   查看文件列表
         cli download   下载文件
         cli delfile -f filename -k key  删除文件
+        
+        ########## 环境变量 ##############
 
         cli addenv -k key -v value  -g group (default)  增加环境变量
         cli getevn  -k key -g grup (default) 获取环境变量
