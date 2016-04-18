@@ -142,7 +142,59 @@ class ZbxCommon(object):
  
             logger.error(e)
         return html
-
+    def getopt(inputs):
+        def ptype(input):
+            if "-" == input[0] and len(input) == 2:
+                return (1,input[1])
+            if "--" == input[:2] and len(input) >= 4:
+                return (2,input[2:])
+            return (0,"")
+        def istype(input):
+            if "-" == input[0]:
+                return 1
+            return 0
+        ret = {}
+        u = 0
+        ucount = len(inputs)
+        icount = 0
+        ls = []
+        if ucount >= 1:
+            while 1:
+                if u >= ucount:
+                    break
+                if istype(inputs[u]) == 1:
+                    break
+                
+                ls.append(inputs[u])
+                u += 1
+    
+            inputs = inputs[u:]
+            icount = len(inputs)
+    
+        if icount >= 1:
+            i = 0
+            state = 0
+            while 1:
+                t,name = ptype(inputs[i])
+                for c in range(1):
+                    if t == 0 :
+                        i += 1
+                        break
+                    if i+1 < icount:
+                        tt,tname = ptype(inputs[i+1])
+                        if tt <> 0:
+                            ret[name] = ""
+                            i += 1
+                            break
+                        ret[name] = inputs[i+1]
+                        i += 2
+                        break
+                    ret[name] = ""
+                    i += 1
+                    break
+                if i >= icount:
+                    break
+        return (ls,ret)
 
     def parse_argv(self,argv):
         data={}
@@ -412,7 +464,8 @@ if __name__ == '__main__':
     elif (len(sys.argv)==2) or (len(sys.argv)>2 and sys.argv[2].startswith('-')):
         action=sys.argv[1]
     elif len(sys.argv)>2 and not sys.argv[2].startswith('-'):
-        action=sys.argv[1]
+        module=sys.argv[1] 
+        action=sys.argv[2]
     elif len(sys.argv)>2 :
         module=sys.argv[1] 
         action=sys.argv[2] 
