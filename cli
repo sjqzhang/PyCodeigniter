@@ -22,7 +22,9 @@ from logging.handlers import RotatingFileHandler
 
 
 
-server_url="http://127.0.0.1:8005/cli"
+server_url="http://172.16.16.113:8005"
+
+default_module='cli'
 
 bin_name='client'
 client_filename='/bin/%s' % bin_name
@@ -82,7 +84,7 @@ class ZbxCommon(object):
         f.write(conn.read())
         f.close()
 
-    def upload(self,filepath):
+    def upload(self,url,filepath):
         boundary = '----------%s' % hex(int(time.time() * 1000))
         data = []
         data.append('--%s' % boundary)
@@ -97,11 +99,9 @@ class ZbxCommon(object):
         fr.close()
         data.append('--%s--\r\n' % boundary)
 
-
-        http_url='%s/upload' % server_url
         http_body='\r\n'.join(data)
         try:
-            req=urllib2.Request(http_url, data=http_body)
+            req=urllib2.Request(url, data=http_body)
             req.add_header('Content-Type', 'multipart/form-data; boundary=%s' % boundary)
             req.add_header('User-Agent','Mozilla/5.0')
             req.add_header('Referer','http://remotserver.com/')
@@ -302,18 +302,30 @@ class ZbxCommon(object):
 class ZbxCli():
 
 
-    def __init__(self):
-        self.entry=server_url+"/%s"
+    def __init__(self,default_module):
+        self.entry=server_url+'/'+default_module+"/%s"
         self.util=ZbxCommon()
 
 
     def download(self,args):
-        self.util.download(args[0])
+        argv= self.util.parse_argv(args)
+	if isinstance(argv,list):
+            argv={}
+        if 'f' in argv.keys():
+            f=argv['f']
+        else:
+            return '(error) -f(filename) require'
+        self.util.download(argv['f'])
 
     def upload(self,args):
         argv= self.util.parse_argv(args)
-        print argv
-        self.util.upload(args[0])
+	if isinstance(argv,list):
+            argv={}
+        if 'f' in argv.keys():
+            f=argv['f']
+        else:
+            return '(error) -f(filename) require'
+        self.util.upload(self.entry%"upload", argv['f'])
 
     def help(self,args):
         ret=self.util.url_fetch(self.entry%'help')
@@ -330,7 +342,7 @@ class ZbxCli():
         else:
             print 'fail'
 
-    def default(self,cmd,args):
+    def default(self,module,action,args):
         argv= self.util.parse_argv(args)
 	if isinstance(argv,list):
             argv={}
@@ -343,7 +355,7 @@ class ZbxCli():
             #    argv['g']="Discovered hosts"
             #if not 't' in argv:
             #    argv['t']="Meizu-System"
-        ret=self.util.url_fetch(self.entry%cmd,{'param':json.dumps(argv)})
+        ret=self.util.url_fetch(server_url+'/%s/%s'%(module,action),{'param':json.dumps(argv)})
         print(ret)
 
     def shell(self,args):
@@ -352,16 +364,22 @@ class ZbxCli():
             sys.exit(0)
 
         #path=tempfile.gettempdir()+os.sep+'zbxcli';
+        filename=''
+        argv= self.util.parse_argv(args)
+        if 'f' in argv.keys():
+            filename=argv['f']
+        else:
+            return '(error) -f(filename) require'
         path=script_path
         if not os.path.exists(path):
             self.util.execute('mkdir -p %s'%path)
 
-        fn=path+os.path.sep+args[0]
+        fn=path+os.path.sep+filename
         src=''
         is_python=False
         result=-1
         if not os.path.exists(fn) or os.stat(fn).st_mtime<(time.time()-10*60):
-            src=self.util.url_fetch(self.entry%'shell',{ 'file':args[0], 'param': json.dumps(args[1:])},timeout=60*60)
+            src=self.util.url_fetch(self.entry%'shell',{ 'file':filename, 'param': json.dumps(args[1:])},timeout=60*60)
         if src!='':
             open(fn,'w').write(src)
         else:
@@ -384,17 +402,24 @@ class ZbxCli():
 
 
 if __name__ == '__main__':
-
-    cli=ZbxCli()
+    module=default_module
+    action='help'
+    cli=ZbxCli(default_module)
     util=ZbxCommon()
     if len(sys.argv)<2:
         cli.help(sys.argv)
+        sys.exit(0)
+    elif (len(sys.argv)==2) or (len(sys.argv)>2 and sys.argv[2].startswith('-')):
+        action=sys.argv[1]
+    elif len(sys.argv)>2 and not sys.argv[2].startswith('-'):
+        action=sys.argv[1]
+    elif len(sys.argv)>2 :
+        module=sys.argv[1] 
+        action=sys.argv[2] 
+    if hasattr(cli,action):
+       getattr(cli,action)(sys.argv[2:])
     else:
-        cmd=sys.argv[1]
-        if hasattr(cli,cmd):
-           getattr(cli,cmd)(sys.argv[2:])
-        else:
-           cli.default(cmd,sys.argv[2:])
+       cli.default(module,action,sys.argv[2:])
 
 
 
