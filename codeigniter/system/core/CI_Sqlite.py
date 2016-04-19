@@ -53,7 +53,8 @@ class CI_Sqlite(object):
         for i in m:
             key,num=re.subn(r"^'?{|}'?$",'',i)
             v.append(param[key])
-            sql=sql.replace(i,'%s')
+            sql=sql.replace(i,'?')
+            sql=sql.replace("'?'",'?')
         return sql,tuple(v)
 
     def dict_result(self,cursor):
