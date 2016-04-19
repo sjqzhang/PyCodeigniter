@@ -7,46 +7,10 @@ from codeigniter import ci
 from codeigniter import CI_Cache
 import os
 import json
+import re
+import sys
 
 
-class Index:
-    def _params(self,param='{}',opts=''):
-        params= json.loads(param)
-        return params
-    def parse_argv(self,argv):
-        data={}
-        long_args=[]
-        short_args=[]
-        for v in argv:
-            if v.startswith('--'):
-                long_args.append(v.replace('--','')+"=")
-            elif v.startswith('-'):
-                short_args.append(v.replace('-',''))
-        opts= getopt.getopt(argv,":".join(short_args)+":",long_args)
-        for opt in opts[0]:
-            data[opt[0].replace('-','')]=opt[1]
-        if len(data)>0:
-            return data
-        else:
-            return argv
-    def index(self,param=''):
-        ctrl='cli'    
-        action='help'
-        cm={
-          '':'Cli',
-          'h':'CliHelp'
-        }  
-        params=self._params(param)
-        if len(params)>2 and params[1].startswith('-'):
-            action=params[0]
-            para=self.parse_argv(params[1:])
-        else:
-            ctrl=params[0]
-            action=params[0]
-            para=self.parse_argv(params[2:])
-        return ci.loader.ctrl(ctrl).action(para)
-            
-     
 
 class Cli:
 
@@ -95,17 +59,28 @@ class Cli:
         return params
 
     def listfile(self,param=''):
-        return "\n".join(os.listdir('files'))
+        params=self._params(param) 
+        if 'd' in params:
+            directory=params['d']
+        else:
+            directory=''
+        directory=directory.replace('.','')
+        return "\n".join(os.listdir('files/'+directory))
 
 
     def upload(self,**kwargs): 
         file=kwargs['file'] 
-        filename='files/'+file.filename 
+        directory=kwargs['dir'] 
+        directory=directory.replace('.','')
+        path='files/'+directory
+        filename=path+'/'+file.filename 
+        if not os.path.isdir(path):
+            os.mkdir(path)
         if not os.path.exists(filename): 
             if isinstance(file,str): 
                 open(filename,'wb').write(file) 
             else: 
-                open('files/'+file.filename,'wb').write(file.file.read()) 
+                open(filename,'wb').write(file.file.read()) 
             return 'success' 
         else: 
             return 'file exists' 
@@ -114,6 +89,7 @@ class Cli:
         params=self._params(param) 
         filename='' 
         key='meizu.com' 
+        directory='/'
         k='' 
         if  'f' in params: 
             filename=params['f'] 
@@ -123,9 +99,12 @@ class Cli:
             k=params['k'] 
         else: 
             return '-k(key) require' 
+        if  'd' in params: 
+            directory=params['d'] 
         if not key==k: 
             return 'key error' 
-        path='files/'+filename 
+        directory=directory.replace('.','')
+        path='files/'+directory + '/' +filename 
         if os.path.exists(path): 
             os.remove(path) 
             return "sucess" 
@@ -263,12 +242,14 @@ class Cli:
             return False
     def listdoc(self,param=''):
         params=self._params(param)
+        if 'k' in params:
+            return self.getdoc(param)
         sql="select cmd from doc group by cmd"
         rows=ci.db.query(sql)
         ret=''
         for row in rows:
             if row['cmd']!=None:
-                ret+=str(row['cmd'])+"\n"
+                ret+=unicode(row['cmd'])+"\n"
         return ret
                 
         return ret
@@ -331,9 +312,9 @@ class Cli:
         for row in rows:
             if row['doc']!=None:
                 if outid:
-                    ret+='# docid:  '+str(row['id'])+"\n"+str(row['doc'])+"\n"
+                    ret+='# docid:  '+unicode(row['id'])+"\n"+unicode(row['doc'])+"\n"*3
                 else:
-                    ret+=str(row['doc'])+"\n"
-                ret+="#"*50
+                    ret+=str(row['doc'])+"\n"*3
+                #ret+="#"*50+"\n"
         return ret
         

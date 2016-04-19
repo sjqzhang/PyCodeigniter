@@ -75,8 +75,8 @@ class ZbxCommon(object):
         reprStr=repr(str).replace(r'\x','%')
         return reprStr[1:-1]
 
-    def download(self,filename):
-        data={'file':filename}
+    def download(self,filename,directory):
+        data={'file':filename,'dir':directory}
         data=urllib.urlencode(data)
         http_url='%s/download?%s' % (server_url,data)
         conn = urllib2.urlopen(http_url)
@@ -84,7 +84,7 @@ class ZbxCommon(object):
         f.write(conn.read())
         f.close()
 
-    def upload(self,url,filepath):
+    def upload(self,url,filepath,directory):
         boundary = '----------%s' % hex(int(time.time() * 1000))
         data = []
         data.append('--%s' % boundary)
@@ -92,6 +92,9 @@ class ZbxCommon(object):
         filename=os.path.basename(filepath)
         data.append('Content-Disposition: form-data; name="%s"\r\n' % 'filename')
         data.append(filename)
+        data.append('--%s' % boundary)
+        data.append('Content-Disposition: form-data; name="%s"\r\n' % 'dir')
+        data.append(directory)
         data.append('--%s' % boundary)
         data.append('Content-Disposition: form-data; name="%s"; filename="%s"' % ('file',filename))
         data.append('Content-Type: %s\r\n' % 'image/png')
@@ -375,7 +378,9 @@ class ZbxCli():
             f=argv['f']
         else:
             return '(error) -f(filename) require'
-        self.util.download(argv['f'])
+        if 'd' not in argv:
+            argv['d']='/'
+        self.util.download(argv['f'],argv['d'])
 
     def upload(self,args):
         argv= self.util.parse_argv(args)
@@ -385,7 +390,9 @@ class ZbxCli():
             f=argv['f']
         else:
             return '(error) -f(filename) require'
-        self.util.upload(self.entry%"upload", argv['f'])
+        if 'd' not in argv:
+            argv['d']='/'
+        self.util.upload(self.entry%"upload", argv['f'],argv['d'])
 
     def help(self,args):
         ret=self.util.url_fetch(self.entry%'help')
@@ -401,6 +408,13 @@ class ZbxCli():
             print 'success'
         else:
             print 'fail'
+    def adddoc(self,args):
+        argv=self.util.getopt(args)
+        if 'f' in argv:
+            argv['d']=open(argv['f'],'r').read()
+        
+        ret=self.util.url_fetch(self.entry%'adddoc',{'param':json.dumps(argv)})
+        print ret
 
     def default(self,module,action,args):
         #argv= self.util.parse_argv(args)
