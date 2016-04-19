@@ -142,7 +142,7 @@ class ZbxCommon(object):
  
             logger.error(e)
         return html
-    def getopt(inputs):
+    def getopt(self,inputs):
         def ptype(input):
             if "-" == input[0] and len(input) == 2:
                 return (1,input[1])
@@ -154,6 +154,8 @@ class ZbxCommon(object):
                 return 1
             return 0
         ret = {}
+        ret['__ctrl__']=''
+        ret['__func__']=''
         u = 0
         ucount = len(inputs)
         icount = 0
@@ -194,7 +196,13 @@ class ZbxCommon(object):
                     break
                 if i >= icount:
                     break
-        return (ls,ret)
+        if len(ls)==2:
+            ret['__ctrl__']=ls[0]
+            ret['__func__']=ls[1]
+        elif len(ls)==1:
+            ret['__ctrl__']=''
+            ret['__func__']=ls[0]
+        return (ret)
 
     def parse_argv(self,argv):
         data={}
@@ -389,13 +397,14 @@ class ZbxCli():
         if content!='':
             open('/tmp/cli','w').write(content)
             os.system('chmod +x /tmp/cli')
-            os.system('mv -f /tmp/cli /bin/cli')
+            os.system('mv -f /tmp/cli %s' %(client_filename))
             print 'success'
         else:
             print 'fail'
 
     def default(self,module,action,args):
-        argv= self.util.parse_argv(args)
+        #argv= self.util.parse_argv(args)
+        argv=self.util.getopt(args)
 	if isinstance(argv,list):
             argv={}
         if isinstance(argv,dict):
@@ -458,21 +467,35 @@ if __name__ == '__main__':
     action='help'
     cli=ZbxCli(default_module)
     util=ZbxCommon()
-    if len(sys.argv)<2:
-        cli.help(sys.argv)
-        sys.exit(0)
-    elif (len(sys.argv)==2) or (len(sys.argv)>2 and sys.argv[2].startswith('-')):
-        action=sys.argv[1]
-    elif len(sys.argv)>2 and not sys.argv[2].startswith('-'):
-        module=sys.argv[1] 
-        action=sys.argv[2]
-    elif len(sys.argv)>2 :
-        module=sys.argv[1] 
-        action=sys.argv[2] 
+    data= util.getopt(sys.argv[1:])
+    if data['__ctrl__']=='':
+        if data['__func__']=='':
+            action='help'
+        else:
+            action=data['__func__']
+    else:
+        module=data['__ctrl__']
+        action=data['__func__']
     if hasattr(cli,action):
        getattr(cli,action)(sys.argv[2:])
     else:
-       cli.default(module,action,sys.argv[2:])
+       cli.default(module,action,sys.argv[1:])
+    
+    #if len(sys.argv)<2:
+    #    cli.help(sys.argv)
+    #    sys.exit(0)
+    #elif (len(sys.argv)==2) or (len(sys.argv)>2 and sys.argv[2].startswith('-')):
+    #    action=sys.argv[1]
+    #elif len(sys.argv)>2 and not sys.argv[2].startswith('-'):
+    #    module=sys.argv[1] 
+    #    action=sys.argv[2]
+    #elif len(sys.argv)>2 :
+    #    module=sys.argv[1] 
+    #    action=sys.argv[2] 
+    #if hasattr(cli,action):
+    #   getattr(cli,action)(sys.argv[2:])
+    #else:
+    #   cli.default(module,action,sys.argv[2:])
 
 
 
