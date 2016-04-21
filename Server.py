@@ -35,6 +35,9 @@ def download(env, start_response):
         directory= data['dir']
         directory=directory.replace('.','')
         filepath='files/'+directory+'/'+filename
+        if not os.path.isfile(filepath):
+            start_response( '404 Not Found', [('Content-Type', 'html/text')])
+            return "(error) file not found" 
         the_file=open(filepath,'rb')
         size=os.path.getsize(filepath)
         response_headers = [ ('Content-Type', 'application/octet-stream'), ('Content-length', str(size)) ]
