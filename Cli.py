@@ -110,6 +110,68 @@ class Cli:
             return "sucess" 
         else: 
             return "Not Found" 
+    def rexec(self,param=''):
+        params=self._params(param)
+        ip=''
+        cmd=''
+        k=''
+        key='Mz'
+        if 'i' in params:
+            ip=params['i']
+        else:
+            return '-i(ip) require'
+        if 'c' in params:
+            cmd=params['c']
+        else:
+            return '-c(command) require'
+        if  'k' in params:
+            k=params['k']
+        else:
+            return '-k(key) require'
+        if not key==k:
+            return 'key error'
+        return self._remote_exec(ip,cmd)
+
+    def _remote_exec(self,ip,cmd):
+       try:
+           import paramiko
+           ssh=paramiko.SSHClient()
+           ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+           pkey= paramiko.RSAKey.from_private_key_file ('keypath/filename','keypassword')
+           try:
+               ssh.connect(ip,22,'ops','',pkey)
+           except Exception as err:
+               self.app.logger.error("PKERROR:"+str(err))
+               try:
+                   ssh.connect(ip,22,'root','root')
+               except Exception as usererr:
+                   self.app.logger.error("USERERROR:"+str(err))
+                   ssh.connect(ip,16120,'root','root')
+
+           ssh.exec_command('sudo -i')
+           ret=[]
+           reterr=[]
+           if isinstance(cmd,list):
+               for c in cmd:
+                   stdin, stdout, stderr = ssh.exec_command(cmd)
+                   reterr.append("".join(stderr.readlines()))
+                   ret.append("".join(stdout.readlines()))
+           else:
+               stdin, stdout, stderr = ssh.exec_command(cmd)
+               reterr=stderr.readlines()
+               ret=stdout.readlines()
+
+           if len(reterr)>0:
+               return "".join(reterr)
+           return "".join(ret)
+       except Exception as er:
+           self.app.logger.error(er)
+           return str(er)
+       finally:
+           try:
+              ssh.close()
+           except Exception as err:
+               pass
 
 ################################################env###############################################
     def _checkenv(self,param=''):
