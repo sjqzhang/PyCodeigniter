@@ -6,11 +6,34 @@ import threading
 from . import PushTraceback
 import hashlib
 import redis
-import gevent
 import multiprocessing
 import Queue
 
-#from gevent import monkey;gevent.monkey.patch_all(thread=False, socket=False)
+
+
+class ResdisAdaptor(object):
+
+    def __init__(self, conf,app):
+        self.app = app
+        self.conf = conf
+        self.expire = int(conf['expire'])
+        host , port = conf['host'].split(":")
+        # self.geventlocalnamespace =  self.app.cookie.data
+        connect_dict = {'host': host,'port':int(port)}
+        if conf.get('password',''):
+            connect_dict['password'] = conf['conf']
+        self.redis = redis.StrictRedis(**connect_dict)
+        
+
+
+    def set(self,key,value):
+        return self.redis.setex(key,self.expire,value)
+
+    def get(self,key):
+        value = self.redis.get(key)
+        return value
+        
+
 class MyLock(object):
     lock = threading.RLock()
     def __enter__(self):
@@ -20,63 +43,6 @@ class MyLock(object):
     def __exit__(self,type, value, traceback):
         #print "out lock"
         MyLock.lock.release()
-
-class ResdisAdaptor(multiprocessing.Process):
-
-    def __init__(self, conf,app):
-        multiprocessing.Process.__init__(self)
-        self.app = app
-        self.conf = conf
-        self.expire = int(conf['expire'])
-        host , port = conf['host'].split(":")
-        # self.geventlocalnamespace =  self.app.cookie.data
-        connect_dict = {'host': host,'port':int(port)}
-        if conf.get('password',''):
-            connect_dict['password'] = conf['conf']
-        self.redisConnPool = redis.StrictRedis(**connect_dict)
-        self.queue= multiprocessing.Queue(10000)
-        self.start()
-        
-
-
-    def set(self,key,value):
-        #return r.setex(key,self.expire,value)
-        # self.app.logger.info("redis set key:%s,value:%s" % (key,value))
-        return self.exec_command("set",(key,self.expire,value) )
-        
-        
-
-    def get(self,key):
-        value  = self.exec_command("get",key )
-        #print "get key :%s value %s" % (key,value)
-        #value = r.get(key)
-        return value
-
-    def exec_command(self,com,v):
-        
-        self.queue.put( (com,v) )
-        v = self.queue.get()
-        return v
-                
-
-    def run(self):
-        
-        while True:
-            try:
-                rsp= None
-                va = self.queue.get()
-                com , v = va
-                
-                if com == "set":
-                    key,expire,value = v
-                    rsp = self.redisConn.setex(key,self.expire,value)
-                if com == "get":
-                    key = v
-                    rsp = self.redisConn.get(key)
-                self.queue.put( rsp )
-            except BaseException as e:
-                self.app.logger.error( "%s:%s" % ( PushTraceback(),e ) )
-
 
 class LocalAdaptor(object):
     class store_data:
@@ -144,7 +110,6 @@ class CI_Session(object):
         self.app = kwargs['app']
         self.conf = kwargs['session']
         self.cookie = self.app.cookie
-        self.data = self.app.cookie.data
 
         if self.conf['type'] == 'local':
             self.store_porxy = LocalAdaptor(self.conf,self.app)

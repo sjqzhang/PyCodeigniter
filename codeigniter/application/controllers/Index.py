@@ -12,7 +12,8 @@ class Index:
     def index(self):
         return "hello world"
 
-
+    def favicon(self):
+        return "favicon"
 
     def test_task(self):
         import datetime
@@ -62,7 +63,6 @@ class Index:
     def test_auto_cache(self,id=0,name='hello'): #auto cache result
         ci.cacche.set('abc',"hello world")
         return ci.cache.get('abc')
-
     def test_cache(self):
         ci.cacche.set('abc',"hello world")
         return ci.cache.get('abc')

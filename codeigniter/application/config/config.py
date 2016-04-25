@@ -20,6 +20,8 @@ db={
 
 
 
+
+
 log={
 
     'file':r'./log.log',
@@ -49,13 +51,23 @@ mail={
 
 
 server={
-    'fastpy':False,
     'port':8005,
     'host':'0.0.0.0',
     'envroment':'development',
     'static_dir':'static',
     'cache_dir':'cache',
     'access_log':'./access.log'
+}
+
+
+route={
+    r'/favicon.ico':'Index.favicon'
+}
+
+
+hook={
+    'init_after':''
+
 }
 
 
@@ -143,6 +155,7 @@ config={
 # 'cron':cron,
 # 'zookeeper':zookeeper,
 #'redis':redis,
+#'route':route,
 # 'memcache':memcache
 
 }

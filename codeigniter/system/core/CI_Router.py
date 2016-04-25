@@ -95,9 +95,10 @@ class CI_Router(object):
     def wsgi_route(self,env):
         stime=time.time()
         data=self.app.input.parse(env)
+        self.app.local.headers = None
+        self.app.cookie.parse_cookie(env)
         try:
             if 'session' in self.config.keys():
-                self.app.cookie.parse_cookie(env)
                 self.app.session.pre_parse_uuid()
             if '__ctrl_name__' in data.keys():
                 ctrl=data['__ctrl_name__']
@@ -105,13 +106,25 @@ class CI_Router(object):
             if '__func_name__' in data.keys():
                 func=data['__func_name__']
                 del data['__func_name__']
-            ctrl_instance=self.app.loader.ctrl(ctrl)
-            #print(dir(ctrl_instance))
-            f=self.get_func(ctrl_instance,func)
-            if f!=None:
-                func=f
-            if not hasattr(ctrl_instance,func) or str(func).startswith('_'):
-                 return "404 Not Found", "Not Found"
+            if self.app.static:
+                if self.app.static.accept(env):
+                    return self.app.static.route(env)
+            for i in range(1):
+                if 'route' in self.config.keys():
+                    for route,ctrl in self.config['route'].iteritems():
+                        if re.match(route,env['PATH_INFO']) or route.strip() == env['PATH_INFO'].strip():
+                            ctrl,func  = ctrl.split(".")
+                            ctrl_instance=self.app.loader.ctrl(ctrl)
+                            if not hasattr(ctrl_instance,func) or str(func).startswith('_'):
+                                return "404 Not Found", "Not Found"
+                            break
+                ctrl_instance=self.app.loader.ctrl(ctrl)
+                #print(dir(ctrl_instance))
+                f=self.get_func(ctrl_instance,func)
+                if f!=None:
+                    func=f
+                if not hasattr(ctrl_instance,func) or str(func).startswith('_'):
+                     return "404 Not Found", "Not Found"
         except Exception as err:
             self._log(env,404,stime)
             return "404 Not Found", "Not Found"

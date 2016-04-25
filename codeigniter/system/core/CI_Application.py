@@ -23,15 +23,6 @@ except Exception as er:
 
 
 
-is_gevent=False
-
-try:
-    from gevent import monkey; monkey.patch_all()
-    from gevent.pywsgi import WSGIServer
-    is_gevent=True
-except Exception as er:
-    pass
-
 from cookielib import CookieJar
 import re
 import zlib
@@ -39,7 +30,7 @@ import zlib
 
 
 import pdb
-
+from threading import local
 class CI_CLASS(object):
 
     def __getattr__(self,attr):
@@ -78,6 +69,9 @@ class CI_Application(object):
         self.memcache=None
         self.session=None
         self.cookie=None
+        self.is_threads = False
+        self.local = local()
+
         self._app_create(application_path)
         CI_Application.application_instance = self
         self.init()
@@ -93,6 +87,11 @@ class CI_Application(object):
     #     if hasattr(self,item):
     #         return getattr(self,item)
 
+    def set_header(self,key,value):
+        if type(key) == str and type(value):
+            if None == self.local.headers:
+                self.local.headers = []
+            self.local.headers.append( (key,value) )
 
     def get(self,key):
         if key in self.instances.keys():
@@ -119,6 +118,8 @@ class CI_Application(object):
         self.config['system_path']=self.system_path
         self.config['application_path']=self.application_path
         self.config['app']=self
+        if 'use_threads' in self.config.keys():
+            self.is_threads = self.config['use_threads']
         for conf in self.config.keys():
             if isinstance(self.config[conf],dict):
                 self.config[conf]['app']=self
@@ -134,10 +135,9 @@ class CI_Application(object):
                 self.logger.error(err)
         self.input= eval('CI_Input(**self.config)')
 
-        if 'session' in self.config.keys():
-            exec('from CI_Cookie import CI_Cookie')
-            self.cookie= eval('CI_Cookie(**self.config)')
-            module_list.append('CI_Cookie')
+        exec('from CI_Cookie import CI_Cookie')
+        self.cookie= eval('CI_Cookie(**self.config)')
+        module_list.append('CI_Cookie')
             
         if 'db' in self.config.keys():
             if 'type' in self.config['db'] and self.config['db']['type']=='sqlite' :
@@ -157,6 +157,7 @@ class CI_Application(object):
                 module_list.append('CI_DBActiveRec')
         else:
             self.logger.warn('db not config')
+        self.static = None
         self.router= eval('CI_Router(**self.config)')
         if 'mail' in self.config.keys():
             self.mail= eval('CI_Mail(**self.config["mail"])')
@@ -165,11 +166,16 @@ class CI_Application(object):
             self.cache= eval('CI_Cache(**self.config)')
             if 'type' in self.config['cache']:
                 cache_type=self.config['cache']['type']
+        if 'server' in self.config.keys():
+            if 'static_dir' in self.config['server']:
+                exec('from CI_Static import CI_Static')
+                self.static = eval('CI_Static(**self.config)')
+
         if 'server' in self.config.keys() and 'fastpy' in self.config['server'] and  self.config['server']['fastpy'] :
             exec('from CI_Server import CI_Server')
             self.server= eval('CI_Server(**self.config)')
             module_list.append('CI_Server')
-
+            
         if 'zookeeper' in self.config.keys():
             exec('from CI_Zookeeper import CI_Zookeeper')
             self.zk= eval('CI_Zookeeper(**self.config)')
@@ -198,6 +204,7 @@ class CI_Application(object):
             exec('from CI_Cron import CI_Cron')
             self.cron= eval('CI_Cron(**self.config)')
             module_list.append('CI_Cron')
+        
 
         #must be instance last
         self.loader= eval('CI_Loader(**self.config)')
@@ -251,24 +258,7 @@ class CI_Application(object):
         return input_config
 
 
-    def request_hander(self, environ, start_response):
-        html=''
-        cookie=[]
 
-
-        code,obj=self.router.wsgi_route(environ)
-        if 'session' in self.config.keys():
-            cookie = self.cookie.result_cookie()
-        if not isinstance(obj,str) and not isinstance(obj,unicode):
-            html=json.dumps(obj)
-            start_response(str(code), [('Content-Type', 'application/json')] +cookie )
-        else:
-            start_response(str(code), [('Content-Type', 'text/html')] +cookie )
-            if isinstance(obj,unicode):
-                html=unicode.encode(obj,'utf-8')
-            else:
-                html=obj
-        return [str(html)]
 
     def get_logger(self,name):
         return self.getLogger(name)
@@ -400,17 +390,36 @@ class CI_Application(object):
         else:
             return pyquery.PyQuery(selector,obj)
 
+    def application(self, environ, start_response):
+        code,content=self.router.wsgi_route(environ)
+        if self.cookie:
+            self.cookie.result_cookie()
+        if not type(content) in [str,unicode]:
+            content = json.dumps(content)
+        if self.local.headers:
+            start_response(str(code),self.local.headers)
+        else:
+            start_response(str(code),[])
+        self.local.headers = None
+        return [str(content)]
+
+
     def start_server(self):
         msg="server listen to : "+str(self.config['server']['port'])
         print(msg)
         self.logger.info(msg)
-        if is_gevent:
+        if self.is_threads:
+            from gevent import monkey
+            monkey.patch_all()
+            import werkzeug.serving
+            print "use werkzeug.serving"
+
             port=self.config['server']['port']
             host=self.config['server']['host']
-            WSGIServer((host, port), self.request_hander).serve_forever()
+            werkzeug.serving.run_simple(host, port, self.application,threaded = True)
         else:
             from wsgiref.simple_server import make_server
-            httpd=make_server(self.config['server']['host'],self.config['server']['port'],self.request_hander)
+            httpd=make_server(self.config['server']['host'],self.config['server']['port'],self.application)
             httpd.serve_forever()
 
 
