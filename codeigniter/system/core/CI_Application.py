@@ -22,6 +22,15 @@ except Exception as er:
     pass
 
 
+is_install_gevent=False
+try:
+    from gevent import monkey
+    monkey.patch_all()
+    from gevent.pywsgi import WSGIServer
+    is_install_gevent=True
+except Exception as er:
+    pass
+
 
 from cookielib import CookieJar
 import re
@@ -408,15 +417,21 @@ class CI_Application(object):
         msg="server listen to : "+str(self.config['server']['port'])
         print(msg)
         self.logger.info(msg)
-        if self.is_threads:
-            from gevent import monkey
-            monkey.patch_all()
-            import werkzeug.serving
-            print "use werkzeug.serving"
 
-            port=self.config['server']['port']
-            host=self.config['server']['host']
-            werkzeug.serving.run_simple(host, port, self.application,threaded = True)
+
+
+        # if self.is_threads:
+        #     # from gevent import monkey
+        #     # monkey.patch_all()
+        #     import werkzeug.serving
+        #     print "use werkzeug.serving"
+        #
+        #     port=self.config['server']['port']
+        #     host=self.config['server']['host']
+        #     werkzeug.serving.run_simple(host, port, self.application,threaded = True)
+        if is_install_gevent:
+            WSGIServer((self.config['server']['host'],self.config['server']['port']), self.application).serve_forever()
+
         else:
             from wsgiref.simple_server import make_server
             httpd=make_server(self.config['server']['host'],self.config['server']['port'],self.application)

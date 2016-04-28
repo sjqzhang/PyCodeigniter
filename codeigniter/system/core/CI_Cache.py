@@ -14,6 +14,7 @@ __author__ = 'xiaozhang'
 import re
 import time
 import json
+import hashlib
 
 import CI_Application 
 
@@ -78,29 +79,38 @@ class CI_Cache(object):
             return getattr(self.cache_instance,item)
 
 
-
-
-
     @staticmethod
     def get_cache_key(prefix,tpl,func,*args,**kwargs):
-        key=prefix+'$'+func.__name__+'$'
-        # match= re.findall(r'\#p\[(\d+)\]([^,}]+)?',tpl)
-        match=CI_Cache.REGEX_KEY.findall(tpl)
-        # match=[]
-        # return key
-        if len(match)<=len(kwargs):
-            for m in match:
-                if m[0] in kwargs.keys():
-                    if isinstance(kwargs[(m[0])],dict):
-                        if m[1]!='':
-                            key=key+str(kwargs[(m[0])][m[1][1:]])+'$'
-                        else:
-                            key=key+str(kwargs[(m[0])])+'$'
-                    else:
-                        key=key+ str(kwargs[(m[0])])+'$'
-                else:
-                    continue
-        return key
+        def md5(input):
+          m2 = hashlib.md5()
+          m2.update(input)
+          return str(m2.hexdigest())
+        key=(prefix,'$',tpl,'$',str(func),tuple(args),str(kwargs))
+        return prefix+'_'+md5(str(key))
+
+
+
+
+    # @staticmethod
+    # def get_cache_key(prefix,tpl,func,*args,**kwargs):
+    #     key=prefix+'$'+func.__name__+'$'
+    #     # match= re.findall(r'\#p\[(\d+)\]([^,}]+)?',tpl)
+    #     match=CI_Cache.REGEX_KEY.findall(tpl)
+    #     # match=[]
+    #     # return key
+    #     if len(match)<=len(kwargs):
+    #         for m in match:
+    #             if m[0] in kwargs.keys():
+    #                 if isinstance(kwargs[(m[0])],dict):
+    #                     if m[1]!='':
+    #                         key=key+str(kwargs[(m[0])][m[1][1:]])+'$'
+    #                     else:
+    #                         key=key+str(kwargs[(m[0])])+'$'
+    #                 else:
+    #                     key=key+ str(kwargs[(m[0])])+'$'
+    #             else:
+    #                 continue
+    #     return key
     @staticmethod
     def Cache(prefix='', ttl=3600,key='',op='select'):
         def handle_func(func):
