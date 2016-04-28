@@ -26,7 +26,7 @@ server_url="http://172.16.16.113:8005"
 
 default_module='cli'
 
-bin_name='cli'
+bin_name='client'
 client_filename='/bin/%s' % bin_name
 client_log_filename= tempfile.gettempdir()+os.path.sep+ bin_name+".log"
 script_path= tempfile.gettempdir()+ os.path.sep+'script'
@@ -75,16 +75,20 @@ class ZbxCommon(object):
         reprStr=repr(str).replace(r'\x','%')
         return reprStr[1:-1]
 
-    def download(self,filename):
-        data={'file':filename}
-        data=urllib.urlencode(data)
-        http_url='%s/download?%s' % (server_url,data)
-        conn = urllib2.urlopen(http_url)
-        f = open(filename,'wb')
-        f.write(conn.read())
-        f.close()
+    def download(self,filename,directory,filepath):
+        try:
+            data={'file':filename,'dir':directory}
+            data=urllib.urlencode(data)
+            http_url='%s/download?%s' % (server_url,data)
+            conn = urllib2.urlopen(http_url)
+            f = open(filepath,'wb')
+            f.write(conn.read())
+            f.close()
+        except Exception as e:
+            logger.error(e)    
+            print e
 
-    def upload(self,url,filepath):
+    def upload(self,url,filepath,directory):
         boundary = '----------%s' % hex(int(time.time() * 1000))
         data = []
         data.append('--%s' % boundary)
@@ -92,6 +96,9 @@ class ZbxCommon(object):
         filename=os.path.basename(filepath)
         data.append('Content-Disposition: form-data; name="%s"\r\n' % 'filename')
         data.append(filename)
+        data.append('--%s' % boundary)
+        data.append('Content-Disposition: form-data; name="%s"\r\n' % 'dir')
+        data.append(directory)
         data.append('--%s' % boundary)
         data.append('Content-Disposition: form-data; name="%s"; filename="%s"' % ('file',filename))
         data.append('Content-Type: %s\r\n' % 'image/png')
@@ -108,7 +115,7 @@ class ZbxCommon(object):
             resp = urllib2.urlopen(req, timeout=5)
             qrcont=resp.read()
             print qrcont
-        except Exception,e:
+        except Exception as e:
             logger.error(e)    
             print e
             print 'http error'
@@ -375,7 +382,11 @@ class ZbxCli():
             f=argv['f']
         else:
             return '(error) -f(filename) require'
-        self.util.download(argv['f'])
+        if 'd' not in argv:
+            argv['d']='/'
+        if 'o' not in argv:
+            argv['o']=argv['f']
+        self.util.download(argv['f'],argv['d'],argv['o'])
 
     def upload(self,args):
         argv= self.util.parse_argv(args)
@@ -385,7 +396,9 @@ class ZbxCli():
             f=argv['f']
         else:
             return '(error) -f(filename) require'
-        self.util.upload(self.entry%"upload", argv['f'])
+        if 'd' not in argv:
+            argv['d']='/'
+        self.util.upload(self.entry%"upload", argv['f'],argv['d'])
 
     def help(self,args):
         ret=self.util.url_fetch(self.entry%'help')
@@ -401,11 +414,17 @@ class ZbxCli():
             print 'success'
         else:
             print 'fail'
+    def adddoc(self,args):
+        argv=self.util.getopt(args)
+        if 'f' in argv:
+            argv['d']=open(argv['f'],'r').read()
+        
+        ret=self.util.url_fetch(self.entry%'adddoc',{'param':json.dumps(argv)})
+        print ret
 
     def default(self,module,action,args):
-        argv= self.util.parse_argv(args)
-        #print argv
-        #print self.util.getopt(args)
+        #argv= self.util.parse_argv(args)
+        argv=self.util.getopt(args)
 	if isinstance(argv,list):
             argv={}
         if isinstance(argv,dict):
