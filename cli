@@ -3,7 +3,9 @@
 __author__ = 'xiaozhang'
 
 
-
+import shutil,subprocess,time,traceback
+import   atexit
+from signal import SIGTERM
 
 import os
 import urllib2
@@ -19,9 +21,10 @@ import tempfile
 import threading
 import getopt
 from logging.handlers import RotatingFileHandler
+import json
 
 
-
+pidfile="/var/zbxcli.pid"
 server_url="http://172.16.16.113:8005"
 
 default_module='cli'
@@ -40,6 +43,123 @@ logging.basicConfig(level=logging.DEBUG,
                 filemode='a')
 logger.addHandler(RotatingFileHandler(filename=client_log_filename,maxBytes=100 * 1024 * 1024, backupCount=3))
 
+class Daemon(object):
+        """
+        A generic daemon class.
+       
+        Usage: subclass the Daemon class and override the run() method
+        """
+        def __init__(self, pidfile, stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
+                self.stdin = stdin
+                self.stdout = stdout
+                self.stderr = stderr
+                self.pidfile = pidfile
+       
+        def daemonize(self):
+                """
+                do the UNIX double-fork magic, see Stevens' "Advanced
+                Programming in the UNIX Environment" for details (ISBN 0201563177)
+                http://www.erlenstar.demon.co.uk/unix/faq_2.html#SEC16
+                """
+                try:
+                        pid = os.fork()
+                        if pid > 0:
+                                # exit first parent
+                                sys.exit(0)
+                except OSError, e:
+                        sys.stderr.write("fork #1 failed: %d (%s)\n" % (e.errno, e.strerror))
+                        sys.exit(1)
+       
+                # decouple from parent environment
+                os.chdir("/")
+                os.setsid()
+                os.umask(0)
+       
+                # do second fork
+                try:
+                        pid = os.fork()
+                        if pid > 0:
+                                # exit from second parent
+                                sys.exit(0)
+                except OSError, e:
+                        sys.stderr.write("fork #2 failed: %d (%s)\n" % (e.errno, e.strerror))
+                        sys.exit(1)
+       
+                # redirect standard file descriptors
+                sys.stdout.flush()
+                sys.stderr.flush()
+                si = file(self.stdin, 'r')
+                so = file(self.stdout, 'a+')
+                se = file(self.stderr, 'a+', 0)
+                os.dup2(si.fileno(), sys.stdin.fileno())
+                os.dup2(so.fileno(), sys.stdout.fileno())
+                os.dup2(se.fileno(), sys.stderr.fileno())
+       
+                # write pidfile
+                atexit.register(self.delpid)
+                pid = str(os.getpid())
+                file(self.pidfile,'w+').write("%s\n" % pid)
+       
+        def delpid(self):
+                os.remove(self.pidfile)
+ 
+        def start(self):
+                """
+                Start the daemon
+                """
+                # Check for a pidfile to see if the daemon already runs
+                try:
+                        pf = file(self.pidfile,'r')
+                        pid = int(pf.read().strip())
+                        pf.close()
+                except IOError:
+                        pid = None
+                if pid:
+                        message = "pidfile %s already exist. Daemon already running?\n"
+                        sys.stderr.write(message % self.pidfile)
+                        sys.exit(1)
+               
+                # Start the daemon
+                self.daemonize()
+                self.run()
+ 
+        def stop(self):
+                """
+                Stop the daemon
+                """
+                # Get the pid from the pidfile
+                try:
+                        pf = file(self.pidfile,'r')
+                        pid = int(pf.read().strip())
+                        pf.close()
+                except IOError:
+                        pid = None
+       
+                if not pid:
+                        message = "pidfile %s does not exist. Daemon not running?\n"
+                        sys.stderr.write(message % self.pidfile)
+                        return # not an error in a restart
+ 
+                # Try killing the daemon process       
+                try:
+                        while 1:
+                                os.kill(pid, SIGTERM)
+                                time.sleep(0.1)
+                except OSError, err:
+                        err = str(err)
+                        if err.find("No such process") > 0:
+                                if os.path.exists(self.pidfile):
+                                        os.remove(self.pidfile)
+                        else:
+                                print str(err)
+                                sys.exit(1)
+ 
+        def restart(self):
+                """
+                Restart the daemon
+                """
+                self.stop()
+                self.start()
 
 
 class ZbxCommand(object):
@@ -120,7 +240,7 @@ class ZbxCommon(object):
             print e
             print 'http error'
 
-    def url_fetch(self,url,data=None,timeout=30):
+    def url_fetch(self,url,data=None,timeout=30,httpCmd=''):
         html='';
         # print(url)
         try:
@@ -134,6 +254,9 @@ class ZbxCommon(object):
                 headers = headers,
                 data=data
             )
+            if httpCmd <> "":
+                req.get_method = lambda: httpCmd 
+
             html=urllib2.urlopen(req,timeout=timeout).read()
             charset=re.compile(r'<meta[^>]*charset=[\'\"]*?([a-z0-8\-]+)[\'\"]?[^>]*?>',re.IGNORECASE).findall(html)
             if len(charset) >0:
@@ -422,10 +545,29 @@ class ZbxCli():
         ret=self.util.url_fetch(self.entry%'adddoc',{'param':json.dumps(argv)})
         print ret
 
+    def daemon(self,argv):
+        daemon = ZbxDaemon(pidfile)
+        setattr(daemon,'zbxcli',self)
+        data= self.util.getopt(sys.argv[1:])
+        opt = data.get('s')
+        if 'start' == opt:
+            print "cli daemon start"
+            daemon.start()
+        elif 'stop' == opt:
+            print "cli daemon stop"
+            daemon.stop()
+        elif 'restart' == opt:
+            print "cli daemon restart"
+            daemon.restart()
+        else:
+            print "usage: cli deamon -s start|stop|restart"
+            sys.exit(2)
+        sys.exit(0)
+
     def default(self,module,action,args):
         #argv= self.util.parse_argv(args)
         argv=self.util.getopt(args)
-	if isinstance(argv,list):
+        if isinstance(argv,list):
             argv={}
         if isinstance(argv,dict):
             if not 's' in argv:
@@ -438,6 +580,20 @@ class ZbxCli():
             #    argv['t']="Meizu-System"
         ret=self.util.url_fetch(server_url+'/%s/%s'%(module,action),{'param':json.dumps(argv)})
         print(ret)
+        return ret
+
+    def remote_server(self,module,action,argv):
+        if isinstance(argv,dict):
+            if not 's' in argv:
+                argv['s']=self.util.get_hostname()
+            if not 'i' in argv:
+                argv['i']=self.util.get_one_ip()
+            #if not 'g' in argv:
+            #    argv['g']="Discovered hosts"
+            #if not 't' in argv:
+            #    argv['t']="Meizu-System"
+        ret=self.util.url_fetch(server_url+'/%s/%s'%(module,action),{'param':json.dumps(argv)})
+        return ret
 
     def shell(self,args):
         if len(args)<1:
@@ -480,6 +636,87 @@ class ZbxCli():
             result=cmd.run(60*60*24)
         print(result)
 
+class ZbxDaemon(Daemon):
+
+    def __getattr__(self,attr):
+        if hasattr(self,'zbxcli'):
+            if hasattr(self.zbxcli,attr):
+                return getattr(self.zbxcli,attr)
+        return None
+
+    def get_etcd(self):
+        now = time.time()
+        if not self.update_time:
+            self.update_time = now -600
+        if now - self.update_time > 600:
+            print "=== get etcd"
+            self.update_time = now
+            self.etcd_list =  json.loads(self.remote_server('cli','getetcd',{}) )
+            print "remote",self.etcd_list
+
+    def heartbeat(self):
+        print "=== heartbeat start"
+        ip = self.util.get_one_ip()
+        for host in self.etcd_list:
+            html = self.util.url_fetch("http://%s/v2/keys/heartbeat/%s" % (host,ip) ,data={'ttl':60,'value':'2333'},httpCmd = 'PUT' )
+            if html != "":
+                break
+        print "=== heartbeata end"
+
+    def watch_commmand(self):
+
+        ip = self.util.get_one_ip()
+        print "watch_commmand",ip,self.etcd_list
+        for host in self.etcd_list:
+            self.util.url_fetch("http://%s/v2/keys/publish/%s?wait=true&recursive=true" % (host,ip),timeout = 10 )
+            content = self.util.url_fetch("http://%s/v2/keys/publish/%s?recursive=true" % (host,ip),timeout = 10 )
+            if content != "":
+                self.feedback_result(ip,host,content) 
+                break
+
+
+    def feedback_result(self,ip,host,content):
+        try:
+            print "process cmd"
+            if content == "Not Found":
+                print "no funud key"
+                return
+            rjson = json.loads(content)
+            print rjson
+            if not rjson['node'].get('dir',False):
+                url = "http://%s/v2/keys%s?recursive=true" % (host,rjson['node']['key'])
+                self.util.url_fetch(url,httpCmd= 'DELETE' )
+                print "publish is no dir"
+                
+                return
+
+            if not rjson['node'].get('nodes'):
+                print "no Check command"
+                return
+
+            for cNode in  rjson['node']['nodes']:
+                cmd = cNode['value'].decode("utf-8")
+                key = cNode['key']
+                result = ZbxCommand(cmd).run()
+                url = "http://%s/v2/keys%s?recursive=true" % (host,key)
+                self.util.url_fetch(url,httpCmd= 'DELETE' )
+                message = "ip:%s cmd:%s result:%s" % (ip,cmd,result)
+                self.remote_server('cli','feedback_result',{'param':message})
+                #print "cmd %s result %s" % (cmd,result)
+
+        except BaseException as e:
+            print "feed error"
+            print e
+
+
+
+
+    def run(self):
+        self.get_etcd()
+        while True:
+            self.get_etcd()
+            self.heartbeat()
+            self.watch_commmand()
 
 
 if __name__ == '__main__':
