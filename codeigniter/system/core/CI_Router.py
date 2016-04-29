@@ -96,6 +96,8 @@ class CI_Router(object):
         stime=time.time()
         data=self.app.input.parse(env)
         self.app.local.headers = None
+        self.app.local.env=env
+        self.app.local.data=data
         self.app.cookie.parse_cookie(env)
         try:
             if 'session' in self.config.keys():

@@ -81,6 +81,7 @@ class CI_Application(object):
         self.is_threads = False
         self.local = local()
 
+
         self._app_create(application_path)
         CI_Application.application_instance = self
         self.init()
@@ -410,6 +411,8 @@ class CI_Application(object):
         else:
             start_response(str(code),[])
         self.local.headers = None
+        self.local.env=None
+        self.local.data=None
         return [str(content)]
 
 
@@ -436,6 +439,7 @@ class CI_Application(object):
             from wsgiref.simple_server import make_server
             httpd=make_server(self.config['server']['host'],self.config['server']['port'],self.application)
             httpd.serve_forever()
+
 
 
 
