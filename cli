@@ -243,6 +243,12 @@ class ZbxCommon(object):
     def url_fetch(self,url,data=None,timeout=30,httpCmd=''):
         html='';
         # print(url)
+        home= os.path.expanduser('~')
+        fn=home+'/.cli'
+        key=''
+        if os.path.isfile(fn):
+            with open(fn) as f:
+                key=f.read().strip()
         try:
             headers = {
                 'User-Agent':'Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US; rv:1.9.1.6) Gecko/20091201 Firefox/3.5.6'
@@ -564,6 +570,21 @@ class ZbxCli():
             sys.exit(2)
         sys.exit(0)
 
+    def login(self,argv):
+        data= self.util.getopt(sys.argv[1:])
+        if 'u' not in data:
+            data['u']=raw_input('please input username: ')
+        if 'p' not in data:
+            import getpass
+            data['p']=getpass.getpass('please input password: ')
+        ret=self.util.url_fetch(server_url+'/%s/%s'%(module,action),{'param':json.dumps(data)})
+        home= os.path.expanduser('~')
+        fn=home+'/.cli'
+        if os.path.isfile(fn):
+            with open(fn,"w") as f:
+                f.write(ret)
+
+
     def default(self,module,action,args):
         #argv= self.util.parse_argv(args)
         argv=self.util.getopt(args)
@@ -717,6 +738,7 @@ class ZbxDaemon(Daemon):
             self.get_etcd()
             self.heartbeat()
             self.watch_commmand()
+            time.sleep(1)
 
 
 if __name__ == '__main__':
