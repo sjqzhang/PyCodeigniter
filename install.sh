@@ -38,6 +38,7 @@ yum install -y "Development tools"
 yum install -y python-devel
 yum install -y wget
 yum install -y unzip
+yum install -y gevent
 
 
 }
@@ -48,6 +49,7 @@ apt-get install -y build-essential
 apt-get install -y python-dev
 apt-get install -y wget
 apt-get install -y unzip
+apt-get install -y gevent
 
 
 }
