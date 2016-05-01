@@ -25,7 +25,7 @@ import json
 
 
 pidfile="/var/zbxcli.pid"
-server_url="http://172.16.16.113:8005"
+server_url="http://172.17.140.116:8005"
 
 default_module='cli'
 
@@ -46,7 +46,7 @@ logger.addHandler(RotatingFileHandler(filename=client_log_filename,maxBytes=100 
 class Daemon(object):
         """
         A generic daemon class.
-       
+
         Usage: subclass the Daemon class and override the run() method
         """
         def __init__(self, pidfile, stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
@@ -54,7 +54,7 @@ class Daemon(object):
                 self.stdout = stdout
                 self.stderr = stderr
                 self.pidfile = pidfile
-       
+
         def daemonize(self):
                 """
                 do the UNIX double-fork magic, see Stevens' "Advanced
@@ -69,12 +69,12 @@ class Daemon(object):
                 except OSError, e:
                         sys.stderr.write("fork #1 failed: %d (%s)\n" % (e.errno, e.strerror))
                         sys.exit(1)
-       
+
                 # decouple from parent environment
                 os.chdir("/")
                 os.setsid()
                 os.umask(0)
-       
+
                 # do second fork
                 try:
                         pid = os.fork()
@@ -84,7 +84,7 @@ class Daemon(object):
                 except OSError, e:
                         sys.stderr.write("fork #2 failed: %d (%s)\n" % (e.errno, e.strerror))
                         sys.exit(1)
-       
+
                 # redirect standard file descriptors
                 sys.stdout.flush()
                 sys.stderr.flush()
@@ -94,15 +94,15 @@ class Daemon(object):
                 os.dup2(si.fileno(), sys.stdin.fileno())
                 os.dup2(so.fileno(), sys.stdout.fileno())
                 os.dup2(se.fileno(), sys.stderr.fileno())
-       
+
                 # write pidfile
                 atexit.register(self.delpid)
                 pid = str(os.getpid())
                 file(self.pidfile,'w+').write("%s\n" % pid)
-       
+
         def delpid(self):
                 os.remove(self.pidfile)
- 
+
         def start(self):
                 """
                 Start the daemon
@@ -118,11 +118,11 @@ class Daemon(object):
                         message = "pidfile %s already exist. Daemon already running?\n"
                         sys.stderr.write(message % self.pidfile)
                         sys.exit(1)
-               
+
                 # Start the daemon
                 self.daemonize()
                 self.run()
- 
+
         def stop(self):
                 """
                 Stop the daemon
@@ -134,13 +134,13 @@ class Daemon(object):
                         pf.close()
                 except IOError:
                         pid = None
-       
+
                 if not pid:
                         message = "pidfile %s does not exist. Daemon not running?\n"
                         sys.stderr.write(message % self.pidfile)
                         return # not an error in a restart
- 
-                # Try killing the daemon process       
+
+                # Try killing the daemon process
                 try:
                         while 1:
                                 os.kill(pid, SIGTERM)
@@ -153,7 +153,7 @@ class Daemon(object):
                         else:
                                 print str(err)
                                 sys.exit(1)
- 
+
         def restart(self):
                 """
                 Restart the daemon
@@ -205,7 +205,7 @@ class ZbxCommon(object):
             f.write(conn.read())
             f.close()
         except Exception as e:
-            logger.error(e)    
+            logger.error(e)
             print e
 
     def upload(self,url,filepath,directory):
@@ -236,7 +236,7 @@ class ZbxCommon(object):
             qrcont=resp.read()
             print qrcont
         except Exception as e:
-            logger.error(e)    
+            logger.error(e)
             print e
             print 'http error'
 
@@ -251,7 +251,8 @@ class ZbxCommon(object):
                 key=f.read().strip()
         try:
             headers = {
-                'User-Agent':'Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US; rv:1.9.1.6) Gecko/20091201 Firefox/3.5.6'
+                'User-Agent':'Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US; rv:1.9.1.6) Gecko/20091201 Firefox/3.5.6',
+                'auth-uuid':key
             }
             if data!=None:
                 data=urllib.urlencode(data)
@@ -261,7 +262,7 @@ class ZbxCommon(object):
                 data=data
             )
             if httpCmd <> "":
-                req.get_method = lambda: httpCmd 
+                req.get_method = lambda: httpCmd
 
             html=urllib2.urlopen(req,timeout=timeout).read()
             charset=re.compile(r'<meta[^>]*charset=[\'\"]*?([a-z0-8\-]+)[\'\"]?[^>]*?>',re.IGNORECASE).findall(html)
@@ -275,7 +276,7 @@ class ZbxCommon(object):
                 print(e.msg)
             else:
                 print e
- 
+
             logger.error(e)
         return html
     def getopt(self,inputs):
@@ -302,13 +303,13 @@ class ZbxCommon(object):
                     break
                 if istype(inputs[u]) == 1:
                     break
-                
+
                 ls.append(inputs[u])
                 u += 1
-    
+
             inputs = inputs[u:]
             icount = len(inputs)
-    
+
         if icount >= 1:
             i = 0
             state = 0
@@ -547,7 +548,7 @@ class ZbxCli():
         argv=self.util.getopt(args)
         if 'f' in argv:
             argv['d']=open(argv['f'],'r').read()
-        
+
         ret=self.util.url_fetch(self.entry%'adddoc',{'param':json.dumps(argv)})
         print ret
 
@@ -570,6 +571,13 @@ class ZbxCli():
             sys.exit(2)
         sys.exit(0)
 
+    def logout(self,argv):
+        home= os.path.expanduser('~')
+        fn=home+'/.cli'
+        if os.path.isfile(fn):
+            with open(fn,"w") as f:
+                f.write('')
+
     def login(self,argv):
         data= self.util.getopt(sys.argv[1:])
         if 'u' not in data:
@@ -583,6 +591,13 @@ class ZbxCli():
         if os.path.isfile(fn):
             with open(fn,"w") as f:
                 f.write(ret)
+                if len(ret)==36:
+                    print 'success'
+                    return
+                else:
+                    print 'fail'
+                    return
+        print 'fail'
 
 
     def default(self,module,action,args):
@@ -692,7 +707,7 @@ class ZbxDaemon(Daemon):
             self.util.url_fetch("http://%s/v2/keys/publish/%s?wait=true&recursive=true" % (host,ip),timeout = 10 )
             content = self.util.url_fetch("http://%s/v2/keys/publish/%s?recursive=true" % (host,ip),timeout = 10 )
             if content != "":
-                self.feedback_result(ip,host,content) 
+                self.feedback_result(ip,host,content)
                 break
 
 
@@ -708,7 +723,7 @@ class ZbxDaemon(Daemon):
                 url = "http://%s/v2/keys%s?recursive=true" % (host,rjson['node']['key'])
                 self.util.url_fetch(url,httpCmd= 'DELETE' )
                 print "publish is no dir"
-                
+
                 return
 
             if not rjson['node'].get('nodes'):
@@ -759,18 +774,18 @@ if __name__ == '__main__':
        getattr(cli,action)(sys.argv[2:])
     else:
        cli.default(module,action,sys.argv[1:])
-    
+
     #if len(sys.argv)<2:
     #    cli.help(sys.argv)
     #    sys.exit(0)
     #elif (len(sys.argv)==2) or (len(sys.argv)>2 and sys.argv[2].startswith('-')):
     #    action=sys.argv[1]
     #elif len(sys.argv)>2 and not sys.argv[2].startswith('-'):
-    #    module=sys.argv[1] 
+    #    module=sys.argv[1]
     #    action=sys.argv[2]
     #elif len(sys.argv)>2 :
-    #    module=sys.argv[1] 
-    #    action=sys.argv[2] 
+    #    module=sys.argv[1]
+    #    action=sys.argv[2]
     #if hasattr(cli,action):
     #   getattr(cli,action)(sys.argv[2:])
     #else:

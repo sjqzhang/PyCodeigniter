@@ -298,9 +298,9 @@ class CI_Application(object):
         return m.hexdigest()
 
     def uuid(self):
-        return uuid.uuid4()
+        return str(uuid.uuid4())
 
-    # def request( self, url,data=None,headers={}):
+    # )def request( self, url,data=None,headers={}):
     #         html='';
     #         if not 'User-Agent' in headers.keys():
     #             headers['User-Agent']='Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US; rv:1.9.1.6) Gecko/20091201 Firefox/3.5.6'

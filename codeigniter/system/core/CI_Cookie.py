@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding:utf8 -*-
-import gevent
-
+try:
+    import gevent
+except:
+    pass
 from . import PushTraceback
 
 class CookieData:
