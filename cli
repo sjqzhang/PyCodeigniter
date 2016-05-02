@@ -577,6 +577,15 @@ class ZbxCli():
         if os.path.isfile(fn):
             with open(fn,"w") as f:
                 f.write('')
+    def register(self,argv):
+        data= self.util.getopt(sys.argv[1:])
+        if 'u' not in data:
+            data['u']=raw_input('please input username: ')
+        if 'p' not in data:
+            import getpass
+            data['p']=getpass.getpass('please input password: ')
+        ret=self.util.url_fetch(server_url+'/%s/%s'%(module,action),{'param':json.dumps(data)})
+        print ret
 
     def login(self,argv):
         data= self.util.getopt(sys.argv[1:])
@@ -595,9 +604,9 @@ class ZbxCli():
                     print 'success'
                     return
                 else:
-                    print 'fail'
+                    print ret
                     return
-        print 'fail'
+        print ret
 
 
     def default(self,module,action,args):
