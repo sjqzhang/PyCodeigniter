@@ -61,6 +61,7 @@ def application(env, start_response):
 
     code,obj=ci.router.wsgi_route(env)
     #print type(obj)
+    print ci.local.data
     if not isinstance(obj,str) and not isinstance(obj,unicode):
         html=json.dumps(obj)
         start_response(str(code), [('Content-Type', 'application/json')])

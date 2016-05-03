@@ -506,7 +506,7 @@ class ZbxCli():
 
     def download(self,args):
         argv= self.util.parse_argv(args)
-	if isinstance(argv,list):
+        if isinstance(argv,list):
             argv={}
         if 'f' in argv.keys():
             f=argv['f']
@@ -520,7 +520,7 @@ class ZbxCli():
 
     def upload(self,args):
         argv= self.util.parse_argv(args)
-	if isinstance(argv,list):
+        if isinstance(argv,list):
             argv={}
         if 'f' in argv.keys():
             f=argv['f']
@@ -597,15 +597,15 @@ class ZbxCli():
         ret=self.util.url_fetch(server_url+'/%s/%s'%(module,action),{'param':json.dumps(data)})
         home= os.path.expanduser('~')
         fn=home+'/.cli'
-        if os.path.isfile(fn):
-            with open(fn,"w") as f:
-                f.write(ret)
-                if len(ret)==36:
-                    print 'success'
-                    return
-                else:
-                    print ret
-                    return
+        # if os.path.isfile(fn):
+        with open(fn,"w") as f:
+            f.write(ret)
+            if len(ret)==36:
+                print 'success'
+                return
+            else:
+                print ret
+                return
         print ret
 
 

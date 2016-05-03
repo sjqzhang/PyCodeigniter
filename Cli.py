@@ -18,8 +18,6 @@ def auth(func):
     def decorated(*arg,**kwargs):
         if not 'HTTP_AUTH_UUID' in ci.local.env:
             return "(error)unauthorize1"
-        print ci.local.env['HTTP_AUTH_UUID']
-        print ci.cache.get(ci.local.env['HTTP_AUTH_UUID'])
         if ci.cache.get(ci.local.env['HTTP_AUTH_UUID'])==None:
             return "(error)unauthorize"
         return func(*arg,**kwargs)
@@ -117,13 +115,16 @@ class Cli:
             return '-p(password) require'
         if  'i' in params:
             ip=params['i']
-        data={'user':user,'pwd':ci.md5(pwd),'status':1}
-        is_exist=ci.db.scalar("select count(1) as cnt from user where user='{user}' and pwd='{pwd}' and status='{status}' limit 1 offset 0",data)['cnt']
+        data={'user':user,'pwd':ci.md5(pwd)}
+        is_exist=ci.db.scalar("select status from user where user='{user}' and pwd='{pwd}' limit 1 offset 0",data)
         udata={'user':user,'lasttime':time.strftime("%Y-%m-%d %H:%M:%S",time.localtime(time.time())),'ip':ip}
-        if is_exist>0:
+        print is_exist
+        if is_exist!=None:
+            if is_exist['status']!=1:
+                return '(error) user not in actvie status'
             ci.db.query("update user set logincount=logincount+1,lasttime='{lasttime}',ip='{ip}' where user='{user}'",udata)
             uuid=str(ci.uuid())
-            ci.cache.set(uuid,uuid)
+            ci.cache.set(uuid,user)
         else:
             ci.db.query("update user set logincount=logincount+1,failcount=failcount+1,lasttime='{lasttime}',ip='{ip}' where user='{user}'",udata)
 
