@@ -145,6 +145,8 @@ class CI_Router(object):
         finally:
             if 'session' in self.config.keys():
                 self.app.session.release()
+                self.app.local.data=None
+                self.app.local.env=None
             
 
 

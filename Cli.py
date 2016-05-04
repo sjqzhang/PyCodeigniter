@@ -62,6 +62,10 @@ class Cli:
          '''
         return h
 
+
+    def getetcd(self,param=''):
+        return ['172.16.16.113:4001']
+
     def disableuser(self,param=''):
         return self._userstatus(param,0)
     def enableuser(self,param=''):
@@ -77,6 +81,7 @@ class Cli:
         data={'user':user,'status':status}
         ci.db.query("update user set status='{status}' where user='{user}'",data)
         return 'success'
+
 
     def register(self,param=''):
             params=self._params(param)
@@ -118,7 +123,6 @@ class Cli:
         data={'user':user,'pwd':ci.md5(pwd)}
         is_exist=ci.db.scalar("select status from user where user='{user}' and pwd='{pwd}' limit 1 offset 0",data)
         udata={'user':user,'lasttime':time.strftime("%Y-%m-%d %H:%M:%S",time.localtime(time.time())),'ip':ip}
-        print is_exist
         if is_exist!=None:
             if is_exist['status']!=1:
                 return '(error) user not in actvie status'

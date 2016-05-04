@@ -27,9 +27,11 @@ import json
 pidfile="/var/zbxcli.pid"
 server_url="http://172.17.140.116:8005"
 
+etcd_prefix='/keeper'
+
 default_module='cli'
 
-bin_name='client'
+bin_name='cli'
 client_filename='/bin/%s' % bin_name
 client_log_filename= tempfile.gettempdir()+os.path.sep+ bin_name+".log"
 script_path= tempfile.gettempdir()+ os.path.sep+'script'
@@ -39,7 +41,7 @@ logger = logging.getLogger()
 logging.basicConfig(level=logging.DEBUG,
                 format='%(asctime)-25s %(module)s:%(lineno)d  %(levelname)-8s %(message)s',
                 #datefmt='%a, %d %b %Y %H:%M:%S',
-                filename=tempfile.gettempdir()+ os.path.sep +'zbxcli.log',
+                filename=tempfile.gettempdir()+ os.path.sep +'%s.log' % bin_name,
                 filemode='a')
 logger.addHandler(RotatingFileHandler(filename=client_log_filename,maxBytes=100 * 1024 * 1024, backupCount=3))
 
@@ -408,7 +410,7 @@ class ZbxCommon(object):
 
     def get_one_ip(self):
         #ret = [x for x in self.get_all_ip_list() if x.startswith('10') or x.startswith('172') or x.startswith('192')]
-        ret = [x for x in self.get_all_ip_list() if x.startswith('10.') ]
+        ret = [x for x in self.get_all_ip_list() if x.startswith('10.') or  x.startswith('172.') or  x.startswith('192.') ]
         if len(ret)>1:
             return ret[0]
         return ''.join(ret)
@@ -502,6 +504,7 @@ class ZbxCli():
     def __init__(self,default_module):
         self.entry=server_url+'/'+default_module+"/%s"
         self.util=ZbxCommon()
+        self.etcd_prefix=etcd_prefix
 
 
     def download(self,args):
@@ -690,53 +693,75 @@ class ZbxDaemon(Daemon):
         return None
 
     def get_etcd(self):
-        now = time.time()
-        if not self.update_time:
-            self.update_time = now -600
-        if now - self.update_time > 600:
-            print "=== get etcd"
-            self.update_time = now
-            self.etcd_list =  json.loads(self.remote_server('cli','getetcd',{}) )
-            print "remote",self.etcd_list
+        try:
+            now = time.time()
+            if now - self.update_time > 600:
+                print "=== get etcd"
+                self.etcd_list =  json.loads(self.remote_server('cli','getetcd',{}) )
+                if not isinstance(self.etcd_list,list):
+                    raise Exception("get etcd list error")
+                for host in self.etcd_list:
+                    print self.util.url_fetch("http://%s/v2/keys%s/heartbeat" % (host,self.etcd_prefix) ,data={'ttl':60,'value':'heartbeat'},httpCmd = 'PUT' )
+                    print self.util.url_fetch("http://%s/v2/keys%s/servers" % (host,self.etcd_prefix) ,data={'ttl':60,'value':'servers'},httpCmd = 'PUT' )
+                self.update_time = now
+        except Exception as er:
+            print(er)
+            time.sleep(5)
+            return self.get_etcd()
+
+
 
     def heartbeat(self):
-        print "=== heartbeat start"
-        ip = self.util.get_one_ip()
-        for host in self.etcd_list:
-            html = self.util.url_fetch("http://%s/v2/keys/heartbeat/%s" % (host,ip) ,data={'ttl':60,'value':'2333'},httpCmd = 'PUT' )
-            if html != "":
-                break
-        print "=== heartbeata end"
+        pass
+        try:
+            print "=== heartbeat start"
+            ip = self.util.get_one_ip()
+            for host in self.etcd_list:
+                print "heartbeat:  http://%s/v2/keys%s/heartbeat/%s" % (host,self.etcd_prefix,ip)
+                html = self.util.url_fetch("http://%s/v2/keys%s/heartbeat/%s" % (host,self.etcd_prefix,ip) ,data={'ttl':60,'value':'2333'},httpCmd = 'PUT' )
+                if html != "":
+                    break
+            print "=== heartbeata end"
+        except Exception as er:
+            print er
+            logger.error('heartbeat error:'+str(er))
+
 
     def watch_commmand(self):
+        try:
+            ip = self.util.get_one_ip()
+            print "watch_commmand",ip,self.etcd_list
+            for host in self.etcd_list:
+                self.util.url_fetch("http://%s/v2/keys%s/servers/%s?wait=true&recursive=true" % (host,self.etcd_prefix,ip),timeout = 10 )
+                content = self.util.url_fetch("http://%s/v2/keys%s/servers/%s?recursive=true" % (host,self.etcd_prefix,ip),timeout = 10 )
+                print "content   "+content
+                if content != "":
+                    self.feedback_result(ip,host,content)
+                    break
+        except Exception as er:
+            print er
+            logger.error('watch_commmand error:'+str(er))
 
-        ip = self.util.get_one_ip()
-        print "watch_commmand",ip,self.etcd_list
-        for host in self.etcd_list:
-            self.util.url_fetch("http://%s/v2/keys/publish/%s?wait=true&recursive=true" % (host,ip),timeout = 10 )
-            content = self.util.url_fetch("http://%s/v2/keys/publish/%s?recursive=true" % (host,ip),timeout = 10 )
-            if content != "":
-                self.feedback_result(ip,host,content)
-                break
+
 
 
     def feedback_result(self,ip,host,content):
         try:
             print "process cmd"
             if content == "Not Found":
-                print "no funud key"
+                print "no found key"
                 return
             rjson = json.loads(content)
             print rjson
             if not rjson['node'].get('dir',False):
                 url = "http://%s/v2/keys%s?recursive=true" % (host,rjson['node']['key'])
+                print "feedback_result"+ url
                 self.util.url_fetch(url,httpCmd= 'DELETE' )
                 print "publish is no dir"
-
                 return
 
             if not rjson['node'].get('nodes'):
-                print "no Check command"
+                print "no found command"
                 return
 
             for cNode in  rjson['node']['nodes']:
@@ -750,6 +775,7 @@ class ZbxDaemon(Daemon):
                 #print "cmd %s result %s" % (cmd,result)
 
         except BaseException as e:
+            logger.error('feedback_result error:'+str(e))
             print "feed error"
             print e
 
@@ -757,12 +783,17 @@ class ZbxDaemon(Daemon):
 
 
     def run(self):
-        self.get_etcd()
+        self.update_time=time.time()-800
+
         while True:
-            self.get_etcd()
-            self.heartbeat()
-            self.watch_commmand()
-            time.sleep(1)
+            try:
+                self.get_etcd()
+                self.heartbeat()
+                self.watch_commmand()
+                time.sleep(1)
+            except BaseException as e:
+                pass
+                time.sleep(5)
 
 
 if __name__ == '__main__':
