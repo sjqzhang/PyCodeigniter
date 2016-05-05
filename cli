@@ -694,6 +694,8 @@ class ZbxCli():
 
 class ZbxDaemon(Daemon):
 
+
+
     def __getattr__(self,attr):
         if hasattr(self,'zbxcli'):
             if hasattr(self.zbxcli,attr):
@@ -755,6 +757,9 @@ class ZbxDaemon(Daemon):
 
 
 
+
+
+
     def feedback_result(self,ip,host,content):
         try:
             print "process cmd"
@@ -777,11 +782,14 @@ class ZbxDaemon(Daemon):
             for cNode in  rjson['node']['nodes']:
                 cmd = cNode['value'].decode("utf-8")
                 key = cNode['key']
-                result = ZbxCommand(cmd).run()
+                self.keys.append(key)
                 url = "http://%s/v2/keys%s?recursive=true" % (host,key)
                 self.util.url_fetch(url,httpCmd= 'DELETE' )
-                message = {'ip':ip, 'cmd':cmd, 'result':result}
-                self.remote_server('cli','feedback_result',{'param':message})
+                def tmp():
+                    result = ZbxCommand(cmd).run()
+                    message = {'ip':ip, 'cmd':cmd, 'result':result}
+                    self.remote_server('cli','feedback_result',{'param':message})
+                threading.Thread(target=tmp).start()
                 #print "cmd %s result %s" % (cmd,result)
 
         except BaseException as e:
