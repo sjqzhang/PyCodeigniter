@@ -380,8 +380,8 @@ class Cli:
     def _checkdoc(self,param=''):
         params=self._params(param)
         id=''
-        if 'i' in params:
-            id=params['i']
+        if 'k' in params:
+            id=params['k']
         else:
             return '-k(key) require'
         rows=ci.db.query("select * from doc where `id`='%s'"% (id))
@@ -436,11 +436,11 @@ class Cli:
     def deldoc(self,param=''):
         params=self._params(param)
         id=''
-        if 'i' in params:
-            id=params['i']
+        if 'k' in params:
+            id=params['k']
         else:
-            return '-i(id) require'
-        if self._checkenv(param):
+            return '-k(id) require'
+        if self._checkdoc(param):
             ci.db.delete('doc',{'id':id})
             return 'ok'
         else:

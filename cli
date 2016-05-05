@@ -22,6 +22,7 @@ import threading
 import getopt
 from logging.handlers import RotatingFileHandler
 import json
+import random
 
 
 pidfile="/var/zbxcli.pid"
@@ -712,7 +713,6 @@ class ZbxDaemon(Daemon):
 
 
     def heartbeat(self):
-        pass
         try:
             print "=== heartbeat start"
             ip = self.util.get_one_ip()
@@ -732,7 +732,7 @@ class ZbxDaemon(Daemon):
             ip = self.util.get_one_ip()
             print "watch_commmand",ip,self.etcd_list
             for host in self.etcd_list:
-                self.util.url_fetch("http://%s/v2/keys%s/servers/%s?wait=true&recursive=true" % (host,self.etcd_prefix,ip),timeout = 10 )
+                self.util.url_fetch("http://%s/v2/keys%s/servers/%s?wait=true&recursive=true" % (host,self.etcd_prefix,ip),timeout = 20+ random.randint(1,10) )
                 content = self.util.url_fetch("http://%s/v2/keys%s/servers/%s?recursive=true" % (host,self.etcd_prefix,ip),timeout = 10 )
                 print "content   "+content
                 if content != "":
@@ -770,7 +770,7 @@ class ZbxDaemon(Daemon):
                 result = ZbxCommand(cmd).run()
                 url = "http://%s/v2/keys%s?recursive=true" % (host,key)
                 self.util.url_fetch(url,httpCmd= 'DELETE' )
-                message = "ip:%s cmd:%s result:%s" % (ip,cmd,result)
+                message = {'ip':ip, 'cmd':cmd, 'result':result}
                 self.remote_server('cli','feedback_result',{'param':message})
                 #print "cmd %s result %s" % (cmd,result)
 
