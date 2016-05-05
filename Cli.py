@@ -66,6 +66,9 @@ class Cli:
     def getetcd(self,param=''):
         return {'server':['172.16.16.113:4001'],'prefix':'/keeper'}
 
+    def feedback_result(self,param=''):
+        print(param)
+
     def disableuser(self,param=''):
         return self._userstatus(param,0)
     def enableuser(self,param=''):
