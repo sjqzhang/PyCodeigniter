@@ -570,6 +570,9 @@ class ZbxCli():
         elif 'restart' == opt:
             print "cli daemon restart"
             daemon.restart()
+        elif 'debug' == opt:
+            print "cli daemon debug"
+            daemon.run()
         else:
             print "usage: cli deamon -s start|stop|restart"
             sys.exit(2)
