@@ -28,7 +28,7 @@ import random
 pidfile="/var/zbxcli.pid"
 server_url="http://172.17.140.116:8005"
 
-etcd_prefix='/keeper'
+# etcd_prefix='/keeper'
 
 default_module='cli'
 
@@ -505,7 +505,7 @@ class ZbxCli():
     def __init__(self,default_module):
         self.entry=server_url+'/'+default_module+"/%s"
         self.util=ZbxCommon()
-        self.etcd_prefix=etcd_prefix
+        # self.etcd_prefix=etcd_prefix
 
 
     def download(self,args):
@@ -698,7 +698,10 @@ class ZbxDaemon(Daemon):
             now = time.time()
             if now - self.update_time > 600:
                 print "=== get etcd"
-                self.etcd_list =  json.loads(self.remote_server('cli','getetcd',{}) )
+                self.etcd_conf =  json.loads(self.remote_server('cli','getetcd',{}) )
+                print self.etcd_conf
+                self.etcd_list=self.etcd_conf['server']
+                self.etcd_prefix=self.etcd_conf['prefix']
                 if not isinstance(self.etcd_list,list):
                     raise Exception("get etcd list error")
                 for host in self.etcd_list:
