@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 # -*- coding:utf8 -*-
-try:
-    import gevent
-except:
-    pass
+import gevent
+
 from . import PushTraceback
 
 class CookieData:
@@ -20,8 +18,8 @@ class CookieData:
         if self.isPre:
             return ""
         cookie = "%s=%s" % ( self.name , self.value )
-        # if self.path:
-        #     cookie += ";path=%s" % self.path
+        if self.path:
+            cookie += ";path=%s" % self.path
         # if self.domain:
         #     cookie += ";domain=%s" % self.domain
         if self.maxage:
@@ -39,7 +37,6 @@ class CI_Cookie:
 
     def parse_cookie(self,env):
         try:
-            self.app.local.cookie = {}
             Cookie = env.get('HTTP_COOKIE',None)
             if Cookie == None:
                 return
@@ -48,9 +45,10 @@ class CI_Cookie:
                 cod = CookieData()
                 cod.name = zp[0].strip()
                 cod.value = zp[1]
+                cod.path  = "/"
                 cod.domain = ""
                 cod.isPre = True
-                self.app.local.cookie[cod.name] = cod
+                self.app.local.response.cookies[cod.name] = cod
         except BaseException as e:
             self.app.logger.error("%s:%s" % ( PushTraceback(),e ))
 
@@ -62,25 +60,24 @@ class CI_Cookie:
 
 
     def get(self,key):
-        v = self.app.local.cookie.get(key,None)
+        v = self.app.local.response.cookies.get(key,None)
         if v == None:
             return None
         return v.value
         
 
     def set(self,key,value,maxage=86400):
-        v = self.app.local.cookie.get(key,None)
+        v = self.app.local.response.cookies.get(key,None)
         if None ==  v:
             v = CookieData()
             v.name = key
         v.value = value
         v.maxage = maxage
         v.isPre = False
-        self.app.local.cookie[key] = v
+        self.app.local.response.cookies[key] = v
 
     def result_cookie(self):
-        [self.app.set_header("Set-Cookie","%s" % cookiedata) for cookiedata in  self.app.local.cookie.values() if "%s" % cookiedata <> ""]
-        self.app.local.cookie = None
+        [self.app.set_header("Set-Cookie","%s" % cookiedata) for cookiedata in  self.app.local.response.cookies.values() if "%s" % cookiedata <> ""]
 
 
 

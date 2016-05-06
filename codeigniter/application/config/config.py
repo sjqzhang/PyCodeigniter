@@ -65,10 +65,14 @@ route={
 }
 
 
-hook={
-    'init_after':''
+hooks={
+    'post_controller_constructor':[
+       'hUTEST.thook'
+    ],
+    'display_override':'hUTEST.thook'
 
 }
+
 
 
 cache={
@@ -150,6 +154,7 @@ config={
 'server':server,
 'cache':cache,
 'autoload':autoload,
+#'hooks':hooks,
 # 'template':template
 #'session':session
 # 'cron':cron,

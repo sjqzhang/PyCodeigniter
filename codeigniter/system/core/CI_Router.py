@@ -13,7 +13,7 @@ try:
     import web,cgi,os
 except Exception as e:
     pass
-
+from CI_Application import CI
 
 class CI_Router(object):
     def __init__(self,**kwargs):
@@ -90,63 +90,70 @@ class CI_Router(object):
         message="%s - - [%s] \"%s %s %s\" %s %s" % (addr,dt,method,path,protol,str(code),etime)
         self.access_log.info(message)
 
-
-
     def wsgi_route(self,env):
         stime=time.time()
         data=self.app.input.parse(env)
-        self.app.local.headers = None
-        self.app.local.env=env
-        self.app.local.data=data
-        self.app.cookie.parse_cookie(env)
         try:
-            if 'session' in self.config.keys():
-                self.app.session.pre_parse_uuid()
-            if '__ctrl_name__' in data.keys():
-                ctrl=data['__ctrl_name__']
-                del data['__ctrl_name__']
-            if '__func_name__' in data.keys():
-                func=data['__func_name__']
-                del data['__func_name__']
-            if self.app.static:
-                if self.app.static.accept(env):
-                    return self.app.static.route(env)
-            for i in range(1):
-                if 'route' in self.config.keys():
-                    for route,ctrl in self.config['route'].iteritems():
-                        if re.match(route,env['PATH_INFO']) or route.strip() == env['PATH_INFO'].strip():
-                            ctrl,func  = ctrl.split(".")
-                            ctrl_instance=self.app.loader.ctrl(ctrl)
-                            if not hasattr(ctrl_instance,func) or str(func).startswith('_'):
-                                return "404 Not Found", "Not Found"
-                            break
-                ctrl_instance=self.app.loader.ctrl(ctrl)
-                #print(dir(ctrl_instance))
-                f=self.get_func(ctrl_instance,func)
-                if f!=None:
-                    func=f
-                if not hasattr(ctrl_instance,func) or str(func).startswith('_'):
-                     return "404 Not Found", "Not Found"
-        except Exception as err:
-            self._log(env,404,stime)
-            return "404 Not Found", "Not Found"
-        try:
-            ret=eval('self.app.loader.ctrl(ctrl).'+func+'(**data)')
-            self._log(env,200,stime)
-            return '200 OK',ret
-        except TypeError as e:
-            self.app.logger.error('when call controller %s function %s error,%s'%(ctrl,func,str(e)))
-            self._log(env,500,stime)
-            return '200 OK',{'message':str(e),'code':500}
-        except Exception as e:
-            self._log(env,500,stime)
-            self.app.logger.error('when call controller %s function %s error,%s'%(ctrl,func,str(e)))
-            return  "500 Internal server error","Server Error,Please see log file"
+            try:
+                if False == self.app.hook.call_pre_controller(env):
+                    if self.app.local.response.content == "":
+                        self.app.set500("pre_controller hook result false")
+                    return
+                if 'session' in self.config.keys():
+                    self.app.session.pre_parse_uuid()
+                if '__ctrl_name__' in data.keys():
+                    controller_name=data['__ctrl_name__']
+                    del data['__ctrl_name__']
+                if '__func_name__' in data.keys():
+                    func=data['__func_name__']
+                    del data['__func_name__']
+                if self.app.static:
+                    if self.app.static.accept(env):
+                        return self.app.static.route(env)
+                for i in range(1):
+                    if 'route' in self.config.keys():
+                        for route,ctrl in self.config['route'].iteritems():
+                            if re.match(route,env['PATH_INFO']) or route.strip() == env['PATH_INFO'].strip():
+                                ctrl,func  = ctrl.split(".")
+                                ctrl_instance=self.app.loader.ctrl(ctrl)
+                                if not hasattr(ctrl_instance,func) or str(func).startswith('_'):
+                                    self.app.set404()
+                                    return
+                                break
+                    ctrl_instance=self.app.loader.ctrl(controller_name)
+                    f=self.get_func(ctrl_instance,func)
+                    if f!=None:
+                        func=f
+                    if not hasattr(ctrl_instance,func) or str(func).startswith('_'):
+                        self.app.set404()
+                        return
+            except Exception as err:
+                self._log(env,404,stime)
+                self.app.set404()
+                return
+            try:
+                if False == self.app.hook.call_post_controller_constructor(env,ctrl_instance,func):
+                    if self.app.local.response.content == "":
+                        self.app.set500("post_controller_constructor hook result false")
+                    return
+                ret= getattr(ctrl_instance,func)(**data)
+                self._log(env,200,stime)
+                self.app.set200(ret)
+                self.app.hook.call_post_controller(env,ctrl_instance,func,ret)
+                return 
+            except TypeError as e:
+                self.app.logger.error('when call controller %s function %s error,%s'%(controller_name,func,str(e)))
+                self._log(env,500,stime)
+                self.app.set200({'message':str(e),'code':500})
+                return
+            except Exception as e:
+                self._log(env,500,stime)
+                self.app.logger.error('when call controller %s function %s error,%s'%(controller_name,func,str(e)))
+                self.app.set500("Server Error,Please see log file")
+                return
         finally:
             if 'session' in self.config.keys():
                 self.app.session.release()
-                self.app.local.data=None
-                self.app.local.env=None
             
 
 

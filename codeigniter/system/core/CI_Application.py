@@ -51,6 +51,13 @@ class CI_CLASS(object):
 CI = CI_CLASS()
 
 
+class T_Respond(object):
+    def __init__(self):
+        self.headers = []
+        self.cookies = {}
+        self.code = ""
+        self.content = ""
+
 class CI_Application(object):
     application_instance=None
     cj = CookieJar()
@@ -81,7 +88,6 @@ class CI_Application(object):
         self.is_threads = False
         self.local = local()
 
-
         self._app_create(application_path)
         CI_Application.application_instance = self
         self.init()
@@ -99,9 +105,7 @@ class CI_Application(object):
 
     def set_header(self,key,value):
         if type(key) == str and type(value):
-            if None == self.local.headers:
-                self.local.headers = []
-            self.local.headers.append( (key,value) )
+            self.local.response.headers.append( (key,value) )
 
     def get(self,key):
         if key in self.instances.keys():
@@ -128,6 +132,11 @@ class CI_Application(object):
         self.config['system_path']=self.system_path
         self.config['application_path']=self.application_path
         self.config['app']=self
+
+        exec('from CI_Hook import CI_Hook')
+        self.hook= eval('CI_Hook()')
+        self.hook.call_pre_system()
+        
         if 'use_threads' in self.config.keys():
             self.is_threads = self.config['use_threads']
         for conf in self.config.keys():
@@ -219,6 +228,7 @@ class CI_Application(object):
         #must be instance last
         self.loader= eval('CI_Loader(**self.config)')
 
+
         if 'cron' in self.config.keys():
             self.cron.init()
 
@@ -298,9 +308,9 @@ class CI_Application(object):
         return m.hexdigest()
 
     def uuid(self):
-        return str(uuid.uuid4())
+        return uuid.uuid4()
 
-    # )def request( self, url,data=None,headers={}):
+    # def request( self, url,data=None,headers={}):
     #         html='';
     #         if not 'User-Agent' in headers.keys():
     #             headers['User-Agent']='Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US; rv:1.9.1.6) Gecko/20091201 Firefox/3.5.6'
@@ -400,19 +410,36 @@ class CI_Application(object):
         else:
             return pyquery.PyQuery(selector,obj)
 
+    def setresult(self,code,content):
+        self.local.response.code = code
+        self.local.response.content = content
+
+    def set200(self,content):
+        self.local.response.code = '200 OK'
+        self.local.response.content = content
+
+    def set404(self,content=""):
+        self.local.response.code = "404 Not Found"
+        self.local.response.content = "Not Found" if "" ==  content else content
+
+    def set500(self,content=""):
+        self.local.response.code = "500 Internal server error"
+        self.local.response.content = "Server Error,Please see log file" if "" ==  content else content
+
     def application(self, environ, start_response):
-        code,content=self.router.wsgi_route(environ)
+        self.local.response = T_Respond()
+        self.cookie.parse_cookie(environ)
+        print self.local.response.cookies
+        self.router.wsgi_route(environ)
+        self.hook.call_display_override(environ)
+        code = self.local.response.code
+        content = self.local.response.content
         if self.cookie:
             self.cookie.result_cookie()
         if not type(content) in [str,unicode]:
             content = json.dumps(content)
-        if self.local.headers:
-            start_response(str(code),self.local.headers)
-        else:
-            start_response(str(code),[])
-        self.local.headers = None
-        self.local.env=None
-        self.local.data=None
+        start_response(str(code),self.local.response.headers)
+        self.local.response = None
         return [str(content)]
 
 
@@ -420,26 +447,13 @@ class CI_Application(object):
         msg="server listen to : "+str(self.config['server']['port'])
         print(msg)
         self.logger.info(msg)
-
-
-
-        # if self.is_threads:
-        #     # from gevent import monkey
-        #     # monkey.patch_all()
-        #     import werkzeug.serving
-        #     print "use werkzeug.serving"
-        #
-        #     port=self.config['server']['port']
-        #     host=self.config['server']['host']
-        #     werkzeug.serving.run_simple(host, port, self.application,threaded = True)
         if is_install_gevent:
+            print "running gevent wsgiserver ..."
             WSGIServer((self.config['server']['host'],self.config['server']['port']), self.application).serve_forever()
-
         else:
             from wsgiref.simple_server import make_server
             httpd=make_server(self.config['server']['host'],self.config['server']['port'],self.application)
             httpd.serve_forever()
-
 
 
 
