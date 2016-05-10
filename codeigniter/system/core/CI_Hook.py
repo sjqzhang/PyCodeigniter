@@ -61,8 +61,11 @@ class CI_Hook(object):
         hook = getattr(self,hook_name)
         if None == hook:
             return
-        if type(hook) == list: 
-            return reduce(lambda p,v:True if p <> False and v <> False else False ,[_hcall(*args,**argv) for _hcall in hook])
+        if type(hook) == list:
+            for hcall in hook:
+                if False ==  hcall(*args,**argv):
+                    return False
+            return
         return hook(*args,**argv)
 
 
