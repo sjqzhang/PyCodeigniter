@@ -565,7 +565,6 @@ class ZbxCli():
         setattr(daemon,'zbxcli',self)
         data= self.util.getopt(sys.argv[1:])
         opt = data.get('s')
-        print data
         sys.exit(0)
         if 'start' == opt:
             print "cli daemon start"
