@@ -24,14 +24,14 @@ def download(env, start_response):
         data={}
         if len(urlparse.parse_qsl(env['QUERY_STRING']))==0:
             start_response( code, [('Content-Type', 'html/text')])
-            return "(error) -f(filename) require" 
-	for i in urlparse.parse_qsl(env['QUERY_STRING']):
+            return "(error) -f(filename) require"
+        for i in urlparse.parse_qsl(env['QUERY_STRING']):
             data[i[0]]=i[1]
 
         filename= data['file'] #env['QUERY_STRING'].split('=')[1]
-	filename=unquote(filename)
-	filename=filename.replace('+',' ')
-	print filename
+        filename=unquote(filename)
+        filename=filename.replace('+',' ')
+        #print filename
         directory= data['dir']
         directory=directory.replace('.','')
         filepath='files/'+directory+'/'+filename
@@ -49,30 +49,13 @@ def download(env, start_response):
 
 
 
+
 def application(env, start_response):
-    html=''
-
-
+    res = ci.application(env,start_response)
     path=env['PATH_INFO']
-
     if path.find('download')>0:
         return download(env,start_response)
-
-
-    code,obj=ci.router.wsgi_route(env)
-    #print type(obj)
-
-    print env['PATH_INFO']+ str( ci.local.data)
-    if not isinstance(obj,str) and not isinstance(obj,unicode):
-        html=json.dumps(obj)
-        start_response(str(code), [('Content-Type', 'application/json')])
-    else:
-	try:
-            html=unicode(obj).encode('utf-8')
-	except:
-	    html=obj
-        start_response(str(code), [('Content-Type', 'text/html')])
-    return [str(html)]
+    return res
 
 
 
