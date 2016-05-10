@@ -426,10 +426,12 @@ class CI_Application(object):
         self.local.response.code = "500 Internal server error"
         self.local.response.content = "Server Error,Please see log file" if "" ==  content else content
 
+
     def application(self, environ, start_response):
         self.local.response = T_Respond()
+        self.local.env=environ
         self.cookie.parse_cookie(environ)
-        print self.local.response.cookies
+        # print self.local.response.cookies
         self.router.wsgi_route(environ)
         self.hook.call_display_override(environ)
         code = self.local.response.code
