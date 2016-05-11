@@ -158,10 +158,13 @@ class Match:
 #     import sys
 #
 #     sys.path.append('..')
-#     from helpers.help import Helper
+#     # from helpers.help import Helper
 #
-#     print content
-#     print Match().match(pattern, Helper().content2dict(content))
+#     # print content
+#     start=time.time()
+#     for i in xrange(1,100000):
+#         Match().match(pattern,{'event_value':'Linux','expression':'abc'})
+#     print(time.time()-start)
 
 
 
@@ -667,20 +670,40 @@ class Cli:
             data={'ip':ip,'tags':json.dumps(old),'id':row['id']}
             ci.db.query("update tags set ip='{ip}',tags='{tags}' where id='{id}'",data)
         return 'success'
+    # @cache.Cache(ttl=30)
     def gettag(self,param=''):
+        print 'xxx'
         params=self._params(param)
+        if 't' not in params:
+            return '-t(tag) require'
         rows=ci.db.query("select ip,tags from tags")
         ret=[]
+        tag=params['t']
+        tag=tag.replace('&&',' and ')
+        tag=tag.replace('||',' or ')
+        # if len(re.findall(r'=\s+',tag))>0:
+        #     return 'tag must be key=value'
+        def tmp(a):
+            return ('('+(a.group(0)).encode("utf-8")+')').decode('utf-8')
+        exp=re.sub(r'(\w+=\s*(?:[^\s]+)\s*)',tmp,tag)
         for row in rows:
-            if Match().match(params['t'], json.loads( row['tags']),True):
+            if Match().match(exp, json.loads( row['tags']),False):
                 ret.append(row['ip'])
         return "\n".join(ret)
-    # @cache.Cache(ttl=30)
-    def listtag(self,param=''):
+    # @cache.Cache(ttl=3600)
+    def listtag(self,param='',output='tags'):
         params=self._params(param)
         rows=ci.db.query("select tags from tags")
-        return str(rows)
-
+        # return rows
+        s=set()
+        for row in rows:
+            tags=json.loads(row['tags'])
+            for k in tags.keys():
+                if output=='tags':
+                    s.add(k.encode('utf-8')+"=%s"% tags[k].encode('utf-8') )
+                else:
+                    s.add(tags[k].encode('utf-8'))
+        return "\n".join(s)
 
 
 
