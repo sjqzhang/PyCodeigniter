@@ -192,7 +192,13 @@ class Cli:
         #ci.set_header('HTTP/1.0 401 Unauthorized')
         # sys.exit(0)
         return "hello world".strip()
-
+    def abc(self,param='',**kwargs):
+        # print ci.local.env
+        #ci.set_header('WWW-Authenticate','Basic realm="Authentication System"')
+        #ci.set_header('HTTP/1.0 401 Unauthorized')
+        # sys.exit(0)
+        print kwargs
+        return "hello world".strip()
 
     def help(self,param=''):
 	h='''
@@ -639,8 +645,65 @@ class Cli:
         return ret
 
 ################################################ tags ###############################################
-
     def addtag(self,param=''):
+        params=self._params(param)
+        table=''
+        tag=''
+        if 'tag' in params:
+            tag=params['tag']
+        else:
+            return '--tag(tag) require'
+        if 'table' in params:
+            table=params['table']
+        else:
+            return '--table(table name) require'
+        if tag.find('=')==-1:
+            return 'tag must be "key=value"'
+        body={}
+        for t in tag.split(';'):
+            kv=t.split('=')
+            if len(kv)==2:
+                body[kv[0]]=kv[1]
+        row=ci.db.scalar("select id,body from tags where tbname='{tbname}' limit 1 offset 0",{'tbname':table})
+        if row==None:
+            data={'tbname':table, 'body':json.dumps(body)}
+            ci.db.query("insert into tags(tbname,body) values('{tbname}','{body}')",data)
+        else:
+            old=json.loads(row['body'])
+            for k in body.keys():
+                old[k]=body[k]
+            data={'body':json.dumps(old),'id':row['id']}
+            ci.db.query("update tags set body='{body}' where id='{id}'",data)
+        return 'success'
+
+    def listtag(self,param=''):
+        params=self._params(param)
+        rows=ci.db.query("select tbname,body from tags")
+        # return rows
+        s=set()
+        for row in rows:
+            tags=json.loads(row['body'])
+            for k in tags.keys():
+                s.add('table_name: '+row['tbname'].encode('utf-8')+"\ttags: "+ k.encode('utf-8')+"=%s"% tags[k].encode('utf-8') )
+        return "\n".join(s)
+
+
+    def _check_body_val(self,table,key,value):
+        row=ci.db.scalar("select body from tags where tbname='%s' limit 1 offset 0"%table)
+        body={}
+        if row!=None:
+            body=json.loads(row['body'])
+        if key in body.keys():
+            if body[key]!='':
+                if value in body[key].split(','):
+                    return  True,'OK'
+                else:
+                    return  False," value:'%s' must be in '%s'" %(key,body[key])
+        else:
+            return False," tag must be in '%s'" %(str(body.keys()))
+
+
+    def addhosttag(self,param=''):
         params=self._params(param)
         tag=''
         ip=''
@@ -654,56 +717,61 @@ class Cli:
             ip=params['i']
         else:
             return '-i(ip) require'
-        tags={}
+        body={}
         for t in tag.split(';'):
             kv=t.split('=')
             if len(kv)==2:
-                tags[kv[0]]=kv[1]
-        row=ci.db.scalar("select id,tags from tags where ip='{ip}' limit 1 offset 0",{'ip':ip})
+                ok,messege=self._check_body_val('hosts',kv[0],kv[1])
+                if not ok:
+                    return messege.encode('utf-8')
+                body[kv[0]]=kv[1]
+        row=ci.db.scalar("select id,body from hosts where ip='{ip}' limit 1 offset 0",{'ip':ip})
         if row==None:
-            data={'ip':ip,'tags':json.dumps(tags)}
-            ci.db.query("insert into tags(ip,tags) values('{ip}','{tags}')",data)
+            data={'ip':ip,'body':json.dumps(body)}
+            ci.db.query("insert into hosts(ip,body) values('{ip}','{body}')",data)
         else:
-            old=json.loads(row['tags'])
-            for k in tags.keys():
-                old[k]=tags[k]
-            data={'ip':ip,'tags':json.dumps(old),'id':row['id']}
-            ci.db.query("update tags set ip='{ip}',tags='{tags}' where id='{id}'",data)
+            old=json.loads(row['body'])
+            for k in body.keys():
+                old[k]=body[k]
+            data={'ip':ip,'body':json.dumps(old),'id':row['id']}
+            ci.db.query("update hosts set ip='{ip}',body='{body}' where id='{id}'",data)
         return 'success'
     # @cache.Cache(ttl=30)
-    def gettag(self,param=''):
-        print 'xxx'
+    def gethost(self,param=''):
         params=self._params(param)
         if 't' not in params:
             return '-t(tag) require'
-        rows=ci.db.query("select ip,tags from tags")
+        rows=ci.db.query("select ip,body from hosts")
         ret=[]
         tag=params['t']
-        tag=tag.replace('&&',' and ')
-        tag=tag.replace('||',' or ')
-        # if len(re.findall(r'=\s+',tag))>0:
-        #     return 'tag must be key=value'
-        def tmp(a):
-            return ('('+(a.group(0)).encode("utf-8")+')').decode('utf-8')
-        exp=re.sub(r'(\w+=\s*(?:[^\s]+)\s*)',tmp,tag)
+        rows= self._search_body('hosts',tag)
         for row in rows:
-            if Match().match(exp, json.loads( row['tags']),False):
                 ret.append(row['ip'])
         return "\n".join(ret)
     # @cache.Cache(ttl=3600)
-    def listtag(self,param='',output='tags'):
+    def listhosttag(self,param=''):
         params=self._params(param)
-        rows=ci.db.query("select tags from tags")
+        rows=ci.db.query("select body from hosts")
         # return rows
         s=set()
         for row in rows:
-            tags=json.loads(row['tags'])
+            tags=json.loads(row['body'])
             for k in tags.keys():
-                if output=='tags':
-                    s.add(k.encode('utf-8')+"=%s"% tags[k].encode('utf-8') )
-                else:
-                    s.add(tags[k].encode('utf-8'))
+                s.add(k.encode('utf-8')+"=%s"% tags[k].encode('utf-8') )
         return "\n".join(s)
 
 
 
+    def _search_body(self,table='', exp=''):
+        assert  table!=''
+        exp=exp.replace('&&',' and ')
+        exp=exp.replace('||',' or ')
+        rows=ci.db.query("select * from %s"%table)
+        ret=[]
+        def tmp(a):
+            return ('('+(a.group(0)).encode("utf-8")+')').decode('utf-8')
+        exp=re.sub(r'(\w+=\s*(?:[^\s]+)\s*)',tmp,exp)
+        for row in rows:
+            if Match().match(exp, json.loads( row['body']),False):
+                ret.append(row)
+        return ret
