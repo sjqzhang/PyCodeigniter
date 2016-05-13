@@ -12,6 +12,7 @@ import re
 import sys
 import time
 import base64
+# from sql4json.sql4json import *
 
 OP_NOT_VALID = -1
 OP_EQUAL = 1
@@ -151,7 +152,7 @@ class Match:
 # if __name__ == '__main__':
 #     pattern = [
 #         '(((hostname=MZKJ-PC-02876)))',
-#         '(hostname=MZKJ-CentOS7-17.16.137.8) and (or hostgroup=Discovered hosts, Linux servers)and(((level=Warning)or(level=Critical)))'
+#         '(hostname=MZKJ-CentOS7-17.16.137.8) and ( hostgroup=Discovered hosts, Linux servers)and(((level=Warning)or(level=Critical)))'
 #     ]
 #     content = "event_time=14:58:57|event_value=1|level=Warning|expression={MZKJ-CentOS7-17.16.137.8:system.cpu.util[0,,avg1].last()}>5|hostname=MZKJ-CentOS7-17.16.137.8|hostgroup=Discovered hosts, Linux servers|templatename=Template OS Linux|ip=172.16.137.8|item_name=Processor load (1 min average per core)|item_value=6.968583"
 #
@@ -201,7 +202,7 @@ class Cli:
         return "hello world".strip()
 
     def help(self,param=''):
-	h='''
+        h='''
         ########## 文件与shell ##############
 
         cli upgrade   更新 cli 程序
@@ -218,7 +219,6 @@ class Cli:
         cli delenv   -k key -g group 删除环境变量
         cli listenv   -g group -e 1 查看某个组的环境变量 默认 default -e 1 导出
         cli updateenv   -k key -v value -g group (default)更新环境变量
-
          '''
         return h
 
@@ -684,7 +684,7 @@ class Cli:
         for row in rows:
             tags=json.loads(row['body'])
             for k in tags.keys():
-                s.add('table_name: '+row['tbname'].encode('utf-8')+"\ttags: "+ k.encode('utf-8')+"=%s"% tags[k].encode('utf-8') )
+                s.add('object_name: '+row['tbname'].encode('utf-8')+"\ttags: "+ k.encode('utf-8')+"=%s"% tags[k].encode('utf-8') )
         return "\n".join(s)
 
 
@@ -698,9 +698,11 @@ class Cli:
                 if value in body[key].split(','):
                     return  True,'OK'
                 else:
-                    return  False," value:'%s' must be in '%s'" %(key,body[key])
+                    return  False," value:'%s' must be in %s" %(key,str(body[key].encode('utf-8').split(',')))
+            else:
+                return True,'OK'
         else:
-            return False," tag must be in '%s'" %(str(body.keys()))
+            return False," tag name must be in %s" %(str([ k.encode('utf-8') for k in body.keys()]))
 
 
     def addhosttag(self,param=''):
@@ -736,18 +738,31 @@ class Cli:
             data={'ip':ip,'body':json.dumps(old),'id':row['id']}
             ci.db.query("update hosts set ip='{ip}',body='{body}' where id='{id}'",data)
         return 'success'
-    # @cache.Cache(ttl=30)
+    # @cache.Cache(ttl=300)
     def gethost(self,param=''):
         params=self._params(param)
         if 't' not in params:
             return '-t(tag) require'
-        rows=ci.db.query("select ip,body from hosts")
+        # rows=ci.db.query("select ip,body from hosts")
+        rows=self._cache_table('hosts')
         ret=[]
         tag=params['t']
+        start=time.time()
         rows= self._search_body('hosts',tag)
+        print(time.time()-start)
         for row in rows:
                 ret.append(row['ip'])
         return "\n".join(ret)
+
+    def viewhost(self,param=''):
+        params=self._params(param)
+        if 'i' not in params:
+            return '-i(ip) require'
+        else:
+            ip=params['i']
+        data={'ip':ip}
+        row=ci.db.scalar("select ip,body from hosts where ip='{ip}' limit 1 offset 0",data)
+        return row['body']
     # @cache.Cache(ttl=3600)
     def listhosttag(self,param=''):
         params=self._params(param)
@@ -760,6 +775,73 @@ class Cli:
                 s.add(k.encode('utf-8')+"=%s"% tags[k].encode('utf-8') )
         return "\n".join(s)
 
+    @cache.Cache(ttl=3600)
+    def _cache_table(self,table):
+        print('xxxxxx')
+        return ci.db.query("select * from %s" % table)
+
+    @cache.Cache(ttl=3600)
+    def test2(self,param=''):
+        print 'xxxxxxxx'
+        start=time.time()
+        rows=self.db.query('select * from hosts limit 5')
+        print(time.time()-start)
+        start=time.time()
+        data=[]
+
+
+        for index,row in enumerate(rows):
+            r=json.loads(row['body'])
+
+            rows[index]=r
+        return rows
+
+
+
+    def test3(self,param=''):
+        pass
+        rows=self._cache_table('hosts')
+
+
+    def test(self,param=''):
+
+        # from data_query_engine import DataQueryEngine
+
+        # rows=self._cache_table('hosts')
+        # rows=self.db.query('select * from hosts limit 10')
+        rows=self.db.query('select * from hosts ')
+        start=time.time()
+        data=[]
+
+        for index,row in enumerate(rows):
+            r=json.loads(row['body'])
+
+            rows[index]=r
+
+
+        # print(rows)
+        # query = DataQueryEngine(rows, "select * from ")
+        # return  query.get_results()
+
+
+
+
+        # query = Sql4Json(json.dumps({"data":rows}), "select ip,business from / where room_en_short=='GZ-NS'")
+        # query = Sql4Json(json.dumps({"data":rows}), "select * from data")
+        # query = Sql4Json(json.dumps(rows), "select ip,business from / where  module > 'sync-web'")
+
+
+        # query = DataQueryEngine(rows, "select * from  /  where  module == 'sync-web'")
+        # return  query.get_results()
+        #
+        # print time.time()-start
+        # results_dictionary = query.get_results()
+        # return results_dictionary
+
+
+
+
+
 
 
     def _search_body(self,table='', exp=''):
@@ -771,6 +853,7 @@ class Cli:
         def tmp(a):
             return ('('+(a.group(0)).encode("utf-8")+')').decode('utf-8')
         exp=re.sub(r'(\w+=\s*(?:[^\s]+)\s*)',tmp,exp)
+        print(exp)
         for row in rows:
             if Match().match(exp, json.loads( row['body']),False):
                 ret.append(row)
