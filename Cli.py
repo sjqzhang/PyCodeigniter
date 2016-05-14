@@ -575,10 +575,9 @@ class Cli:
         ret=''
         for row in rows:
             if row['cmd']!=None:
-                ret+=unicode(row['cmd'])+"\n"
+                ret+=(row['cmd'].encode('utf-8'))+"\n"
         return ret
 
-        return ret
 
     def adddoc(self,param=''):
         params=self._params(param)
@@ -638,9 +637,9 @@ class Cli:
         for row in rows:
             if row['doc']!=None:
                 if outid:
-                    ret+='# docid:  '+unicode(row['id'])+"\n"+unicode(row['doc'])+"\n"*3
+                    ret+='# docid:  '+str(row['id'])+"\n"+(row['doc'].encode('utf-8'))+"\n"*3
                 else:
-                    ret+=str(row['doc'])+"\n"*3
+                    ret+=str(unicode.encode(row['doc'],'utf-8','ignore'))+"\n"*3
                 #ret+="#"*50+"\n"
         return ret
 
@@ -799,8 +798,19 @@ class Cli:
 
 
     def test3(self,param=''):
-        pass
         rows=self._cache_table('hosts')
+        for index,row in enumerate(rows):
+            r=json.loads(row['body'])
+
+            rows[index]=r
+        import pymongo
+
+        conn = pymongo.MongoClient("127.0.0.1",27017)
+        db = conn.test
+        for row in rows:
+
+            db.test.insert_one(row)
+
 
 
     def test(self,param=''):
