@@ -61,7 +61,12 @@ class CI_Memory_Cache(object):
 
 
 class CI_Cache(object):
-    REGEX_KEY=re.compile(r'\#p\[(\w+)\]([^,}]+)?',re.IGNORECASE)
+    exp=[]
+    exp.append(r"#p\[[\d+]\]\.\w+")
+    exp.append(r"#p\[[\d+]\]")
+    exp.append(r"#\w+\.\w+")
+    exp.append(r"#\w+")
+    REGEX_KEY=re.compile(r'|'.join(exp),re.IGNORECASE)
     def __init__(self,**kwargs):
         # globals()['ci']=kwargs['app']
         self.cache_conf=kwargs['cache']
@@ -92,7 +97,7 @@ class CI_Cache(object):
 
 
     # @staticmethod
-    # def get_cache_key(prefix,tpl,func,*args,**kwargs):
+    # def get_cache_key_by_dic(prefix,tpl,func,*args,**kwargs):
     #     key=prefix+'$'+func.__name__+'$'
     #     # match= re.findall(r'\#p\[(\d+)\]([^,}]+)?',tpl)
     #     match=CI_Cache.REGEX_KEY.findall(tpl)
@@ -112,18 +117,92 @@ class CI_Cache(object):
     #                 continue
     #     return key
     @staticmethod
-    def Cache(prefix='', ttl=3600,key='',op='select'):
+    def get_cache_key_by_args(prefix,tpl,func,args,kwargs,md5=False):
+        def _md5(input):
+            m2 = hashlib.md5()
+            m2.update(input)
+            return str(m2.hexdigest())
+        exp=[]
+        exp.append(r"#p\[[\d+]\]\.\w+")
+        exp.append(r"#p\[[\d+]\]")
+        exp.append(r"#\w+\.\w+")
+        exp.append(r"#\w+")
+        REGEX_KEY=re.compile(r'|'.join(exp),re.IGNORECASE)
+        match=REGEX_KEY.findall(tpl)
+        key=prefix+'$'+func.__name__+'$'
+        if len(match)==0:
+            raise  Exception('key must input,example: #id,#p[0].id,#abc.id')
+        for m in match:
+            k1=''
+            k2=''
+            idx=-1
+            if m.find('p[')>0:
+                if str(args[0]).find('instance at')>0:
+                    idx=int(re.compile(r'#p\[([\d+])\]',re.IGNORECASE).search(m).group(1))+1
+                else:
+                    idx=int(re.compile(r'#p\[([\d+])\]',re.IGNORECASE).search(m).group(1))
+            if m.find(".")>0:
+                k1,k2=m.split('.')
+            else:
+                if k2=='':
+                    k1=m[1:]
+            if idx!=-1:
+                k1=idx
+                if idx>len(args):
+                    continue
+                    pass
+                    raise  Exception('index out args')
+                if k2!='':
+                    if isinstance(args[k1][k2],unicode):
+                        key+=str( unicode.encode( args[idx][k2],'utf-8','ignore'))+'$'
+                    else:
+                        key+=str(args[idx][k2])+'$'
+                else:
+                    if isinstance(args[idx],unicode):
+                        key+=str(unicode.encode( args[idx],'utf-8','ignore'))+'$'
+                    else:
+                        key+=str(args[idx])+'$'
+                continue
+            else:
+                if k2!='':
+                    if isinstance(kwargs[k1][k2],unicode):
+                        key+=str( unicode.encode( args[idx][k2],'utf-8','ignore'))+'$'
+                    else:
+                        key+=str(kwargs[k1][k2])+'$'
+                    continue
+                if k1!='':
+                    if k1 in kwargs.keys():
+                        if isinstance(kwargs[k1],unicode):
+                            key+=str( unicode.encode( kwargs[k1],'utf-8','ignore'))+'$'
+                        else:
+                            key+=str(kwargs[k1])+'$'
+                    else:
+                        raise  Exception('cache key "%s" not found' % k1)
+                    continue
+        if md5:
+            return _md5(key)
+        else:
+            return key
+
+
+
+
+    @staticmethod
+    def Cache(prefix='', ttl=3600,key='',op='select',md5=True):
         def handle_func(func):
             def handle_args(*args, **kwargs):
-                # print args,kwargs
+                # print 'xxxxxxx', args,kwargs
                 ci=CI_Application.CI
                 if ci!=None:
-                    if  ci.cache.cache_instance==None:
+                    if False and  ci.cache.cache_instance==None:
                         ci.logger.error('cache not implment,you can implment it and setting it')
                         return func(*args, **kwargs)
                     else:
                         # op dispatch
-                        ckey=CI_Cache.get_cache_key(prefix,key,func,*args,**kwargs)
+                        if key=='' and md5:
+                            ckey=CI_Cache.get_cache_key(prefix,key,func,args,kwargs)
+                        else:
+                            ckey=CI_Cache.get_cache_key_by_args(prefix,key,func,args,kwargs,md5=md5)
                         if op=='select':
                             obj=ci.cache.cache_instance.get(ckey)
                             if obj==None:
@@ -169,7 +248,7 @@ class CI_Cache(object):
 
 
 
-@CI_Cache.Cache('abc',key='#p[0].index,#p[1],#p[2]')
+@CI_Cache.Cache('abc',key='#p[0].index,#p[1],#p[2]',md5=False)
 def abc(a,b,c):
     print (a,b,c)
 
@@ -177,4 +256,7 @@ def abc(a,b,c):
 
 
 if __name__=='__main__':
-    abc({'index':'adsdf'},2,3)
+    s=time.time()
+    for i in xrange(1,10000):
+        abc({'index':'adsdf'},2,3)
+    print(time.time()-s)
