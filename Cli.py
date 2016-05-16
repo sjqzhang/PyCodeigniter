@@ -742,8 +742,8 @@ class Cli:
         params=self._params(param)
         if 't' not in params:
             return '-t(tag) require'
-        # rows=ci.db.query("select ip,body from hosts")
-        rows=self._cache_table('hosts')
+        rows=ci.db.query("select ip,body from hosts")
+        # rows=self._cache_table('hosts')
         ret=[]
         tag=params['t']
         start=time.time()

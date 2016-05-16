@@ -27,6 +27,7 @@ import random
 
 pidfile="/var/zbxcli.pid"
 server_url="http://172.17.140.116:8005"
+configfile='/etc/cli'
 
 # etcd_prefix='/keeper'
 
@@ -34,6 +35,7 @@ default_module='cli'
 
 bin_name='cli'
 client_filename='/bin/%s' % bin_name
+client_log_filename= tempfile.gettempdir()+os.path.sep+ bin_name+".log"
 client_log_filename= tempfile.gettempdir()+os.path.sep+ bin_name+".log"
 script_path= tempfile.gettempdir()+ os.path.sep+'script'
 
@@ -154,7 +156,7 @@ class Daemon(object):
                                 if os.path.exists(self.pidfile):
                                         os.remove(self.pidfile)
                         else:
-                                print str(err)
+                                print(str(err))
                                 sys.exit(1)
 
         def restart(self):
@@ -182,7 +184,6 @@ class ZbxCommand(object):
         thread.join(timeout)
         if thread.is_alive():
             logger.info(self.cmd)
-            #print 'Terminating process'
             self.process.terminate()
             thread.join()
             util=ZbxCommon()
@@ -209,7 +210,7 @@ class ZbxCommon(object):
             f.close()
         except Exception as e:
             logger.error(e)
-            print e
+            print(e)
 
     def upload(self,url,filepath,directory):
         boundary = '----------%s' % hex(int(time.time() * 1000))
@@ -237,11 +238,11 @@ class ZbxCommon(object):
             req.add_header('Referer','http://remotserver.com/')
             resp = urllib2.urlopen(req, timeout=5)
             qrcont=resp.read()
-            print qrcont
+            print(qrcont)
         except Exception as e:
             logger.error(e)
-            print e
-            print 'http error'
+            print(e)
+            print('http error')
 
     def url_fetch(self,url,data=None,timeout=30,httpCmd=''):
         html='';
@@ -275,10 +276,11 @@ class ZbxCommon(object):
                 html=unicode(html,charset[0])
             #print(html)
         except Exception as e:
+            print("deug", url,data,httpCmd)
             if hasattr(e,'msg'):
                 print(e.msg)
             else:
-                print e
+                print(e)
 
             logger.error(e)
         return html
@@ -371,29 +373,6 @@ class ZbxCommon(object):
         now_datetime = time.strftime('_%Y-%m-%d_%H_%M_%S', time.localtime(time.time()))
         return now_datetime
 
-    def backup_config(self,src):
-        ret = 1
-        if not os.path.exists(src):
-            print 'not exist {0}'.format(src)
-            logging.error("not exists {0}".format(src))
-            sys.exit(-1)
-
-        dst = ''.join([src, self.now_datetime()])
-        if not os.path.exists(dst):
-            ret = os.system('cp -af {0} {1}'.format(src, dst))
-            if not ret:
-                logging.info("cp -af {0} {1}".format(src, dst))
-            else:
-                print "cp error"
-                logging.error("ret={0} cp {2} {2}".format(ret, src, dst))
-                sys.exit(-2)
-        else:
-            print 'exist dst'
-            logging.error("exist {0}".format(dst))
-            sys.exit(-3)
-
-        return ret
-
     def execute(self,cmd):
         try:
             return os.popen(cmd).read()
@@ -445,46 +424,6 @@ class ZbxCommon(object):
             return os.path.abspath(os.path.dirname(caller_file))+ os.path.sep+__file__
 
 
-    def backup_config(self,src):
-        """
-
-        :return:
-        """
-        ret = 1
-        if not os.path.exists(src):
-            print 'not exist {0}'.format(src)
-            logging.error("not exists {0}".format(src))
-            sys.exit(-1)
-
-        dst = ''.join([src, self.now_datetime()])
-        if not os.path.exists(dst):
-            ret = os.system('cp -af {0} {1}'.format(src, dst))
-            if not ret:
-                logging.info("cp -af {0} {1}".format(src, dst))
-            else:
-                print "cp error"
-                logging.error("ret={0} cp {2} {2}".format(ret, src, dst))
-                sys.exit(-2)
-        else:
-            print 'exist dst'
-            logging.error("exist {0}".format(dst))
-            sys.exit(-3)
-
-        return ret
-
-    def update_config(self,src):
-        """
-
-        :return:
-        """
-        dst = '/data/zabbix/conf/zabbix_agentd.conf'
-        ret = os.system('echo "{0}" > {1}'.format(src, dst))
-        if not ret:
-            logging.info("update {0}".format(dst))
-        else:
-            print "cp error"
-            logging.error("ret={0} update {1} {2}".format(ret, src, dst))
-            sys.exit(-2)
 
     def tuple2list(self,*args):
         print(args)
@@ -540,7 +479,7 @@ class ZbxCli():
 
     def help(self,args):
         ret=self.util.url_fetch(self.entry%'help')
-        print ret
+        print(ret)
 
     def upgrade(self,args):
         fn=self.util.exec_filename()
@@ -549,37 +488,36 @@ class ZbxCli():
             open('/tmp/cli','w').write(content)
             os.system('chmod +x /tmp/cli')
             os.system('mv -f /tmp/cli %s' %(client_filename))
-            print 'success'
+            print('success')
         else:
-            print 'fail'
+            print('fail')
     def adddoc(self,args):
         argv=self.util.getopt(args)
         if 'f' in argv:
             argv['d']=open(argv['f'],'r').read()
 
         ret=self.util.url_fetch(self.entry%'adddoc',{'param':json.dumps(argv)})
-        print ret
+        print(ret)
 
     def daemon(self,argv):
         daemon = ZbxDaemon(pidfile)
         setattr(daemon,'zbxcli',self)
         data= self.util.getopt(sys.argv[1:])
         opt = data.get('s')
-        sys.exit(0)
         if 'start' == opt:
-            print "cli daemon start"
+            print("cli daemon start")
             daemon.start()
         elif 'stop' == opt:
-            print "cli daemon stop"
+            print("cli daemon stop")
             daemon.stop()
         elif 'restart' == opt:
-            print "cli daemon restart"
+            print("cli daemon restart")
             daemon.restart()
         elif 'debug' == opt:
-            print "cli daemon debug"
+            print("cli daemon debug")
             daemon.run()
         else:
-            print "usage: cli deamon -s start|stop|restart"
+            print("usage: cli deamon -s start|stop|restart")
             sys.exit(2)
         sys.exit(0)
 
@@ -597,7 +535,7 @@ class ZbxCli():
             import getpass
             data['p']=getpass.getpass('please input password: ')
         ret=self.util.url_fetch(server_url+'/%s/%s'%(module,action),{'param':json.dumps(data)})
-        print ret
+        print(ret)
 
     def login(self,argv):
         data= self.util.getopt(sys.argv[1:])
@@ -613,13 +551,20 @@ class ZbxCli():
         with open(fn,"w") as f:
             f.write(ret)
             if len(ret)==36:
-                print 'success'
+                print('success')
                 return
             else:
-                print ret
+                print(ret)
                 return
-        print ret
+        print(ret)
 
+    def config(self,argv):
+        conf='''
+pidfile=/var/zbxcli.pid
+server_url=http://127.0.0.1:8005
+'''
+        with open(configfile,'w') as f:
+            f.write(conf)
 
     def default(self,module,action,args):
         #argv= self.util.parse_argv(args)
@@ -707,16 +652,16 @@ class ZbxDaemon(Daemon):
         try:
             now = time.time()
             if now - self.update_time > 600:
-                print "=== get etcd"
+                print("=== get etcd")
                 self.etcd_conf =  json.loads(self.remote_server('cli','getetcd',{}) )
-                print self.etcd_conf
+                print(self.etcd_conf)
                 self.etcd_list=self.etcd_conf['server']
                 self.etcd_prefix=self.etcd_conf['prefix']
                 if not isinstance(self.etcd_list,list):
                     raise Exception("get etcd list error")
                 for host in self.etcd_list:
-                    print self.util.url_fetch("http://%s/v2/keys%s/heartbeat" % (host,self.etcd_prefix) ,data={'ttl':60,'value':'heartbeat'},httpCmd = 'PUT' )
-                    print self.util.url_fetch("http://%s/v2/keys%s/servers" % (host,self.etcd_prefix) ,data={'ttl':60,'value':'servers'},httpCmd = 'PUT' )
+                    print(self.util.url_fetch("http://%s/v2/keys%s/heartbeat" % (host,self.etcd_prefix) ,data={'ttl':60,'value':'heartbeat'},httpCmd = 'PUT' ))
+                    print(self.util.url_fetch("http://%s/v2/keys%s/servers" % (host,self.etcd_prefix) ,data={'ttl':60,'value':'servers'},httpCmd = 'PUT' ))
                 self.update_time = now
         except Exception as er:
             print(er)
@@ -727,32 +672,32 @@ class ZbxDaemon(Daemon):
 
     def heartbeat(self):
         try:
-            print "=== heartbeat start"
+            print("=== heartbeat start")
             ip = self.util.get_one_ip()
             for host in self.etcd_list:
-                print "heartbeat:  http://%s/v2/keys%s/heartbeat/%s" % (host,self.etcd_prefix,ip)
+                print("heartbeat:  http://%s/v2/keys%s/heartbeat/%s" % (host,self.etcd_prefix,ip))
                 html = self.util.url_fetch("http://%s/v2/keys%s/heartbeat/%s" % (host,self.etcd_prefix,ip) ,data={'ttl':60,'value':'2333'},httpCmd = 'PUT' )
                 if html != "":
                     break
-            print "=== heartbeata end"
+            print("=== heartbeata end")
         except Exception as er:
-            print er
+            print(er)
             logger.error('heartbeat error:'+str(er))
 
 
     def watch_commmand(self):
         try:
             ip = self.util.get_one_ip()
-            print "watch_commmand",ip,self.etcd_list
+            print("watch_commmand",ip,self.etcd_list)
             for host in self.etcd_list:
                 self.util.url_fetch("http://%s/v2/keys%s/servers/%s?wait=true&recursive=true" % (host,self.etcd_prefix,ip),timeout = 20+ random.randint(1,10) )
                 content = self.util.url_fetch("http://%s/v2/keys%s/servers/%s?recursive=true" % (host,self.etcd_prefix,ip),timeout = 10 )
-                print "content   "+content
+                print("content   "+content)
                 if content != "":
                     self.feedback_result(ip,host,content)
                     break
         except Exception as er:
-            print er
+            print(er)
             logger.error('watch_commmand error:'+str(er))
 
 
@@ -763,40 +708,41 @@ class ZbxDaemon(Daemon):
 
     def feedback_result(self,ip,host,content):
         try:
-            print "process cmd"
+            print("process cmd")
             if content == "Not Found":
-                print "no found key"
+                print("no found key")
                 return
             rjson = json.loads(content)
-            print rjson
             if not rjson['node'].get('dir',False):
                 url = "http://%s/v2/keys%s?recursive=true" % (host,rjson['node']['key'])
-                print "feedback_result"+ url
+                print("feedback_result"+ url)
                 self.util.url_fetch(url,httpCmd= 'DELETE' )
-                print "publish is no dir"
+                print("publish is no dir")
                 return
 
             if not rjson['node'].get('nodes'):
-                print "no found command"
+                print("no found command")
                 return
 
             for cNode in  rjson['node']['nodes']:
-                cmd = cNode['value'].decode("utf-8")
+                cmd = cNode['value'].encode("utf-8")
                 key = cNode['key']
-                self.keys.append(key)
+                # self.keys.append(key)
                 url = "http://%s/v2/keys%s?recursive=true" % (host,key)
                 self.util.url_fetch(url,httpCmd= 'DELETE' )
                 def tmp():
                     result = ZbxCommand(cmd).run()
+                    print(type(result))
                     message = {'ip':ip, 'cmd':cmd, 'result':result}
+                    print(message)
                     self.remote_server('cli','feedback_result',{'param':message})
                 threading.Thread(target=tmp).start()
-                #print "cmd %s result %s" % (cmd,result)
+
 
         except BaseException as e:
             logger.error('feedback_result error:'+str(e))
-            print "feed error"
-            print e
+            print("feed error")
+            print(e)
 
 
 
@@ -816,11 +762,26 @@ class ZbxDaemon(Daemon):
 
 
 if __name__ == '__main__':
+    if os.path.isfile(configfile):
+        with open(configfile) as f:
+            try:
+                for l in f.read().strip().split("\n"):
+                    k,v=l.split('=',1)
+                    if k.strip()=='server_url' and v!='':
+                        server_url=v.strip()
+                    if k.strip()=='pidfile' and v!='':
+                        pidfile=v.strip()
+            except Exception as er:
+                logger.error(er)
+                pass
+
     module=default_module
     action='help'
     cli=ZbxCli(default_module)
     util=ZbxCommon()
     data= util.getopt(sys.argv[1:])
+
+
     if data['__ctrl__']=='':
         if data['__func__']=='':
             action='help'
