@@ -14,139 +14,139 @@ import time
 import base64
 # from sql4json.sql4json import *
 
-OP_NOT_VALID = -1
-OP_EQUAL = 1
-OP_NOT_EQUAL = 2
-
-class Match_Helper():
-    def __init__(self, content_dict, is_regex=False):
-
-        self.content = {}
-        for k, val in content_dict.iteritems():
-            self.content[k.lower()] = val.lower()
-
-        self.is_regex = is_regex
-        self.expr = None
-
-    @staticmethod
-    def check_pattern(expr):
-        if not expr:
-            return False
-
-        lcount = expr.count('(')
-        rcount = expr.count(')')
-        return lcount == rcount
-
-    def find_operator(self, expr):
-        """
-        返回 op_type， key, value
-        :param expr:
-        :return:
-        """
-        length = len(expr)
-        idx_e = expr.find('=') if expr.find('=') != -1 else length
-        idx_ne = expr.find('<>') if expr.find('<>') != -1 else length
-        idx = min(idx_e, idx_ne)
-        if idx == length:
-            return -1, '', ''
-
-        key = expr[:idx].strip().lower()
-        val = expr[idx + (1 if idx == idx_e else 2):].strip().lower()
-        return (OP_EQUAL if idx == idx_e else OP_NOT_EQUAL), key, val
-
-    def compute(self, expr):
-        expr = expr.strip()
-        op_type, op_key, op_val = self.find_operator(expr)
-        if op_type == OP_NOT_VALID:
-            return False  # TODO 表达式不合法，这里应该终止计算，先做返回False处理
-        val_content = self.content.get(op_key, '').lower()
-
-        bfilter, ret = self._filter(op_key, op_val, val_content, op_type)
-        if bfilter:
-            return ret
-        else:
-            if op_type == OP_EQUAL:
-                return self.compute_equal(op_val, val_content, self.is_regex)
-            else:
-                return self.compute_not_equal(op_val, val_content, self.is_regex)
-
-    def _filter(self, key, val_pattern, val_content, op_type):
-        if self.is_regex or key != 'hostgroup':
-            return False, False
-
-        hostgroup_list = [s.strip() for s in val_content.split(',')]
-        if op_type == OP_EQUAL:
-            return True, val_pattern in hostgroup_list
-        else:
-            return True, val_pattern not in hostgroup_list
-
-    def compute_equal(self, val_pattern, val_content, is_regex):
-        if self.is_regex:
-            return True if re.search(val_pattern, val_content, re.IGNORECASE) else False
-        else:
-            return True if val_content == val_pattern else False
-        pass
-
-    def compute_not_equal(self, val_pattern, val_content, is_regex):
-        if self.is_regex:
-            return True if not re.search(val_pattern, val_content, re.IGNORECASE) else False
-        else:
-            return True if val_content != val_pattern else False
-        pass
-
-    # pattern = '(host=MZKJ-PC-02876)and(hostgroup=Discovered hosts)and((level=Warning)or(Critical))'
-    def calculate(self):
-        self.expr = self.expr.strip()
-        if len(self.expr) == 0:
-            return False
-
-        if self.expr[0] == '(':
-            self.expr = self.expr[1:]
-            ret = self.calculate()
-            assert self.expr[0] == ')'
-            self.expr = self.expr[1:].lstrip()
-
-            if self.expr.startswith('and'):
-                self.expr = self.expr[3:]
-                return self.calculate() and ret
-            elif self.expr.startswith('or'):
-                self.expr = self.expr[2:]
-                return self.calculate() or ret
-            else:
-                return ret
-        else:
-            ridx = self.expr.find(')')
-            if ridx == -1:
-                return self.compute(self.expr)
-            ret = self.compute(self.expr[:ridx])
-            self.expr = self.expr[ridx:]
-            return ret
-
-    def match(self, expr):
-        expr = expr.strip()
-        if not self.check_pattern(expr):
-            return False
-
-        self.expr = expr
-        return self.calculate()
-
-
-class Match:
-    def __init__(self):
-        pass
-
-    def match(self, pattern, content_dict, is_regex=False):
-        matcher = Match_Helper(content_dict, is_regex)
-        if isinstance(pattern, (tuple, list)):
-            ret = {}
-            for i in range(len(pattern)):
-                ret[i] = matcher.match(pattern[i])
-            return ret
-        else:
-            return matcher.match(pattern)
-
-    def is_valid_pattern(self, pattern):
-        return Match_Helper.check_pattern(pattern)
+# OP_NOT_VALID = -1
+# OP_EQUAL = 1
+# OP_NOT_EQUAL = 2
+#
+# class Match_Helper():
+#     def __init__(self, content_dict, is_regex=False):
+#
+#         self.content = {}
+#         for k, val in content_dict.iteritems():
+#             self.content[k.lower()] = val.lower()
+#
+#         self.is_regex = is_regex
+#         self.expr = None
+#
+#     @staticmethod
+#     def check_pattern(expr):
+#         if not expr:
+#             return False
+#
+#         lcount = expr.count('(')
+#         rcount = expr.count(')')
+#         return lcount == rcount
+#
+#     def find_operator(self, expr):
+#         """
+#         返回 op_type， key, value
+#         :param expr:
+#         :return:
+#         """
+#         length = len(expr)
+#         idx_e = expr.find('=') if expr.find('=') != -1 else length
+#         idx_ne = expr.find('<>') if expr.find('<>') != -1 else length
+#         idx = min(idx_e, idx_ne)
+#         if idx == length:
+#             return -1, '', ''
+#
+#         key = expr[:idx].strip().lower()
+#         val = expr[idx + (1 if idx == idx_e else 2):].strip().lower()
+#         return (OP_EQUAL if idx == idx_e else OP_NOT_EQUAL), key, val
+#
+#     def compute(self, expr):
+#         expr = expr.strip()
+#         op_type, op_key, op_val = self.find_operator(expr)
+#         if op_type == OP_NOT_VALID:
+#             return False  # TODO 表达式不合法，这里应该终止计算，先做返回False处理
+#         val_content = self.content.get(op_key, '').lower()
+#
+#         bfilter, ret = self._filter(op_key, op_val, val_content, op_type)
+#         if bfilter:
+#             return ret
+#         else:
+#             if op_type == OP_EQUAL:
+#                 return self.compute_equal(op_val, val_content, self.is_regex)
+#             else:
+#                 return self.compute_not_equal(op_val, val_content, self.is_regex)
+#
+#     def _filter(self, key, val_pattern, val_content, op_type):
+#         if self.is_regex or key != 'hostgroup':
+#             return False, False
+#
+#         hostgroup_list = [s.strip() for s in val_content.split(',')]
+#         if op_type == OP_EQUAL:
+#             return True, val_pattern in hostgroup_list
+#         else:
+#             return True, val_pattern not in hostgroup_list
+#
+#     def compute_equal(self, val_pattern, val_content, is_regex):
+#         if self.is_regex:
+#             return True if re.search(val_pattern, val_content, re.IGNORECASE) else False
+#         else:
+#             return True if val_content == val_pattern else False
+#         pass
+#
+#     def compute_not_equal(self, val_pattern, val_content, is_regex):
+#         if self.is_regex:
+#             return True if not re.search(val_pattern, val_content, re.IGNORECASE) else False
+#         else:
+#             return True if val_content != val_pattern else False
+#         pass
+#
+#     # pattern = '(host=MZKJ-PC-02876)and(hostgroup=Discovered hosts)and((level=Warning)or(Critical))'
+#     def calculate(self):
+#         self.expr = self.expr.strip()
+#         if len(self.expr) == 0:
+#             return False
+#
+#         if self.expr[0] == '(':
+#             self.expr = self.expr[1:]
+#             ret = self.calculate()
+#             assert self.expr[0] == ')'
+#             self.expr = self.expr[1:].lstrip()
+#
+#             if self.expr.startswith('and'):
+#                 self.expr = self.expr[3:]
+#                 return self.calculate() and ret
+#             elif self.expr.startswith('or'):
+#                 self.expr = self.expr[2:]
+#                 return self.calculate() or ret
+#             else:
+#                 return ret
+#         else:
+#             ridx = self.expr.find(')')
+#             if ridx == -1:
+#                 return self.compute(self.expr)
+#             ret = self.compute(self.expr[:ridx])
+#             self.expr = self.expr[ridx:]
+#             return ret
+#
+#     def match(self, expr):
+#         expr = expr.strip()
+#         if not self.check_pattern(expr):
+#             return False
+#
+#         self.expr = expr
+#         return self.calculate()
+#
+#
+# class Match:
+#     def __init__(self):
+#         pass
+#
+#     def match(self, pattern, content_dict, is_regex=False):
+#         matcher = Match_Helper(content_dict, is_regex)
+#         if isinstance(pattern, (tuple, list)):
+#             ret = {}
+#             for i in range(len(pattern)):
+#                 ret[i] = matcher.match(pattern[i])
+#             return ret
+#         else:
+#             return matcher.match(pattern)
+#
+#     def is_valid_pattern(self, pattern):
+#         return Match_Helper.check_pattern(pattern)
 
 
 # if __name__ == '__main__':
@@ -169,6 +169,117 @@ class Match:
 
 
 
+############################# new exp ############################as
+
+
+
+class Expr:
+    def __init__(self, expr):
+        self.op_map = {
+            '=': self._equal_,
+            '!=': self._not_equal,
+            '<>': self._not_equal,
+            'like': self._like
+        }
+        self.key, self.op, self.val = self.__parser(expr)
+        self.func = self.op_map[self.op]
+
+    def __parser(self, expr):
+        op = map(lambda x: [expr.find(x), x], filter(lambda x: x in expr, self.op_map.keys()))
+        assert len(op) >= 1
+
+        op = min(op)
+        return str(expr[:op[0]]).strip().lower(), str(op[1]).strip().lower(), str(expr[op[0] + len(op[1]):]).strip().lower()
+
+    def _equal_(self, fst_val, sec_val):
+        return fst_val == sec_val
+
+    def _like(self,fst_val,sec_val):
+        return fst_val in sec_val
+
+
+    def _not_equal(self, fst_val, sec_val):
+        return fst_val != sec_val
+
+    def compute(self, data_dict):
+        v=data_dict.get(self.key, '')
+        if isinstance(v,unicode):
+            v = v.encode('utf-8')
+        sec_val = str(v).lower()
+        return self.func(self.val, sec_val)
+
+
+class Matcher:
+    def __init__(self, pattern_expr):
+        self.raw_pattern_expr = pattern_expr
+        self.postfix_expr_list = self.__translate_to_postfix_expr(pattern_expr)
+        pass
+
+
+    def __is_startswith_op(self, pattern_expr):
+        if pattern_expr.startswith('('):
+            return True, '(', pattern_expr[1:]
+        elif pattern_expr.startswith('or'):
+            return True, 'or', pattern_expr[2:]
+        elif pattern_expr.startswith('and'):
+            return True, 'and', pattern_expr[3:]
+        else:
+            return False, '', pattern_expr
+
+    def __translate_to_postfix_expr(self, pattern_expr):
+        postfix_expr_list = []
+        tmp_stack = []
+
+        while True:
+            pattern_expr = pattern_expr.strip()
+            if len(pattern_expr) <= 0:
+                break
+
+            is_op, op, pattern_expr = self.__is_startswith_op(pattern_expr)
+            if is_op:
+                tmp_stack.append(op)
+            else:
+                idx = pattern_expr.find(')')
+                if idx != 0:
+                    postfix_expr_list.append(Expr(pattern_expr if idx == -1 else pattern_expr[:idx]))
+                pattern_expr = pattern_expr[idx + 1:]
+
+                while True:
+                    t = tmp_stack.pop()
+                    if t == '(':
+                        break
+                    postfix_expr_list.append(t)
+
+        while len(tmp_stack) > 0:
+            postfix_expr_list.append(tmp_stack.pop())
+
+        print postfix_expr_list
+        return postfix_expr_list
+
+
+    def calc(self, data_dict):
+        tmp_list = []
+        for i in range(len(self.postfix_expr_list)):
+            op = self.postfix_expr_list[i]
+            if isinstance(op, Expr):
+                tmp_list.append(op.compute(data_dict))
+            else:
+                fst_val = tmp_list.pop()
+                sec_val = tmp_list.pop()
+                tmp_list.append((fst_val and sec_val) if op == 'and' else (fst_val or sec_val))
+        return tmp_list[0]
+
+
+class Match_Utils:
+    def __init__(self):
+        pass
+
+    def Match(self, data_dict, pattern_expr):
+        return Matcher(pattern_expr).calc(data_dict=data_dict)
+
+
+
+
 def auth(func):
     def decorated(*arg,**kwargs):
         if not 'HTTP_AUTH_UUID' in ci.local.env:
@@ -185,6 +296,12 @@ def auth(func):
 
 
 class Cli:
+
+    def __init__(self):
+        self.cmdkeys={}
+        pass
+
+
 
     @auth
     def index(self,param=''):
@@ -228,6 +345,66 @@ class Cli:
 
     def feedback_result(self,param=''):
         print(param)
+        data=json.loads(param)['param']
+        if 'index' in data.keys() and str(data['index']) in self.cmdkeys.keys():
+            self.cmdkeys[str(data['index'])]=data['result']
+        ci.logger.info("ip:%s,result:\n%s"%(data['ip'],data['result']))
+
+
+    def cmd(self,param=''):
+        try:
+            params=self._params(param)
+            etcd=self.getetcd(param)
+            cmd=''
+            ip=''
+            timeout=3
+
+            if  'c' in params:
+                cmd=params['c']
+            else:
+                return '-c(cmd) require'
+            if  'i' in params:
+                ip=params['i']
+            else:
+                return '-i(ip) require'
+            if  't' in params:
+                timeout= float( params['t'])
+            import urllib2,urllib
+            data={'value':cmd.encode('utf-8')}
+            data=urllib.urlencode(data)
+            req = urllib2.Request(
+                    url ="http://%s/v2/keys%s/servers/%s/"%(etcd['server'][0],etcd['prefix'],ip),
+                    data=data
+            )
+            req.get_method = lambda: 'POST'
+            # print urllib2.urlopen(req,timeout=10).read()
+            ret=json.loads(urllib2.urlopen(req,timeout=10).read())
+
+
+            # print ret
+            index=str(ret['node']['createdIndex'])
+            self.cmdkeys[index]=''
+            start=time.time()
+            if ret['node']['value']==cmd:
+                while True:
+                    if (time.time()-start> timeout) or self.cmdkeys[index]!='':
+                        break
+                    else:
+                        time.sleep(0.1)
+                if self.cmdkeys[index]!='':
+                    ret=self.cmdkeys[index]
+                    del self.cmdkeys[index]
+                    return ret
+                return '(success) submit command success'
+            else:
+                return '(unsafe) submit command success '
+        except Exception as er:
+            print er
+            return 'fail'
+            pass
+
+
+
 
     def disableuser(self,param=''):
         return self._userstatus(param,0)
@@ -774,26 +951,34 @@ class Cli:
                 s.add(k.encode('utf-8')+"=%s"% tags[k].encode('utf-8') )
         return "\n".join(s)
 
-    @cache.Cache(ttl=3600)
+    @cache.Cache(ttl=3600,key="#p[0]",md5=False)
     def _cache_table(self,table):
         print('xxxxxx')
         return ci.db.query("select * from %s" % table)
 
-    @cache.Cache(ttl=3600)
-    def test2(self,param=''):
+
+    def abc(self):
+        s=time.time()
+        for i in xrange(1,100000):
+            self._cache_table('hosts')[0]
+        print(time.time()-s)
+        return 'abc'
+
+    @CI_Cache.Cache(ttl=3600,key='#ip')
+    def test2(self,id="id",ip='172.16.133.12',dd={'ip':'xxxxxxxxx'},xx=''):
         print 'xxxxxxxx'
-        start=time.time()
-        rows=self.db.query('select * from hosts limit 5')
-        print(time.time()-start)
-        start=time.time()
-        data=[]
-
-
-        for index,row in enumerate(rows):
-            r=json.loads(row['body'])
-
-            rows[index]=r
-        return rows
+        # start=time.time()
+        # rows=self.db.query('select * from hosts limit 5')
+        # print(time.time()-start)
+        # start=time.time()
+        # data=[]
+        #
+        #
+        # for index,row in enumerate(rows):
+        #     r=json.loads(row['body'])
+        #
+        #     rows[index]=r
+        # return rows
 
 
 
@@ -803,13 +988,13 @@ class Cli:
             r=json.loads(row['body'])
 
             rows[index]=r
-        import pymongo
-
-        conn = pymongo.MongoClient("127.0.0.1",27017)
-        db = conn.test
-        for row in rows:
-
-            db.test.insert_one(row)
+        # import pymongo
+        #
+        # conn = pymongo.MongoClient("127.0.0.1",27017)
+        # db = conn.test
+        # for row in rows:
+        #
+        #     db.test.insert_one(row)
 
 
 
@@ -817,9 +1002,9 @@ class Cli:
 
         # from data_query_engine import DataQueryEngine
 
-        # rows=self._cache_table('hosts')
+        rows=self._cache_table('hosts')
         # rows=self.db.query('select * from hosts limit 10')
-        rows=self.db.query('select * from hosts ')
+        # rows=self.db.query('select * from hosts ')
         start=time.time()
         data=[]
 
@@ -861,10 +1046,17 @@ class Cli:
         rows=ci.db.query("select * from %s"%table)
         ret=[]
         def tmp(a):
-            return ('('+(a.group(0)).encode("utf-8")+')').decode('utf-8')
-        exp=re.sub(r'(\w+=\s*(?:[^\s]+)\s*)',tmp,exp)
+            return ('('+(a.group(0)).encode("utf-8").replace("'",'')+')').decode('utf-8')
+        exp=re.sub(r'(\w+\s*(=|like)\s*[\'](?:[^\']+)[\'])|(\w+=\s*(?:[^\s]+)\s*)',tmp,exp)
         print(exp)
-        for row in rows:
-            if Match().match(exp, json.loads( row['body']),False):
-                ret.append(row)
+        s=time.time()
+
+
+        expmatch= Matcher(exp)
+
+        print len(rows)
+
+
+        ret = filter(lambda row: expmatch.calc(data_dict=json.loads( row['body'])), rows)
+        print("xxxxxxxxxxxxxx:"+str(time.time()-s))
         return ret
