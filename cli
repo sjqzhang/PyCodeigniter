@@ -244,7 +244,7 @@ class ZbxCommon(object):
             print(e)
             print('http error')
 
-    def url_fetch(self,url,data=None,timeout=30,httpCmd=''):
+    def url_fetch(self,url,data=None,timeout=30,httpCmd='',debug=False):
         html='';
         # print(url)
         home= os.path.expanduser('~')
@@ -276,7 +276,8 @@ class ZbxCommon(object):
                 html=unicode(html,charset[0])
             #print(html)
         except Exception as e:
-            print("deug", url,data,httpCmd)
+            if debug:
+                print("deug", url,data,httpCmd)
             if hasattr(e,'msg'):
                 print(e.msg)
             else:
@@ -727,13 +728,14 @@ class ZbxDaemon(Daemon):
             for cNode in  rjson['node']['nodes']:
                 cmd = cNode['value'].encode("utf-8")
                 key = cNode['key']
+                createdIndex = cNode['createdIndex']
                 # self.keys.append(key)
                 url = "http://%s/v2/keys%s?recursive=true" % (host,key)
                 self.util.url_fetch(url,httpCmd= 'DELETE' )
                 def tmp():
                     result = ZbxCommand(cmd).run()
                     print(type(result))
-                    message = {'ip':ip, 'cmd':cmd, 'result':result}
+                    message = {'ip':ip, 'cmd':cmd, 'result':result,'index':createdIndex}
                     print(message)
                     self.remote_server('cli','feedback_result',{'param':message})
                 threading.Thread(target=tmp).start()
