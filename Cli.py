@@ -1047,7 +1047,7 @@ class Cli:
         ret=[]
         def tmp(a):
             return ('('+(a.group(0)).encode("utf-8").replace("'",'')+')').decode('utf-8')
-        exp=re.sub(r'(\w+\s*(=|like)\s*[\'](?:[^\']+)[\'])|(\w+=\s*(?:[^\s]+)\s*)',tmp,exp)
+        exp=re.sub(r'(\w+\s*(=|like)\s*[\'](?:[^\']+)[\'])|(\w+(=|like)\s*(?:[^\s]+)\s*)',tmp,exp)
         print(exp)
         s=time.time()
 
