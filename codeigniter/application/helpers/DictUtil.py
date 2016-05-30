@@ -11,7 +11,8 @@ class Expr:
             '=': self._equal_,
             '!=': self._not_equal,
             '<>': self._not_equal,
-            'like': self._like
+            'like': self._like,
+            'in':self._in
         }
         self.key, self.op, self.val = self.__parser(expr)
         self.func = self.op_map[self.op]
@@ -29,6 +30,12 @@ class Expr:
     def _like(self,fst_val,sec_val):
         return fst_val in sec_val
 
+    def _in(self,fst_val,sec_val):
+        # return False
+        sec_val=re.sub(r'^\[|\]$','',sec_val)
+        return fst_val in sec_val.split(',')
+
+
 
     def _not_equal(self, fst_val, sec_val):
         return fst_val != sec_val
@@ -37,6 +44,11 @@ class Expr:
         v=data_dict.get(self.key, '')
         if isinstance(v,unicode):
             v = v.encode('utf-8')
+        # if isinstance(v,list):
+        #     pass
+            # print(self.func)
+            # if 'in' in self.func.__name__:
+            #     return self.val in v
         sec_val = str(v).lower()
         return self.func(self.val, sec_val)
 
@@ -48,7 +60,8 @@ class Matcher:
                 return ('('+(a.group(0)).encode("utf-8").replace("'",'')+')').decode('utf-8')
             else:
                 return ('('+(a.group(0)).replace("'",'')+')').decode('utf-8')
-        pattern_expr=re.sub(r'(\w+\s*(=|like)\s*[\'](?:[^\']+)[\'])|(\w+\s*(=|like)\s*(?:[^\s]+)\s*)',tmp,pattern_expr)
+        pattern_expr=re.sub(r'(\w+\s*(=|like|in)\s*[\'](?:[^\']+)[\'])|(\w+\s*(=|like|in)\s*(?:[^\s]+)\s*)',tmp,pattern_expr)
+        pattern_expr=pattern_expr.encode('utf-8')
         self.raw_pattern_expr = pattern_expr
         self.postfix_expr_list = self.__translate_to_postfix_expr(pattern_expr)
 
@@ -90,7 +103,7 @@ class Matcher:
         while len(tmp_stack) > 0:
             postfix_expr_list.append(tmp_stack.pop())
 
-        print postfix_expr_list
+        # print postfix_expr_list
         return postfix_expr_list
 
 
@@ -113,8 +126,12 @@ class Matcher:
         :param sql: select columnname1,columnname2,columnname3 where columnname1 like 'xx'
         :return:
         '''
+        if isinstance(select,unicode):
+            select=select.encode('utf-8')
         cols=map(str.strip, select.split(','))
 
+        if isinstance(where,unicode):
+            where=where.encode('utf-8','ignore')
         match=Matcher(where)
 
         if isinstance(list_data,list):
@@ -179,9 +196,8 @@ class DictUtil(object):
     def __init__(self):
         self.match=Matcher()
 
-    def query(self,data=[],sql=''):
-        return self.match.query(data,sql)
-
+    def query(self,data=[],select='',where='',order='',group=''):
+        return self.match.query(data,select=select,where=where,order=order,group=group)
 
 
 
@@ -194,7 +210,7 @@ if __name__=='__main__':
     # print m.calc({'aa':10})
     # print m.query( json.dumps([{'aa':"你好"}]),"select aa,bb,cc where aa=你好")
     #print m.query( [{'aa':"aa"}],"select aa,bb,cc where aa=xx")
-    students = [{'name':'a', 'tag':'y', 'score':18}, {'name':'a', 'tag':'z', 'score':17}, {'name':'w', 'tag':'x', 'score':15}]
+    students = [{'name':'a', 'tag':'y', 'score':18}, {'name':'a', 'tag':'z', 'score':17}, {'name':'w', 'tag':'x', 'score':15,'level':[1,2,3]}]
     # ds=DictRecord(students)
     # print ds.order('name desc').get()
 
@@ -202,5 +218,5 @@ if __name__=='__main__':
 
     import time
     s=time.time()
-    m.query(students*100000,'name,tag',where='name=a and tag=x',order='name desc , tag asc')
+    m.query(students*100000,'name,tag',where='(name=a and tag=x) or level in 1',order='name desc , tag asc')
     print(time.time()-s)
