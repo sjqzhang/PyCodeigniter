@@ -869,6 +869,8 @@ class Cli:
         body={}
         if row!=None:
             body=json.loads(row['body'])
+        else:
+            return True,'OK'
         if key in body.keys():
             if body[key]!='':
                 if value in body[key].split(','):
@@ -880,6 +882,8 @@ class Cli:
         else:
             return False," tag name must be in %s" %(str([ k.encode('utf-8') for k in body.keys()]))
 
+
+################################################ hosts ###############################################
 
     def addhosttag(self,param=''):
         params=self._params(param)
@@ -903,6 +907,7 @@ class Cli:
                 if not ok:
                     return messege.encode('utf-8')
                 body[kv[0]]=kv[1]
+
         row=ci.db.scalar("select id,body from hosts where ip='{ip}' limit 1 offset 0",{'ip':ip})
         if row==None:
             data={'ip':ip,'body':json.dumps(body)}
@@ -927,7 +932,8 @@ class Cli:
         rows= self._search_body('hosts',tag)
         print(time.time()-start)
         for row in rows:
-                ret.append(row['ip'])
+                # ret.append(row['ip'])
+                ret.append(row['app'])
         return "\n".join(ret)
 
     def viewhost(self,param=''):
@@ -956,6 +962,13 @@ class Cli:
         print('xxxxxx')
         return ci.db.query("select * from %s" % table)
 
+
+    def aaa(self,param=''):
+        print ci.loader.helper('DictUtil')
+        rows=ci.db.query('select * from hosts')
+        print rows
+        #return ci.loader.helper('DictUtil').query(rows,'select aa,bb,ip where ip like 172.17.140.133')
+        return ci.loader.helper('DictUtil').query({"xx":"x"},"select aa,bb,ip where ip like '' ")
 
     def abc(self):
         s=time.time()
@@ -1040,23 +1053,111 @@ class Cli:
 
 
     def _search_body(self,table='', exp=''):
-        assert  table!=''
-        exp=exp.replace('&&',' and ')
-        exp=exp.replace('||',' or ')
+        # assert  table!=''
+        # exp=exp.replace('&&',' and ')
+        # exp=exp.replace('||',' or ')
+        # rows=ci.db.query("select * from %s"%table)
+        # ret=[]
+        # def tmp(a):
+        #     return ('('+(a.group(0)).encode("utf-8").replace("'",'')+')').decode('utf-8')
+        # exp=re.sub(r'(\w+\s*(=|like)\s*[\'](?:[^\']+)[\'])|(\w+(=|like)\s*(?:[^\s]+)\s*)',tmp,exp)
+        # print(exp)
+        # s=time.time()
         rows=ci.db.query("select * from %s"%table)
+
         ret=[]
-        def tmp(a):
-            return ('('+(a.group(0)).encode("utf-8").replace("'",'')+')').decode('utf-8')
-        exp=re.sub(r'(\w+\s*(=|like)\s*[\'](?:[^\']+)[\'])|(\w+(=|like)\s*(?:[^\s]+)\s*)',tmp,exp)
-        print(exp)
-        s=time.time()
+
+        # for row in rows:
+        #     row['ip']=row['ip']
 
 
-        expmatch= Matcher(exp)
 
-        print len(rows)
+        rows=map(lambda row: json.loads( row['body']) ,rows)
 
 
-        ret = filter(lambda row: expmatch.calc(data_dict=json.loads( row['body'])), rows)
-        print("xxxxxxxxxxxxxx:"+str(time.time()-s))
-        return ret
+        dutil=ci.loader.helper('DictUtil')
+
+        print(rows)
+
+
+
+        return  dutil.query( rows,select="name", where=exp)
+
+
+        # expmatch= dutil.query( rows, exp)
+        #
+        # print len(rows)
+        #
+        #
+        # ret = filter(lambda row: expmatch.calc(data_dict=json.loads( row['body'])), rows)
+        # print("xxxxxxxxxxxxxx:"+str(time.time()-s))
+        # return ret
+
+# ################################################ objs ###############################################
+    def addobjs(self,param=''):
+            params=self._params(param)
+            tag=''
+            ip=''
+            otype='hosts'
+            key=''
+            if 't' in params:
+                tag=params['t']
+            else:
+                return '-t(tag) require'
+            if tag.find('=')==-1:
+                return 'tag must be "key=value"'
+            if 'i' in params:
+                ip=params['i']
+            else:
+                return '-i(ip) require'
+            if 'o' in params:
+                otype=params['o']
+            else:
+                return '-o(object type) require'
+            if 'k' in params:
+                key=params['k']
+            if key=='':
+                key=ip
+            body={}
+            for t in tag.split(';'):
+                kv=t.split('=')
+                if len(kv)==2:
+                    ok,messege=self._check_body_val(otype,kv[0],kv[1])
+                    if not ok:
+                        return messege.encode('utf-8')
+                    body[kv[0]]=kv[1]
+
+            row=ci.db.scalar("select id,body from objs where key='{key}' and otype='{otype}' limit 1 offset 0",{'key':key,'otype':otype})
+            if row==None:
+                body['_key']=key
+                body['_otype']=otype
+                data={'ip':ip,'body':json.dumps(body),'otype':otype,'key':key}
+                ci.db.query("insert into objs(ip,body,otype,key) values('{ip}','{body}','{otype}','{ip}')",data)
+            else:
+                old=json.loads(row['body'])
+                for k in body.keys():
+                    old[k]=body[k]
+                data={'ip':ip,'body':json.dumps(old),'id':row['id']}
+                ci.db.query("update objs set ip='{ip}',body='{body}' where id='{id}'",data)
+            return 'success'
+
+    def getobjs(self,param=''):
+        params=self._params(param)
+        otype=''
+        tag=''
+        cols='*'
+        if 't' not in params:
+            return '-t(tag) require'
+        else:
+            tag= params['t']
+        if 'o' not in params:
+            return '-o(object type) require'
+        else:
+            otype=params['o']
+        if 'c'  in params:
+            cols= params['c']
+        rows=ci.db.query("select * from objs where otype='{otype}'",{'otype':otype})
+        rows=map(lambda row:json.loads(row['body']),rows)
+        print(rows)
+        return ci.loader.helper('DictUtil').query(rows,select=cols,where=tag)
+

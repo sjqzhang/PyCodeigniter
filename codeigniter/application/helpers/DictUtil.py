@@ -120,7 +120,7 @@ class Matcher:
         return tmp_list[0]
 
     @classmethod
-    def query(self,list_data=[],select='',where='',order='',group=''):
+    def query(self,list_data=[],select='*',where='',order='',group=''):
         '''
         :param data: dict
         :param sql: select columnname1,columnname2,columnname3 where columnname1 like 'xx'
@@ -145,11 +145,20 @@ class Matcher:
         if where!='':
             rows=filter(lambda row: match.calc(row), rows)
 
-        for row in rows:
-            for c in cols:
-                if c not in row.keys():
-                    row[c]=None
+        result=[]
 
+        if select=='*':
+            result=rows
+        else:
+            for row in rows:
+                irow={}
+                for c in cols:
+                    if c not in row.keys():
+                        irow[c]=None
+                    else:
+                        irow[c]=row[c]
+                result.append(irow)
+        rows=result
         if len(rows)==0:
             return rows
 
