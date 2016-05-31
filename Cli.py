@@ -1116,7 +1116,7 @@ class Cli:
                 return '-o(object type) require'
             if 'k' in params:
                 key=params['k']
-            if key=='':
+            else:
                 key=ip
             body={}
             for t in tag.split(';'):
@@ -1132,7 +1132,7 @@ class Cli:
                 body['_key']=key
                 body['_otype']=otype
                 data={'ip':ip,'body':json.dumps(body),'otype':otype,'key':key}
-                ci.db.query("insert into objs(ip,body,otype,key) values('{ip}','{body}','{otype}','{ip}')",data)
+                ci.db.query("insert into objs(ip,body,otype,key) values('{ip}','{body}','{otype}','{key}')",data)
             else:
                 old=json.loads(row['body'])
                 for k in body.keys():
