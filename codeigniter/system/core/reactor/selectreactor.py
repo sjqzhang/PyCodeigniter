@@ -12,8 +12,8 @@ def check_read_ev(ev_fd):
         x_list = set()
         try:
             r, w, x = select(ev_fd._r_list, w_list, x_list)
-        except Exception, e:
-            print str(e)
+        except Exception as  e:
+            print(str(e))
             pass
         ev_fd._lock.acquire()
         ev_fd.r = r
@@ -43,7 +43,7 @@ class SelectReactor(object):
     def poll(self, timeout):
 
         if not self._w_list:
-            self._has_ev.wait() #wait for read or write 
+            self._has_ev.wait() #wait for read or write
             self._has_ev.clear()
 
         # get write event
@@ -71,7 +71,7 @@ class SelectReactor(object):
 
         return results.items()
 
-        
+
 
     def register(self, fd, mode):
         if mode & self.EV_IN:

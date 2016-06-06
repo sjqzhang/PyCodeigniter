@@ -23,7 +23,7 @@ class ResdisAdaptor(object):
         if conf.get('password',''):
             connect_dict['password'] = conf['conf']
         self.redis = redis.StrictRedis(**connect_dict)
-        
+
 
 
     def set(self,key,value):
@@ -32,7 +32,7 @@ class ResdisAdaptor(object):
     def get(self,key):
         value = self.redis.get(key)
         return value
-        
+
 
 class MyLock(object):
     lock = threading.RLock()
@@ -69,12 +69,12 @@ class LocalAdaptor(object):
             if v == None:
                 v = LocalAdaptor.store_data()
                 v.name = key
-                
+
             v.value = value
             v.ctime = time.time()
             v.expire = self.expire
             self.store[v.name] = v
-            
+
 
     def get(self,key):
         with MyLock() as l:
@@ -93,7 +93,7 @@ class LocalAdaptor(object):
                     now = time.time()
                     #print "\n\n[GC for local session map]:"
                     #print "\n".join(["key:%s:value:%s,ttl:%s" % (e.name,e.value,e.expire -  now + e.ctime ) for e in self.store.values()])
-                    
+
                     for v in self.store.values():
                         if now - v.ctime > v.expire:
                             del self.store[v.name]
@@ -116,19 +116,19 @@ class CI_Session(object):
         elif self.conf['type'] == 'redis':
             self.store_porxy = ResdisAdaptor(self.conf,self.app)
         else:
-            raise BaseException("Session storage adaptor must be redis|local ....")        
+            raise BaseException("Session storage adaptor must be redis|local ....")
 
     def pre_parse_uuid(self):
         try:
             self.cookie = self.app.cookie
-            if self.cookie.get('PySessionUUID') <> None:
+            if self.cookie.get('PySessionUUID') != None:
                 return
             self.cookie.set('PySessionUUID',  hashlib.md5("%s_%s" % (uuid.uuid1(),uuid.uuid4()) ).hexdigest() )
         except BaseException as e:
             self.app.logger.error("%s:%s" % ( PushTraceback(),e ))
 
-        
-            
+
+
 
     def set(self,key,value):
         try:
@@ -144,7 +144,7 @@ class CI_Session(object):
             return self.store_porxy.get(ukey)
         except BaseException as e:
             self.app.logger.error("%s:%s" % ( PushTraceback(),e ))
-    
+
     def __getitem__(self,key):
         return self.get(key)
 
@@ -153,8 +153,8 @@ class CI_Session(object):
 
     def release(self):
         pass
-        
-            
-            
+
+
+
 
 

@@ -24,23 +24,23 @@ import platform
 
 
 if 'epoll' in select.__dict__:
-    print "use epoll"
+    print("use epoll")
     use_mod = 'epoll'
     from epollreactor import EpollReactor as Reactor
 elif 'kqueue' in select.__dict__:
-    print "use kqueue"
+    print("use kqueue")
     use_mod = 'kqueue'
     from kqueuereactor import KqueueReactor as Reactor
 elif 'poll' in select.__dict__:
-    print "use poll"
+    print("use poll")
     use_mod = 'poll'
     from pollreactor import PollReactor as Reactor
 elif 'select' in select.__dict__:
-    print "use select"
+    print("use select")
     use_mod = 'select'
     from selectreactor import SelectReactor as Reactor
 else:
-    print "There is no reactor can be used."
+    print("There is no reactor can be used.")
 
 
 CI={'static_dir':'','app':None,'logger':None,'router':None,'access_log_dir':None}
@@ -354,7 +354,7 @@ def sendfilejob(aclog, request, data, ev_fd, fd):
                 data["totalsenlen"] = totalsenlen
                 data["writedata"] = headstr
             aclog.log(" success: %s size:%s" % (request.path,filesize))
-    except Exception, e:
+    except Exception as e:
         aclog.log(" fail: %s %s" % (request.path, str(e)+getTraceStackMsg()))
         res = "404 Not Found"
         data["writedata"] = "HTTP/1.1 404 Not Found\r\nContent-Length: %s\r\nConnection:keep-alive\r\n\r\n%s" % (len(res),res)
@@ -471,7 +471,7 @@ class Worker(object):
                 f.close()
                 res = buf.getvalue()
             self.log.log(" success: %s size:%s" % (request.path,len(res)))
-        except Exception, e:
+        except Exception as e:
             CI['logger'].error(e)
             # self.log.log(" fail: %s %s" % (request.path, str(e)+getTraceStackMsg()))
             res = "404 Not Found"
@@ -638,7 +638,7 @@ def run_main(listen_fd):
     try:
         ev_fd = Reactor()
         ev_fd.register(listen_fd.fileno(), ev_fd.EV_IN | ev_fd.EV_DISCONNECTED)
-    except select.error, msg:
+    except select.error as  msg:
         logger.error(msg)
 
 
@@ -654,7 +654,7 @@ def run_main(listen_fd):
     while True:
         try:
             ev_list = ev_fd.poll(1)
-        except Exception, e:
+        except Exception as e:
             continue
 
         cur_time = time.time()
@@ -668,7 +668,7 @@ def run_main(listen_fd):
                         conn.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                         #conn.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, True)
                         params[conn.fileno()] = {"addr":addr,"writelen":0, "connections":conn, "time":cur_time}
-                    except socket.error, msg:
+                    except socket.error as msg:
                         break
             elif ev_fd.EV_IN & events:
                 param = params.get(fd,None)
@@ -687,7 +687,7 @@ def run_main(listen_fd):
                         else:
                             datas += data
                             read_len += len(data)
-                    except socket.error, msg:
+                    except socket.error as msg:
                         if msg.errno == errno.EAGAIN or msg.errno == 10035:
                             param["read_len"] = read_len
                             len_s = -1
@@ -800,7 +800,7 @@ def run_main(listen_fd):
                             else:
                                 clearfd(ev_fd,params,fd)
                             break
-                    except socket.error, msg:
+                    except socket.error as  msg:
                         if msg.errno == errno.EAGAIN or msg.errno == 10035:
                             param["writelen"] = sendLen
                             break
@@ -881,11 +881,11 @@ class WrapFastPyServer(object):
 
         try:
             listen_fd = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
-        except socket.error, msg:
+        except socket.error as msg:
             logger.error("create socket failed")
         try:
             listen_fd.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        except socket.error, msg:
+        except socket.error as  msg:
             logger.error("setsocketopt SO_REUSEADDR failed")
         try:
             listen_fd.bind((self.server_ip, port))
@@ -895,7 +895,7 @@ class WrapFastPyServer(object):
         try:
             listen_fd.listen(10240)
             listen_fd.setblocking(0)
-        except socket.error, msg:
+        except socket.error as  msg:
             logger.error(msg)
 
         child_num = cpu_count()

@@ -26,14 +26,14 @@ class CookieData:
             cookie += ";max-age=%s" % self.maxage
         if self.secure:
             cookie += ";secure"
-        return  cookie 
+        return  cookie
 
 
 class CI_Cookie:
     """docstring for CI_Cookie"""
     def __init__(self,**kw):
         self.app = kw.get('app')
-        
+
 
     def parse_cookie(self,env):
         try:
@@ -64,7 +64,7 @@ class CI_Cookie:
         if v == None:
             return None
         return v.value
-        
+
 
     def set(self,key,value,maxage=86400):
         v = self.app.local.response.cookies.get(key,None)
@@ -77,8 +77,8 @@ class CI_Cookie:
         self.app.local.response.cookies[key] = v
 
     def result_cookie(self):
-        [self.app.set_header("Set-Cookie","%s" % cookiedata) for cookiedata in  self.app.local.response.cookies.values() if "%s" % cookiedata <> ""]
+        [self.app.set_header("Set-Cookie","%s" % cookiedata) for cookiedata in  self.app.local.response.cookies.values() if "%s" % cookiedata != ""]
 
 
 
-        
+

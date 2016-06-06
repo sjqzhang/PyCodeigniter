@@ -31,7 +31,7 @@ if __name__=='__main__':
     r=CI_Memcache(**redisconf)
 
     r.set('abc','asdfasdfasdf')
-    print r.get('abc')
+    print(r.get('abc'))
 
 
 

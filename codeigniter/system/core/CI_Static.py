@@ -61,7 +61,7 @@ mimes = {
     'ra'   :  'audio/x-realaudio',
     'rv'   :  'video/vnd.rn-realvideo',
     'wav'  :  'audio/wav',
-    'bmp'  :  'image/bmp', 
+    'bmp'  :  'image/bmp',
     'gif'  :  'image/gif',
     'jpeg' :  'image/jpeg',
     'jpg'  :  'image/jpeg',
@@ -104,9 +104,9 @@ class CI_Static(object):
         self.application_path= kwargs['application_path']
         self.app = kwargs['app']
         self.static_path = kwargs['server']['static_dir']
-    
+
     def accept(self,env):
-        paths = [e for e in env['PATH_INFO'].split("/") if e <> ""]
+        paths = [e for e in env['PATH_INFO'].split("/") if e != ""]
         ##防止读取上层目录
         if ".." in paths:
             return False
@@ -119,7 +119,7 @@ class CI_Static(object):
         return False
 
     def route(self,env):
-        paths = [e for e in env['PATH_INFO'].split("/") if e <> ""]
+        paths = [e for e in env['PATH_INFO'].split("/") if e != ""]
         path = "./%s"  %"/".join(paths)
         filename = paths[-1]
         extname = filename.split(".")[-1]
@@ -130,5 +130,5 @@ class CI_Static(object):
             content = fp.read()
         return "200 OK",content
 
-        
+
 

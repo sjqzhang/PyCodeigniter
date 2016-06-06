@@ -21,6 +21,6 @@ def PushTraceback():
     fstring = StringIO.StringIO()
     traceback.print_exc(file=fstring)
     message = fstring.getvalue()
-    print message
+    print(message)
     return message
 

@@ -93,10 +93,9 @@ if __name__=='__main__':
         time.sleep(50)
     # time.sleep(2)
     while True:
-        print zk.is_leader()
+        print(zk.is_leader())
         time.sleep(1)
     # time.sleep(50)
-    print 'sdfasdf'
 
 
 

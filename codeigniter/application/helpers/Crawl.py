@@ -10,11 +10,6 @@ import re
 from  urlparse import urlparse
 
 
-table=u'''
-
-
-
-'''
 
 
 class Crawl(object):

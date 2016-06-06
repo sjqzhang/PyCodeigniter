@@ -136,7 +136,7 @@ class CI_Application(object):
         exec('from CI_Hook import CI_Hook')
         self.hook= eval('CI_Hook()')
         self.hook.call_pre_system()
-        
+
         if 'use_threads' in self.config.keys():
             self.is_threads = self.config['use_threads']
         for conf in self.config.keys():
@@ -157,7 +157,7 @@ class CI_Application(object):
         exec('from CI_Cookie import CI_Cookie')
         self.cookie= eval('CI_Cookie(**self.config)')
         module_list.append('CI_Cookie')
-            
+
         if 'db' in self.config.keys():
             if 'type' in self.config['db'] and self.config['db']['type']=='sqlite' :
                 exec('from CI_Sqlite import CI_Sqlite')
@@ -194,7 +194,7 @@ class CI_Application(object):
             exec('from CI_Server import CI_Server')
             self.server= eval('CI_Server(**self.config)')
             module_list.append('CI_Server')
-            
+
         if 'zookeeper' in self.config.keys():
             exec('from CI_Zookeeper import CI_Zookeeper')
             self.zk= eval('CI_Zookeeper(**self.config)')
@@ -223,7 +223,7 @@ class CI_Application(object):
             exec('from CI_Cron import CI_Cron')
             self.cron= eval('CI_Cron(**self.config)')
             module_list.append('CI_Cron')
-        
+
 
         #must be instance last
         self.loader= eval('CI_Loader(**self.config)')
@@ -426,7 +426,8 @@ class CI_Application(object):
         self.local.response.code = "500 Internal server error"
         self.local.response.content = "Server Error,Please see log file" if "" ==  content else content
 
-
+    def __call__(self, environ, start_response):
+        return self.application(environ,start_response)
     def application(self, environ, start_response):
         self.local.response = T_Respond()
         self.local.env=environ
@@ -450,7 +451,7 @@ class CI_Application(object):
         print(msg)
         self.logger.info(msg)
         if is_install_gevent:
-            print "running gevent wsgiserver ..."
+            print("running gevent wsgiserver ...")
             WSGIServer((self.config['server']['host'],self.config['server']['port']), self.application).serve_forever()
         else:
             from wsgiref.simple_server import make_server
