@@ -75,10 +75,13 @@ class CI_Input(object):
             except Exception as e:
                 self.app.logger.warn(e)
 
-       # print(type(env['__FORM__DATA__']))
-        data=dict( data.items()+env['__FORM__DATA__'].items())
+        #data=dict( data.items()+env['__FORM__DATA__'].items())
+        data={}
+        for k,v in data:
+            data[k]=v
 
-
+        for k,v in env['__FORM__DATA__']:
+            data[k]=v
 
         #print(data)
 

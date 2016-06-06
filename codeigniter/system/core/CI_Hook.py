@@ -34,10 +34,11 @@ class CI_Hook(object):
 
 
     def load_hook(self):
-        if app.config.get('hooks','') == '':
+        if app.config==None or 'hooks' in app.config.keys():
             return
-        hooks = app.config.get('hooks')
+        hooks = app.config['hooks']
         hook_keys=['pre_system','pre_controller','post_controller_constructor','post_controller','display_override']
+
         for key in hooks.keys():
             if not key in hook_keys:
                 continue

@@ -98,10 +98,14 @@ class CI_Logger(object):
             self.logger.log(level,"".join(errorlist))
         else:
             loginfo=self._get_log_back()
-            if isinstance(message,unicode):
-                message=unicode.encode(message,'utf-8','ignore')
-            message = str( self._get_msg( loginfo)[0])+" "+str(message)
-            self.logger.log(level,message)
+            try:
+                if isinstance(message,unicode):
+                    message=unicode.encode(message,'utf-8','ignore')
+                message = str( self._get_msg( loginfo)[0])+" "+str(message)
+                self.logger.log(level,message)
+            except:
+                message = str( self._get_msg( loginfo)[0])+" "+str(message)
+                self.logger.log(level,message)
 
     # def log(self,message,level=logging.INFO):
     #     loginfo=self._get_log_back()

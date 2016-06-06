@@ -8,9 +8,13 @@ import os
 import json
 import imp
 import urllib
-import urllib2
+try:
+    import urllib2
+except:
+    import urllib.request as urllib2
 import hashlib
 
+import platform
 
 try:
     import pyquery
@@ -32,7 +36,10 @@ except Exception as er:
     pass
 
 
-from cookielib import CookieJar
+try:
+    from cookielib import CookieJar
+except:
+    import http.cookiejar as CookieJar
 import re
 import zlib
 
@@ -60,7 +67,10 @@ class T_Respond(object):
 
 class CI_Application(object):
     application_instance=None
-    cj = CookieJar()
+    try:
+        cj = CookieJar()
+    except:
+        cj =CookieJar.CookieJar()
     proxy_handler=urllib2.ProxyHandler({})
     def __init__(self,application_path=None,system_path=None,config_file=None):
         # pdb.set_trace()
@@ -87,6 +97,7 @@ class CI_Application(object):
         self.cookie=None
         self.is_threads = False
         self.local = local()
+        self._is_python3=None
 
         self._app_create(application_path)
         CI_Application.application_instance = self
@@ -106,6 +117,13 @@ class CI_Application(object):
     def set_header(self,key,value):
         if type(key) == str and type(value):
             self.local.response.headers.append( (key,value) )
+
+    @property
+    def is_python3(self):
+        if self._is_python3!=None:
+            return self._is_python3
+        self._is_python3=platform.version().split('.')[0]=='3'
+        return self._is_python3
 
     def get(self,key):
         if key in self.instances.keys():

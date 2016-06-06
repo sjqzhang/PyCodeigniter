@@ -16,7 +16,7 @@ import time
 import json
 import hashlib
 
-import CI_Application 
+from . import CI_Application
 
 try:
     import thread

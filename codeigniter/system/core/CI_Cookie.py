@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 # -*- coding:utf8 -*-
-import gevent
+
 
 from . import PushTraceback
+
+
 
 class CookieData:
     def __init__(self):

@@ -16,11 +16,15 @@ else:
     #         __all__.append(os.path.basename(c).split('.')[0])
 
 
-import StringIO,traceback
-def PushTraceback():
-    fstring = StringIO.StringIO()
-    traceback.print_exc(file=fstring)
-    message = fstring.getvalue()
-    print(message)
-    return message
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 
+import traceback
+def PushTraceback():
+   fstring = StringIO.StringIO()
+   traceback.print_exc(file=fstring)
+   message = fstring.getvalue()
+   return message
+#
