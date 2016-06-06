@@ -8,7 +8,10 @@ import   atexit
 from signal import SIGTERM
 
 import os
-import urllib2
+try:
+    import urllib2
+except:
+    import urllib.request as urllib2
 import urllib
 import subprocess
 import time
@@ -71,7 +74,7 @@ class Daemon(object):
                         if pid > 0:
                                 # exit first parent
                                 sys.exit(0)
-                except OSError, e:
+                except OSError as  e:
                         sys.stderr.write("fork #1 failed: %d (%s)\n" % (e.errno, e.strerror))
                         sys.exit(1)
 
@@ -86,7 +89,7 @@ class Daemon(object):
                         if pid > 0:
                                 # exit from second parent
                                 sys.exit(0)
-                except OSError, e:
+                except OSError as  e:
                         sys.stderr.write("fork #2 failed: %d (%s)\n" % (e.errno, e.strerror))
                         sys.exit(1)
 
@@ -150,7 +153,7 @@ class Daemon(object):
                         while 1:
                                 os.kill(pid, SIGTERM)
                                 time.sleep(0.1)
-                except OSError, err:
+                except OSError as  err:
                         err = str(err)
                         if err.find("No such process") > 0:
                                 if os.path.exists(self.pidfile):
@@ -265,7 +268,7 @@ class ZbxCommon(object):
                 headers = headers,
                 data=data
             )
-            if httpCmd <> "":
+            if httpCmd != "":
                 req.get_method = lambda: httpCmd
 
             html=urllib2.urlopen(req,timeout=timeout).read()
@@ -331,7 +334,7 @@ class ZbxCommon(object):
                         break
                     if i+1 < icount:
                         tt,tname = ptype(inputs[i+1])
-                        if tt <> 0:
+                        if tt != 0:
                             ret[name] = ""
                             i += 1
                             break
