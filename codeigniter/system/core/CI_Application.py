@@ -326,7 +326,7 @@ class CI_Application(object):
         return m.hexdigest()
 
     def uuid(self):
-        return uuid.uuid4()
+        return str(uuid.uuid4())
 
     # def request( self, url,data=None,headers={}):
     #         html='';
@@ -457,6 +457,8 @@ class CI_Application(object):
         content = self.local.response.content
         if self.cookie:
             self.cookie.result_cookie()
+        if isinstance(content,unicode):
+            content=unicode.encode(content,'utf-8','ignore')
         if not type(content) in [str,unicode]:
             content = json.dumps(content)
         start_response(str(code),self.local.response.headers)
