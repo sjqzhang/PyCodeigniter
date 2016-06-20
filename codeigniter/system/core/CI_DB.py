@@ -62,6 +62,7 @@ class CI_DB(object):
             key,num=re.subn(r"^'?{|}'?$",'',i)
             v.append(param[key])
             sql=sql.replace(i,'%s')
+        sql=sql.replace("'%s'",'%s')
         return sql,tuple(v)
 
     def dict_result(self,cursor):
