@@ -29,7 +29,7 @@ class CI_Logger(object):
         if 'name' in kwargs.keys():
             self.name=kwargs['name']
         else:
-            self.name=None
+            self.name='default'
         # self.log_formatter='%(asctime)s %(levelname)s %(module)s.%(funcName)s Line:%(lineno)d %(message)s'
         self.log_formatter='%(asctime)s %(levelname)s %(message)s'
         self.init(self.name)
@@ -40,7 +40,7 @@ class CI_Logger(object):
         if name!=None:
             self.logger=logging.getLogger(name)
         else:
-            self.logger=logging.getLogger()
+            self.logger=logging.getLogger('default')
         self.set_handlers(self.log_file_path)
 
     def _init(self,name):
