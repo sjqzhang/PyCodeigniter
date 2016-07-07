@@ -10,6 +10,7 @@ from logging.handlers import RotatingFileHandler
 import datetime
 import inspect
 import StringIO
+import cgi
 
 try:
     import web,cgi,os
