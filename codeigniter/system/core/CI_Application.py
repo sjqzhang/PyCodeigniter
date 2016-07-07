@@ -448,24 +448,35 @@ class CI_Application(object):
     def __call__(self, environ, start_response):
         return self.application(environ,start_response)
     def application(self, environ, start_response):
-        self.local.response = T_Respond()
-        self.local.env=environ
-        self.cookie.parse_cookie(environ)
-        # print self.local.response.cookies
-        self.router.wsgi_route(environ)
-        self.hook.call_display_override(environ)
-        code = self.local.response.code
-        content = self.local.response.content
-        if self.cookie:
-            self.cookie.result_cookie()
-        if isinstance(content,unicode):
-            content=unicode.encode(content,'utf-8','ignore')
-        if not type(content) in [str,unicode]:
-            content = json.dumps(content)
-        start_response(str(code),self.local.response.headers)
-        self.local.response = None
+        try:
+            if self.local==None:
+                self.local=local()
+            self.local.response = T_Respond()
+            self.local.env=environ
+            self.cookie.parse_cookie(environ)
+            # print self.local.response.cookies
+            self.router.wsgi(environ)
+            self.hook.call_display_override(environ)
+            code = self.local.response.code
+            content = self.local.response.content
+            if self.cookie:
+                self.cookie.result_cookie()
+            if isinstance(content,unicode):
+                content=unicode.encode(content,'utf-8','ignore')
+            if not type(content) in [str,unicode]:
+                content = json.dumps(content)
+            start_response(str(code),self.local.response.headers)
+            self.local.response = None
 
-        return [str(content)]
+            return [str(content)]
+        except Exception as er:
+            self.set500(str(er))
+            return [str(self.local.response.content)]
+        finally:
+            self.local=None
+            self.ctx=None
+
+
 
 
     def start_server(self):
