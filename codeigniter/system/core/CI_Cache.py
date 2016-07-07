@@ -15,6 +15,7 @@ import re
 import time
 import json
 import hashlib
+import inspect
 
 from . import CI_Application
 
@@ -116,6 +117,97 @@ class CI_Cache(object):
     #             else:
     #                 continue
     #     return key
+    # @staticmethod
+    # def get_cache_key_by_args(prefix,tpl,func,args,kwargs,md5=False):
+    #     def _md5(input):
+    #         m2 = hashlib.md5()
+    #         m2.update(input)
+    #         return str(m2.hexdigest())
+    #     exp=[]
+    #     exp.append(r"#p\[[\d+]\]\.\w+")
+    #     exp.append(r"#p\[[\d+]\]")
+    #     exp.append(r"#\w+\.\w+")
+    #     exp.append(r"#\w+")
+    #     REGEX_KEY=re.compile(r'|'.join(exp),re.IGNORECASE)
+    #     match=REGEX_KEY.findall(tpl)
+    #     key=prefix+'$'+func.__name__+'$'
+    #     if len(match)==0:
+    #         raise  Exception('key must input,example: #id,#p[0].id,#abc.id')
+    #     for m in match:
+    #         k1=''
+    #         k2=''
+    #         idx=-1
+    #         if m.find('p[')>0:
+    #             if str(args[0]).find('instance at')>0:
+    #                 idx=int(re.compile(r'#p\[([\d+])\]',re.IGNORECASE).search(m).group(1))+1
+    #             else:
+    #                 idx=int(re.compile(r'#p\[([\d+])\]',re.IGNORECASE).search(m).group(1))
+    #         if m.find(".")>0:
+    #             k1,k2=m.split('.')
+    #         else:
+    #             if k2=='':
+    #                 k1=m[1:]
+    #         if idx!=-1:
+    #             k1=idx
+    #             if idx>len(args):
+    #                 continue
+    #                 pass
+    #                 raise  Exception('index out args')
+    #             if k2!='':
+    #                 if isinstance(args[k1][k2],unicode):
+    #                     key+=str( unicode.encode( args[idx][k2],'utf-8','ignore'))+'$'
+    #                 else:
+    #                     key+=str(args[idx][k2])+'$'
+    #             else:
+    #                 if isinstance(args[idx],unicode):
+    #                     key+=str(unicode.encode( args[idx],'utf-8','ignore'))+'$'
+    #                 else:
+    #                     key+=str(args[idx])+'$'
+    #             continue
+    #         else:
+    #             if k2!='':
+    #                 if isinstance(kwargs[k1][k2],unicode):
+    #                     key+=str( unicode.encode( args[idx][k2],'utf-8','ignore'))+'$'
+    #                 else:
+    #                     key+=str(kwargs[k1][k2])+'$'
+    #                 continue
+    #             if k1!='':
+    #                 if k1 in kwargs.keys():
+    #                     if isinstance(kwargs[k1],unicode):
+    #                         key+=str( unicode.encode( kwargs[k1],'utf-8','ignore'))+'$'
+    #                     else:
+    #                         key+=str(kwargs[k1])+'$'
+    #                 else:
+    #                     raise  Exception('cache key "%s" not found' % k1)
+    #                 continue
+    #     if md5:
+    #         return _md5(key)
+    #     else:
+    #         return key
+
+    @staticmethod
+    def get_func_param_dict(Func,FuncArgs,FuncKwargs):
+        d={}
+        ArgSpec=inspect.getargspec(Func)
+        defualts=ArgSpec[len(ArgSpec)-1]
+        keywords=ArgSpec[len(ArgSpec)-2]
+        varargs=ArgSpec[len(ArgSpec)-3]
+        args=ArgSpec[len(ArgSpec)-4]
+        if FuncKwargs==None:
+            FuncKwargs={}
+        if defualts!=None and len(defualts)>0:
+            for i,v in enumerate( args[(len(args)-len(defualts)):]):
+                d[v]=defualts[i]
+        if len(args)>0 and args[0]=='self':
+            args=args[1:]
+            FuncArgs=FuncArgs[1:]
+        for i,v in enumerate(FuncArgs):
+            d[args[i]]=v
+        for k,v in FuncKwargs.items():
+            d[k]=v
+        return d
+
+
     @staticmethod
     def get_cache_key_by_args(prefix,tpl,func,args,kwargs,md5=False):
         def _md5(input):
@@ -123,66 +215,31 @@ class CI_Cache(object):
             m2.update(input)
             return str(m2.hexdigest())
         exp=[]
-        exp.append(r"#p\[[\d+]\]\.\w+")
-        exp.append(r"#p\[[\d+]\]")
         exp.append(r"#\w+\.\w+")
         exp.append(r"#\w+")
         REGEX_KEY=re.compile(r'|'.join(exp),re.IGNORECASE)
         match=REGEX_KEY.findall(tpl)
         key=prefix+'$'+func.__name__+'$'
-        if len(match)==0:
-            raise  Exception('key must input,example: #id,#p[0].id,#abc.id')
+        data=CI_Cache.get_func_param_dict(func ,args,kwargs)
+        params=[]
         for m in match:
-            k1=''
-            k2=''
-            idx=-1
-            if m.find('p[')>0:
-                if str(args[0]).find('instance at')>0:
-                    idx=int(re.compile(r'#p\[([\d+])\]',re.IGNORECASE).search(m).group(1))+1
+            ks=m[1:].split('.')
+            if len(ks)==2:
+                if ks[0] in data.keys() and ks[1] in data[ks[0]]:
+                    if isinstance(data[ks[0]][ks[1]],unicode):
+                        data[ks[0]][ks[1]]=unicode.encode(data[ks[0]][ks[1]],'utf-8','ignore')
+                    key+=str(data[ks[0]][ks[1]])+'$'
                 else:
-                    idx=int(re.compile(r'#p\[([\d+])\]',re.IGNORECASE).search(m).group(1))
-            if m.find(".")>0:
-                k1,k2=m.split('.')
-            else:
-                if k2=='':
-                    k1=m[1:]
-            if idx!=-1:
-                k1=idx
-                if idx>len(args):
-                    continue
-                    pass
-                    raise  Exception('index out args')
-                if k2!='':
-                    if isinstance(args[k1][k2],unicode):
-                        key+=str( unicode.encode( args[idx][k2],'utf-8','ignore'))+'$'
-                    else:
-                        key+=str(args[idx][k2])+'$'
+                    raise Exception('cache key error: %s or %s not found'%(ks[0],ks[1]))
+            elif len(ks)==1:
+                if ks[0] in data.keys():
+                    if isinstance(data[ks[0]],unicode):
+                        data[ks[0]]=unicode.encode(data[ks[0]],'utf-8','ignore')
+                    key+=str(data[ks[0]])+'$'
                 else:
-                    if isinstance(args[idx],unicode):
-                        key+=str(unicode.encode( args[idx],'utf-8','ignore'))+'$'
-                    else:
-                        key+=str(args[idx])+'$'
-                continue
-            else:
-                if k2!='':
-                    if isinstance(kwargs[k1][k2],unicode):
-                        key+=str( unicode.encode( args[idx][k2],'utf-8','ignore'))+'$'
-                    else:
-                        key+=str(kwargs[k1][k2])+'$'
-                    continue
-                if k1!='':
-                    if k1 in kwargs.keys():
-                        if isinstance(kwargs[k1],unicode):
-                            key+=str( unicode.encode( kwargs[k1],'utf-8','ignore'))+'$'
-                        else:
-                            key+=str(kwargs[k1])+'$'
-                    else:
-                        raise  Exception('cache key "%s" not found' % k1)
-                    continue
-        if md5:
-            return _md5(key)
-        else:
-            return key
+                    raise Exception('cache key error: %s not found'%(ks[0]))
+        # print(key)
+        return key
 
 
 

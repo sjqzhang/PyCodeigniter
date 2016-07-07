@@ -4,6 +4,7 @@ __author__ = 'xiaozhang'
 
 
 import sys,cgi
+import StringIO
 PY2 = sys.version_info[0] == 2
 if PY2:
     from urlparse import parse_qs
@@ -37,9 +38,24 @@ class CI_Input(object):
         return data
 
 
+    # def parse_data(self,app,env):
+    #     if env['REQUEST_METHOD'] in ['POST', 'PUT']:
+    #         if env.get('CONTENT_TYPE', '').lower().startswith('multipart/'):
+    #             fp = env['wsgi.input']
+    #             a = cgi.FieldStorage(fp=fp, environ=env, keep_blank_values=1)
+    #         else:
+    #             fp = StringIO(env.get('wsgi.input').read())
+    #             a = cgi.FieldStorage(fp=fp, environ=env, keep_blank_values=1)
+    #     else:
+    #         a = cgi.FieldStorage(environ=env, keep_blank_values=1)
+    #     app.local.input={}
+    #     for key in a.keys():
+    #         app.local.input[ key ] = a[key].value
 
 
     def parse(self,env):
+
+
         env['__FORM__DATA__']={}
         data={}
         if 'REQUEST_METHOD' in env.keys() and env['REQUEST_METHOD']=='POST':

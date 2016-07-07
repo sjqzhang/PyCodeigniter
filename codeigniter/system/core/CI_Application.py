@@ -97,6 +97,7 @@ class CI_Application(object):
         self.cookie=None
         self.is_threads = False
         self.local = local()
+        self.ctx = local()
         self._is_python3=None
 
         self._app_create(application_path)
@@ -463,6 +464,7 @@ class CI_Application(object):
             content = json.dumps(content)
         start_response(str(code),self.local.response.headers)
         self.local.response = None
+
         return [str(content)]
 
 

@@ -8,6 +8,7 @@ import time
 import logging
 from logging.handlers import RotatingFileHandler
 import datetime
+import inspect
 
 try:
     import web,cgi,os
@@ -91,6 +92,7 @@ class CI_Router(object):
         self.access_log.info(message)
 
     def wsgi_route(self,env):
+        # print(env)
         stime=time.time()
         data=self.app.input.parse(env)
         try:

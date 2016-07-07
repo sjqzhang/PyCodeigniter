@@ -58,7 +58,7 @@ class Index:
     def test_mail(self):
         ci.mail.send(['test@abc.com'],'test','message')
 
-    @CI_Cache.Cache(prefix='test_auto_cache',ttl=3600,key='#p[id],#p[name]')
+    @CI_Cache.Cache(prefix='test_auto_cache',ttl=3600,key='#id,#name')
     def test_auto_cache(self,id=0,name='hello'): #auto cache result
         ci.cacche.set('abc',"hello world")
         return ci.cache.get('abc')
