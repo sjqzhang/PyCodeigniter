@@ -71,79 +71,6 @@ http://127.0.0.1:8005/Index/index
 
 ```
 
-####2.2 how to integrate with `web.py`
-
-```python
-#!/usr/bin/env python
-# -*- coding:utf8 -*-
-__author__ = 'xiaozhang'
-
-import web
-
-from codeigniter.system.core.CI_Application import CI_Application
-
-
-ci=CI_Application(application_path=r'./')
-
-
-urls = (
-    '/.*', ci.router.webpy_route
-)
-app = web.application(urls, globals())
-
-session = web.session.Session(app, web.session.DiskStore('sessions'))
-
-
-if __name__ == "__main__":
-
-
-    app.run()
-```
-
-
-####2.3 how to integrate with `gevent`
-
-```python
-
-#!/usr/bin/python
-"""A web.py application powered by gevent"""
-
-from gevent import monkey; monkey.patch_all()
-from gevent.pywsgi import WSGIServer
-import time
-import json
-
-from codeigniter.system.core.CI_Application import CI_Application
-
-ci=CI_Application(application_path=r'./')
-port=ci.config['server']['port']
-host=ci.config['server']['host']
-
-def application(env, start_response):
-    html=''
-
-    code,obj=ci.router.wsgi_route(env)
-    if not isinstance(obj,str) and not isinstance(obj,unicode):
-        html=json.dumps(obj)
-        start_response(str(code), [('Content-Type', 'application/json')])
-    else:
-        start_response(str(code), [('Content-Type', 'text/html')] )
-        if isinstance(obj,unicode):
-            html=unicode.encode(obj,'utf-8')
-        else:
-            html=obj
-    return [str(html)]
-
-
-
-if __name__ == "__main__":
-    print 'Serving on %s...' % port
-    WSGIServer((host, port), application).serve_forever()
-
-
-
-
-```
 
 
 
@@ -182,6 +109,37 @@ config.py
 
 ```
 
++ how to get config in your application?
+
+```
+
+  ci.config.get('your key')
+  
+  
+
+```
+
+Note: `your key must define in config dict`
+
+for exmaple:
+```
+config={
+
+'log':log,
+'db':db,
+'mail':mail,
+'server':server,
+'cache':cache,
+'autoload':autoload,
+}
+
+
+ci.config.get('db')
+
+
+
+```
+
 
 + how to visit your website?
 
@@ -197,6 +155,12 @@ http://127.0.0.1:8005/Index/index
 
 ```
 
++ how to get request parameters?
+
+```
+ci.local.input.get('name')
+
+```
 
 + how to get controller class instance?
 
@@ -275,7 +239,7 @@ ci.cron.add_cron('*/1 * * * * *','Index.acc')
     prefix:group
     key:key
 
-    @CI_Cache.Cache(prefix='abc',ttl=3,key='#p[id]')
+    @CI_Cache.Cache(prefix='abc',ttl=3,key='#id')
     def abc(self,id="0"):
         return "test cache"
 
@@ -307,15 +271,6 @@ ci.cache.set_cache(B())
 ```
 
 
-## how to use zookeeper (is_leader) ?
-
-```
-while True:
-    if ci.zk.is_leader():
-        pass
-    else:
-        pass
-```
 
 # exmaple
 
