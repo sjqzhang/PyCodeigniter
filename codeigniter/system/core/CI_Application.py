@@ -58,12 +58,7 @@ class CI_CLASS(object):
 CI = CI_CLASS()
 
 
-class T_Respond(object):
-    def __init__(self):
-        self.headers = []
-        self.cookies = {}
-        self.code = ""
-        self.content = ""
+from CI_Response import CI_Response
 
 class CI_Application(object):
     application_instance=None
@@ -209,10 +204,6 @@ class CI_Application(object):
                 exec('from CI_Static import CI_Static')
                 self.static = eval('CI_Static(**self.config)')
 
-        if 'server' in self.config.keys() and 'fastpy' in self.config['server'] and  self.config['server']['fastpy'] :
-            exec('from CI_Server import CI_Server')
-            self.server= eval('CI_Server(**self.config)')
-            module_list.append('CI_Server')
 
         if 'zookeeper' in self.config.keys():
             exec('from CI_Zookeeper import CI_Zookeeper')
@@ -430,20 +421,20 @@ class CI_Application(object):
             return pyquery.PyQuery(selector,obj)
 
     def setresult(self,code,content):
-        self.local.response.code = code
-        self.local.response.content = content
+        self.local.response.status = code
+        self.local.response.body = content
 
     def set200(self,content):
-        self.local.response.code = '200 OK'
-        self.local.response.content = content
+        self.local.response.status = '200 OK'
+        self.local.response.body = content
 
     def set404(self,content=""):
-        self.local.response.code = "404 Not Found"
-        self.local.response.content = "Not Found" if "" ==  content else content
+        self.local.response.status = "404 Not Found"
+        self.local.response.body = "Not Found" if "" ==  content else content
 
     def set500(self,content=""):
-        self.local.response.code = "500 Internal server error"
-        self.local.response.content = "Server Error,Please see log file" if "" ==  content else content
+        self.local.response.status = "500 Internal server error"
+        self.local.response.body = "Server Error,Please see log file" if "" ==  content else content
 
     def __call__(self, environ, start_response):
         return self.application(environ,start_response)
@@ -451,14 +442,14 @@ class CI_Application(object):
         try:
             if self.local==None:
                 self.local=local()
-            self.local.response = T_Respond()
+            self.local.response = CI_Response()
             self.local.env=environ
             self.cookie.parse_cookie(environ)
             # print self.local.response.cookies
             self.router.wsgi(environ)
             self.hook.call_display_override(environ)
-            code = self.local.response.code
-            content = self.local.response.content
+            code = self.local.response.status
+            content = self.local.response.body
             if self.cookie:
                 self.cookie.result_cookie()
             if isinstance(content,unicode):
@@ -471,7 +462,7 @@ class CI_Application(object):
             return [str(content)]
         except Exception as er:
             self.set500(str(er))
-            return [str(self.local.response.content)]
+            return [str(self.local.response.body)]
         finally:
             self.local=None
             self.ctx=None

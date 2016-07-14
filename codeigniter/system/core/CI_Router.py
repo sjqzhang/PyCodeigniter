@@ -18,6 +18,8 @@ except Exception as e:
     pass
 from CI_Application import CI
 
+from CI_Request import CI_Request
+
 class CI_Router(object):
     def __init__(self,**kwargs):
         self.app=kwargs['app']
@@ -100,7 +102,7 @@ class CI_Router(object):
         try:
             try:
                 if False == self.app.hook.call_pre_controller(env):
-                    if self.app.local.response.content == "":
+                    if self.app.local.response.body == "":
                         self.app.set500("pre_controller hook result false")
                     return
                 if 'session' in self.config.keys():
@@ -137,7 +139,7 @@ class CI_Router(object):
                 return
             try:
                 if False == self.app.hook.call_post_controller_constructor(env,ctrl_instance,func):
-                    if self.app.local.response.content == "":
+                    if self.app.local.response.body == "":
                         self.app.set500("post_controller_constructor hook result false")
                     return
                 ret= getattr(ctrl_instance,func)(**data)
@@ -193,17 +195,20 @@ class CI_Router(object):
         path=env['PATH_INFO'].split('/')
         path=filter(lambda p:p!='',path)
         controller_name=''
+
+        req=CI_Request(env)
+
         if len(path)>=2:
             controller_name=path[0]
             func=path[1]
         elif len(path)==1:
             controller_name='index'
             func=path[0]
-        data=self.input(self.app,env)
+        # data=self.input(self.app,env)
         try:
             try:
                 if False == self.app.hook.call_pre_controller(env):
-                    if self.app.local.response.content == "":
+                    if self.app.local.response.body == "":
                         self.app.set500("pre_controller hook result false")
                     return
                 if 'session' in self.config.keys():
@@ -240,12 +245,15 @@ class CI_Router(object):
                 return
             try:
                 if False == self.app.hook.call_post_controller_constructor(env,ctrl_instance,func):
-                    if self.app.local.response.content == "":
+                    if self.app.local.response.body == "":
                         self.app.set500("post_controller_constructor hook result false")
                     return
-                ret= getattr(ctrl_instance,func)(**data)
-                self._log(env,200,stime)
-                self.app.set200(ret)
+
+                ret= getattr(ctrl_instance,func)(req,self.app.local.response)
+                if self.app.local.response.body=="":
+                    self.app.local.response.body=ret
+                # self._log(env,200,stime)
+                # self.app.set200(ret)
                 self.app.hook.call_post_controller(env,ctrl_instance,func,ret)
                 return
             except TypeError as e:
