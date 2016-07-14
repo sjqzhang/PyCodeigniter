@@ -202,7 +202,7 @@ class Matcher:
 
 
 class DictUtil(object):
-    def __init__(self):
+    def __init__(self,*args,**kwargs):
         self.match=Matcher()
 
     def query(self,data=[],select='',where='',order='',group=''):
