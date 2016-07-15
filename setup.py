@@ -5,7 +5,7 @@ setup(
     name='PyCodeigniter',
     version='0.3.1',
      packages=['codeigniter', 'codeigniter.system',
-              'codeigniter.system.core', 'codeigniter.system.core.reactor', 'codeigniter.application',
+              'codeigniter.system.core',  'codeigniter.application',
               'codeigniter.application.config', 'codeigniter.application.models', 'codeigniter.application.helpers',
               'codeigniter.application.library', 'codeigniter.application.controllers','codeigniter.application.views'],
     url='https://github.com/sjqzhang/PyCodeigniter',
