@@ -440,8 +440,6 @@ class CI_Application(object):
         return self.application(environ,start_response)
     def application(self, environ, start_response):
         try:
-            if self.local==None:
-                self.local=local()
             self.local.response = CI_Response()
             self.local.env=environ
             self.cookie.parse_cookie(environ)
@@ -463,9 +461,7 @@ class CI_Application(object):
         except Exception as er:
             self.set500(str(er))
             return [str(self.local.response.body)]
-        finally:
-            self.local=None
-            self.ctx=None
+
 
 
 
