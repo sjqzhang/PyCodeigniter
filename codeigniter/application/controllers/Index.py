@@ -9,17 +9,17 @@ from codeigniter import CI_Cache
 class Index:
 
 
-    def index(self):
+    def index(self,req,resp):
         return "hello world"
 
-    def favicon(self):
+    def favicon(self,req,resp):
         return "favicon"
 
-    def test_task(self):
+    def test_task(self,req,resp):
         import datetime
         print('timer:'+ str(datetime.datetime.now()))
 
-    def test_db(self):
+    def test_db(self,req,resp):
         row= ci.db.query('select 1')
         print(ci.db.scalar('select 1'))
         # ci.db.insert('tablenname',{'fieldname1':'value1','fieldname2':'value2'})
@@ -27,10 +27,10 @@ class Index:
         # ci.db.ar().table('test').select('*').limit(10).get()
         return row
 
-    def test_config(self):
+    def test_config(self,req,resp):
         print(ci.config)
 
-    def test_loader(self):
+    def test_loader(self,req,resp):
         ci.loader.helper('your helper')
         ci.loader.library('your library')
         ci.loader.model('your model')
@@ -39,7 +39,7 @@ class Index:
 
 
     #how to create different instance ?
-    def test_loader_instances(self):
+    def test_loader_instances(self,req,resp):
         #how to connect to different db ?
 
         db2=ci.loader.cls('CI_DB')(ci.config['db2']) # how to create different db instance and save it into ci
@@ -55,36 +55,36 @@ class Index:
         #The rest may be deduced by analogy
 
 
-    def test_mail(self):
+    def test_mail(self,req,resp):
         ci.mail.send(['test@abc.com'],'test','message')
 
     @CI_Cache.Cache(prefix='test_auto_cache',ttl=3600,key='#id,#name')
     def test_auto_cache(self,id=0,name='hello'): #auto cache result
         ci.cacche.set('abc',"hello world")
         return ci.cache.get('abc')
-    def test_cache(self):
+    def test_cache(self,req,resp):
         ci.cacche.set('abc',"hello world")
         return ci.cache.get('abc')
 
-    def test_logger(self):
+    def test_logger(self,req,resp):
         ci.logger.info('Hello World')
 
-    def test_zookeeper(self):
+    def test_zookeeper(self,req,resp):
         while True:
             if ci.zk.is_leader():
                 print('is leader')
             else:
                 print('is follower')
 
-    def test_redis(self):
+    def test_redis(self,req,resp):
         self.redis.set('test','test') # see redis api
         return self.redis.get('test')
 
-    def test_memcache(self):
+    def test_memcache(self,req,resp):
         self.memcache.set('test','test') # see memcache api
         return self.memcache.get('test')
 
-    def test_tpl(self): #template
+    def test_tpl(self,req,resp): #template
         return ci.tpl.render('template.html',[{'sNo':'123456','chinese':67,'math':90,'englist':85},\
             {'sNo':'123456','chinese':80,'math':96,'englist':85}])
 
