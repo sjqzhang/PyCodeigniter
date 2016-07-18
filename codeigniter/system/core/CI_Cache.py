@@ -249,7 +249,7 @@ class CI_Cache(object):
     @staticmethod
     def Cache(prefix='', ttl=3600,key='',op='select',md5=True):
         def handle_func(func):
-            @wraps
+            @wraps(func)
             def handle_args(*args, **kwargs):
                 # print 'xxxxxxx', args,kwargs
                 ci=CI_Application.CI
