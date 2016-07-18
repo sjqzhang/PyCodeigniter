@@ -24,6 +24,8 @@ try:
 except ImportError as e:
     import _thread as thread
 
+from functools import wraps
+
 
 class CI_Memory_Cache(object):
     def __init__(self,**kwargs):
@@ -247,6 +249,7 @@ class CI_Cache(object):
     @staticmethod
     def Cache(prefix='', ttl=3600,key='',op='select',md5=True):
         def handle_func(func):
+            @wraps
             def handle_args(*args, **kwargs):
                 # print 'xxxxxxx', args,kwargs
                 ci=CI_Application.CI

@@ -219,7 +219,11 @@ class CI_DB(object):
         return CI_DBActiveRec(**kwargs)
 
 
-
+    def __getattr__(self,attr):
+        ar=self.ar()
+        if hasattr(ar,attr):
+            return getattr(ar,attr)
+        return None
 
 if __name__=='__main__':
 
