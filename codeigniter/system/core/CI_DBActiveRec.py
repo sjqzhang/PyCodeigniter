@@ -69,12 +69,12 @@ class CI_DBActiveRec():
         else:
             self.auto_close=True
 
-    def query(self,sql):
+    def query(self,sql,param=tuple()):
         if self.auto_close:
             # self.conn.close()
-            return self.app.db.query(sql)
+            return self.app.db.query(sql,param=param)
         else:
-            return self.app.db.query(sql,None,self.conn)
+            return self.app.db.query(sql,param=param,conn=self.conn)
 
     def __getattr__(self, in_field):
         dynamic_properties = ["find_by_", "delete_by_"]
@@ -542,10 +542,33 @@ class CI_DBActiveRec():
         if table == '':
             self.error_msg = 'db must set table'
             return False
+
         sql = self._insert(self._protect_identifiers(table, True, None, False), self.ar_set.keys(), self.ar_set.values())
 
         self._reset_write()
         return self.query(sql)
+
+
+    def insert_safe(self,table='', _set=None):
+        if len(self.ar_set) == 0:
+            self.error_msg = 'insert columns and values are empty'
+            return False
+        if table == '':
+            self.error_msg = 'db must set table'
+            return False
+        sql= """INSERT INTO %s
+                (%s)
+                VALUES (%s);
+        """ % (
+            self._protect_identifiers(table, True, None, False),
+            ', '.join(map(lambda x:'`'+str(x)+'`' ,_set.keys())),
+            ', '.join(map(lambda x:':'+str(x) ,_set.keys()))
+        )
+        self._reset_write()
+        return self.query(sql,_set)
+
+
+
 
     def _insert(self, table, keys, values):
 
@@ -611,6 +634,19 @@ class CI_DBActiveRec():
         sql = self._update(self._protect_identifiers(table, True, None, False), self.ar_set, self.ar_where, self.ar_orderby, self.ar_limit)
         self._reset_write()
         return self.query(sql)
+
+
+    def update_safe(self, table='', _set=None, where=None, limit=None):
+        sql='''
+        update %s set %s
+        where %s
+        '''%(self._protect_identifiers(table, True, None, False),','.join(map(lambda x:'`'+x+'`=:'+x,_set.keys())),
+             ' and '.join(map(lambda x:'`'+x+'`=:'+x,where.keys())),)
+        _set.update(where)
+        self.query(sql,_set)
+
+
+
 
     def _update(self, table, values, where, orderby=None, limit=False):
         valstr = []
