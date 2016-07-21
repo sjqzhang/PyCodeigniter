@@ -183,7 +183,7 @@ ci.loader.model('classname')
 ```
 #you can use active record.
 
-ci.db.ar().select('*').table('test').limit(10).get()
+ci.db.select('*')._from('test').limit(10).get()
 
 ci.db.query('select * from test')
 
