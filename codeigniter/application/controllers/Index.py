@@ -24,7 +24,7 @@ class Index:
         print(ci.db.scalar('select 1'))
         # ci.db.insert('tablenname',{'fieldname1':'value1','fieldname2':'value2'})
         # ci.db.update('tablenname',{'fieldname1':'value1','fieldname2':'value2'},{'condition':'conditionvalue'})
-        # ci.db.ar().table('test').select('*').limit(10).get()
+        # ci.db.select('*')._from('test').limit(10).get()
         return row
 
     def test_config(self,req,resp):
@@ -69,13 +69,6 @@ class Index:
     def test_logger(self,req,resp):
         ci.logger.info('Hello World')
 
-    def test_zookeeper(self,req,resp):
-        while True:
-            if ci.zk.is_leader():
-                print('is leader')
-            else:
-                print('is follower')
-
     def test_redis(self,req,resp):
         self.redis.set('test','test') # see redis api
         return self.redis.get('test')
@@ -87,8 +80,3 @@ class Index:
     def test_tpl(self,req,resp): #template
         return ci.tpl.render('template.html',[{'sNo':'123456','chinese':67,'math':90,'englist':85},\
             {'sNo':'123456','chinese':80,'math':96,'englist':85}])
-
-
-
-
-
