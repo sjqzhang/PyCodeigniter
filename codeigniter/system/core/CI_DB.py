@@ -56,10 +56,10 @@ class CI_DB(object):
             return self.queries[-1]
 
     def format(self,sql,param):
-        m=re.findall(r"{\w+}",sql,re.IGNORECASE|re.DOTALL)
+        m=re.findall(r"{\w+}|\:\w+",sql,re.IGNORECASE|re.DOTALL)
         v=list()
         for i in m:
-            key,num=re.subn(r"^'?{|}'?$",'',i)
+            key,num=re.subn(r"^'?{|}'?$|^\:",'',i)
             v.append(param[key])
             sql=sql.replace(i,'%s')
         sql=sql.replace("'%s'",'%s')
@@ -225,7 +225,11 @@ class CI_DB(object):
         return None
 
 
-
+    def __getattr__(self,attr):
+        ar=self.ar()
+        if hasattr(ar,attr):
+            return getattr(ar,attr)
+        return None
 
 if __name__=='__main__':
 
