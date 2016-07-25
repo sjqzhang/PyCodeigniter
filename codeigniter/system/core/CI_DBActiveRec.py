@@ -61,20 +61,28 @@ class CI_DBActiveRec():
         #super(CI_DBActiveRec,self).__init__(**kwargs)
         #super(DBActiveRec, self).__init__(cursorclass=cursorclass)
 
-        self.app=kwargs['app']
-        if 'conn' in kwargs.keys():
-            self.conn=kwargs['conn']
-        if 'auto_close' in kwargs.keys():
-            self.auto_close=kwargs['auto_close']
-        else:
-            self.auto_close=True
+        self.conn=None
+
+        self.db=None
+
+        # self.app=kwargs['app']
+        # if 'conn' in kwargs.keys():
+        #     self.conn=kwargs['conn']
+        # if 'auto_close' in kwargs.keys():
+        #     self.auto_close=kwargs['auto_close']
+        # else:
+        #     self.auto_close=True
 
     def query(self,sql,param=tuple()):
-        if self.auto_close:
-            # self.conn.close()
-            return self.app.db.query(sql,param=param)
-        else:
-            return self.app.db.query(sql,param=param,conn=self.conn)
+         if self.conn==None:
+            self.conn=self.db.get_connection()
+         return self.app.db.query(sql,param=param,conn=self.conn)
+
+        # if self.auto_close:
+        #     # self.conn.close()
+        #     return self.app.db.query(sql,param=param)
+        # else:
+        #     return self.app.db.query(sql,param=param,conn=self.conn)
 
     def __getattr__(self, in_field):
         dynamic_properties = ["find_by_", "delete_by_"]

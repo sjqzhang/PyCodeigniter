@@ -226,17 +226,15 @@ class CI_DB(object):
             kwargs['conn']=conn
             kwargs['auto_close']=False
             kwargs['app']=self.app
-        return CI_DBActiveRec(**kwargs)
-
-    def __getattr__(self,attr):
-        ar=self.ar()
-        if hasattr(ar,attr):
-            return getattr(ar,attr)
-        return None
+        ar= CI_DBActiveRec(**kwargs)
+        ar.db=self
+        return ar
 
 
     def __getattr__(self,attr):
         ar=self.ar()
+        self.db=self
+        # ar.conn=self.get_connection()
         if hasattr(ar,attr):
             return getattr(ar,attr)
         return None
