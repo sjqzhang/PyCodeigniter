@@ -550,7 +550,7 @@ class CI_DBActiveRec():
 
 
     def insert_safe(self,table='', _set=None):
-        if len(self.ar_set) == 0:
+        if len(_set) == 0:
             self.error_msg = 'insert columns and values are empty'
             return False
         if table == '':
