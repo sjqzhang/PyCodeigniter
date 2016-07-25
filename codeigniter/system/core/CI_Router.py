@@ -221,7 +221,8 @@ class CI_Router(object):
                 #     del data['__func_name__']
                 if self.app.static:
                     if self.app.static.accept(env):
-                        return self.app.static.route(env)
+                        self.app.local.response.status,self.app.local.response.body= self.app.static.route(env)
+                        return
                 for i in range(1):
                     if 'route' in self.config.keys():
                         for route,ctrl in self.config['route'].iteritems():
