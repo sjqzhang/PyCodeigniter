@@ -58,6 +58,12 @@ class CI_DB(object):
     def format(self,sql,param):
         m=re.findall(r"{\w+}|\:\w+",sql,re.IGNORECASE|re.DOTALL)
         v=list()
+        def lcmp(x,y):
+            if len(x)>len(y):
+                return -1
+            else:
+                return 1
+        m.sort(lcmp)
         for i in m:
             key,num=re.subn(r"^'?{|}'?$|^\:",'',i)
             v.append(param[key])
