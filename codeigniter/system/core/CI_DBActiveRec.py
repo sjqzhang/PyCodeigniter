@@ -76,7 +76,7 @@ class CI_DBActiveRec():
     def query(self,sql,param=tuple()):
          if self.conn==None:
             self.conn=self.db.get_connection()
-         return self.app.db.query(sql,param=param,conn=self.conn)
+         return self.db.query(sql,param=param,conn=self.conn)
 
         # if self.auto_close:
         #     # self.conn.close()
