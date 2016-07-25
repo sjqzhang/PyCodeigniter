@@ -63,10 +63,14 @@ class CI_DB(object):
                 return -1
             else:
                 return 1
-        m.sort(lcmp)
+        ks=[]
         for i in m:
             key,num=re.subn(r"^'?{|}'?$|^\:",'',i)
             v.append(param[key])
+            ks.append(i)
+
+        ks.sort(lcmp)
+        for i in ks:
             sql=sql.replace(i,'%s')
         sql=sql.replace("'%s'",'%s')
         return sql,tuple(v)
