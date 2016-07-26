@@ -645,13 +645,19 @@ class CI_DBActiveRec():
 
 
     def update_safe(self, table='', _set=None, where=None, limit=None):
-        sql='''
-        update %s set %s
-        where %s
-        '''%(self._protect_identifiers(table, True, None, False),','.join(map(lambda x:'`'+x+'`=:'+x,_set.keys())),
-             ' and '.join(map(lambda x:'`'+x+'`=:'+x,where.keys())),)
-        _set.update(where)
-        self.query(sql,_set)
+        if where==None:
+            raise Exception('WHERE IS None')
+        if isinstance(where,dict):
+            sql='''
+            UPDATE %s SET %s
+            WHERE %s
+            '''%(self._protect_identifiers(table, True, None, False),','.join(map(lambda x:'`'+x+'`=:'+x,_set.keys())),
+                 ' and '.join(map(lambda x:'`'+x+'`=:'+x,where.keys())),)
+            _set.update(where)
+            self.query(sql,_set)
+        else:
+            raise Exception('WHERE must be dict')
+
 
 
 

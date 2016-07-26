@@ -50,11 +50,20 @@ class CI_Sqlite(object):
     def format(self,sql,param):
         m=re.findall(r"{\w+}|\:\w+",sql,re.IGNORECASE|re.DOTALL)
         v=list()
+        def lcmp(x,y):
+            if len(x)>len(y):
+                return -1
+            else:
+                return 1
+        ks=[]
         for i in m:
-            key,num=re.subn(r"^'?{|}'?$|\:",'',i)
+            key,num=re.subn(r"^'?{|}'?$|^\:",'',i)
             v.append(param[key])
+            ks.append(i)
+
+        ks.sort(lcmp)
+        for i in ks:
             sql=sql.replace(i,'?')
-            sql=sql.replace("'?'",'?')
         return sql,tuple(v)
 
     def dict_result(self,cursor):
@@ -215,7 +224,18 @@ class CI_Sqlite(object):
             kwargs['conn']=conn
             kwargs['auto_close']=False
             kwargs['app']=self.app
-        return CI_DBActiveRec(**kwargs)
+        ar= CI_DBActiveRec(**kwargs)
+        ar.db=self
+        return ar
+
+
+    def __getattr__(self,attr):
+        ar=self.ar()
+        self.db=self
+        # ar.conn=self.get_connection()
+        if hasattr(ar,attr):
+            return getattr(ar,attr)
+        return None
 
 
 
@@ -224,7 +244,7 @@ if __name__=='__main__':
 
     opts=dict(maxconnections=3,blocking=True,host='172.16.132.230', passwd='root',user="root",database="test")
 
-    db=CI_DB(**opts)
+    db=CI_Sqlite(**opts)
 
 
     rows=db.query("select * from test")
