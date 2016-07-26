@@ -152,10 +152,10 @@ class CI_Sqlite(object):
         return self.query(sql,param,conn)
 
     def insert(self, table='', _set=None,conn=None):
-       return self.ar(conn).insert(table,_set)
+       return self.ar(conn).insert_safe(table,_set)
 
     def update(self, table='', _set=None, where=None, conn=None):
-        return self.ar(conn).update(table,_set,where)
+        return self.ar(conn).update_safe(table,_set,where)
 
     def delete(self, table='', where='',conn=None):
         return self.ar(conn).delete(table,where)
