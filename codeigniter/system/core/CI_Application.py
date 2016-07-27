@@ -239,6 +239,7 @@ class CI_Application(object):
         self.loader= eval('CI_Loader(**self.config)')
 
 
+
         if 'cron' in self.config.keys():
             self.cron.init()
 
@@ -259,6 +260,25 @@ class CI_Application(object):
                     self.loader.regcls(m,eval(m))
                 except:
                     pass
+        self._load_ci_cls()
+
+    def _load_ci_cls(self):
+        try:
+            path_core=self.system_path+os.path.sep+'core'
+            files= os.listdir(path_core)
+            sys.path.insert(0,path_core)
+            for file in files:
+                if file.endswith('.py') and file.startswith('CI_'):
+                    try:
+                        mod=self.loader.load_file(path_core+os.path.sep+ file)
+                        cls=file.replace('.py','')
+                        if hasattr(mod,cls):
+                            self.loader.regcls(cls,getattr(mod,cls))
+                    except Exception as e:
+                       pass
+        except Exception as er:
+            pass
+
 
     def _app_create(self,application_path):
         sys_app_path=os.path.dirname( os.path.dirname( os.path.dirname(__file__)))+ os.path.sep+'application'

@@ -64,6 +64,7 @@ class CI_DBActiveRec():
         self.conn=None
 
         self.db=None
+        self.auto_close=None
 
         # self.app=kwargs['app']
         # if 'conn' in kwargs.keys():
@@ -74,9 +75,14 @@ class CI_DBActiveRec():
         #     self.auto_close=True
 
     def query(self,sql,param=tuple()):
-         if self.conn==None:
-            self.conn=self.db.get_connection()
-         return self.db.query(sql,param=param,conn=self.conn)
+        try:
+            if self.conn==None:
+                self.conn=self.db.get_connection()
+            return self.db.query(sql,param=param,conn=self.conn)
+        finally:
+            if self.auto_close:
+                self.conn.close()
+
 
         # if self.auto_close:
         #     # self.conn.close()

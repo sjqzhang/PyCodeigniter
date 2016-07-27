@@ -12,6 +12,68 @@ import collections
 from CI_DBActiveRec import CI_DBActiveRec
 
 
+import time
+from threading import Lock
+class Pool(object):
+    def __init__(self,creator,**kwargs):
+        # self.local=local()
+        self.mutex=Lock()
+        self.creator=creator
+        self.pool=[]
+        self.idle=[]
+        if 'blocking' in kwargs.keys():
+            self.blocking=kwargs['blocking']
+            del kwargs['blocking']
+        else:
+            self.blocking=True
+        if 'maxconnections' in kwargs.keys():
+            self.maxconnections=kwargs['maxconnections']
+            del kwargs['maxconnections']
+        else:
+            self.maxconnections=1
+        self._kwargs=kwargs
+    def get_connection(self):
+        self.mutex.acquire()
+        try:
+            while True:
+                for conn in self.pool:
+                    if conn.idle:
+                        conn.idle=False
+                        return conn
+                if len(self.pool)<self.maxconnections:
+                    return self.create_connection()
+                time.sleep(0.1)
+
+        except Exception as er:
+            print(er)
+        finally:
+            self.mutex.release()
+
+    def create_connection(self):
+        class Connection(object):
+            def __init__(self,con,pool):
+                self.pool=pool
+                self._con=con
+                self.idle=False
+                # pool.pool.append(self)
+            def close(self):
+                self.idle=True
+                # print('idle')
+            def __getattr__(self, item):
+                if hasattr(self._con,item):
+                    return getattr(self._con,item)
+        conn= Connection(self.creator.connect(**self._kwargs),self)
+        self.pool.append(conn)
+        return conn
+
+
+
+
+
+
+
+
+
 
 
 
@@ -19,8 +81,8 @@ from CI_DBActiveRec import CI_DBActiveRec
 class CI_DB(object):
     def __init__(self, **kwargs):
         import pymysql
-        import DBUtils
-        from DBUtils.PooledDB import PooledDB
+        # import DBUtils
+        # from DBUtils.PooledDB import PooledDB
         if 'app' in kwargs.keys():
             self.app=kwargs['app']
             self.logger=self.app.logger
@@ -36,7 +98,8 @@ class CI_DB(object):
             self.autocommit=kwargs['autocommit']
         else:
             self.autocommit=True
-        self.pool=PooledDB(pymysql,**kwargs)
+        self.pool=Pool(pymysql,**kwargs)
+        # self.pool=PooledDB(pymysql,**kwargs)
 
         self.queries=[]
 
@@ -44,7 +107,8 @@ class CI_DB(object):
 
     def get_connection(self):
         # print("get_connection")
-        conn= self.pool.dedicated_connection()
+        conn= self.pool.get_connection()
+        # conn= self.pool.dedicated_connection()
         # cursor=conn.cursor()
         # cursor.execute('set names utf8')
         # cursor.execute('set autocommit=OFF')
@@ -185,24 +249,27 @@ class CI_DB(object):
                 else:
                     self._db.rollback(self.conn)
                 if self._db.autocommit:
-                     cursor=self.conn.cursor()
-                     cursor.execute('set autocommit=ON')
-                     cursor.close()
+                    pass
+                     # cursor=self.conn.cursor()
+                     # cursor.execute('set autocommit=ON')
+                     # cursor.close()
                 self.conn.close()
 
             def __enter__(self):
-                cursor=self.conn.cursor()
-                cursor.execute('set autocommit=OFF')
-                cursor.close()
+                # cursor=self.conn.cursor()
+                # cursor.execute('set autocommit=OFF')
+                # cursor.close()
+                self.conn._con.autocommit(False)
+
                 return self
 
             def __getattr__(self, item):
                 return getattr(self._db,item)
 
             def query(self,sql,param=tuple()):
-                self._db.query(sql,param,self.conn)
+                return self._db.query(sql,param,self.conn)
             def execute(self,sql,param=tuple()):
-                self.query(sql,param,self.conn)
+                return self.query(sql,param,self.conn)
             def scalar(self,sql,param=tuple()):
                 return self._db.scalar(sql,param,self.conn)
             def insert(self, table='', _set=None):
@@ -218,16 +285,11 @@ class CI_DB(object):
 
     def ar(self,conn=None):
         kwargs={}
-        if conn==None:
-            # kwargs['conn']=self.get_connection()
-            kwargs['auto_close']=True
-            kwargs['app']=self.app
-        else:
-            kwargs['conn']=conn
-            kwargs['auto_close']=False
-            kwargs['app']=self.app
         ar= CI_DBActiveRec(**kwargs)
+        if conn==None:
+            ar.auto_close=True
         ar.db=self
+        ar.conn=conn
         return ar
 
 

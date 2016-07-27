@@ -33,6 +33,7 @@ class CI_Sqlite(object):
             self.autocommit=kwargs['autocommit']
         else:
             self.autocommit=True
+        self.database=kwargs['database']
 
 
         self.queries=[]
@@ -40,7 +41,7 @@ class CI_Sqlite(object):
 
 
     def get_connection(self):
-        conn=sqlite3.connect(self.app.config['db']['database'])
+        conn=sqlite3.connect(self.database)
         return conn
 
     def last_query(self):
