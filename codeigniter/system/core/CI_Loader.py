@@ -10,7 +10,8 @@ import time
 import inspect
 import re
 import imp
-
+PY2 = sys.version_info[0] == 2
+PY3 = sys.version_info[0] == 3
 
 
 try:
@@ -33,8 +34,10 @@ class CI_Loader(object):
         sys.path.insert(0, os.path.abspath(self.application_path))
         for m in self.app_modules_list:
             self.modules[m]={}
-        map(self._load_application,self.app_modules_list)
-
+        if PY2:
+            map(self._load_application,self.app_modules_list)
+        if PY3:
+            list(map(self._load_application,self.app_modules_list))
         try:
             if self.app.config['server']['envroment']=='development' or self.app.config['server']['envroment']=='dev':
                 thread.start_new_thread(self.check,(),)
