@@ -19,7 +19,8 @@ import inspect
 import os
 import sys
 sys.path.insert(0,os.path.dirname(__file__))
-from CI_Application import CI_Application
+import CI_Application
+# from CI_Application import CI_Application
 PY2 = sys.version_info[0] == 2
 PY3 = sys.version_info[0] == 3
 
