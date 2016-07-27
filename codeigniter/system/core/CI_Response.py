@@ -4,9 +4,16 @@ __author__ = 'xiaozhang'
 
 import sys
 import datetime
-from six.moves import http_cookies
-CookieError = http_cookies.CookieError
-SimpleCookie = http_cookies.SimpleCookie
+PY2 = sys.version_info[0] == 2
+PY3 = sys.version_info[0] == 3
+
+if PY2:
+    import Cookie as cookies
+if PY3:
+    from http import cookies
+
+SimpleCookie=cookies.SimpleCookie
+CookieError=cookies.CookieError
 
 HTTP_CODES = {200: "200 OK",
               301: "301 Moved Permanently",

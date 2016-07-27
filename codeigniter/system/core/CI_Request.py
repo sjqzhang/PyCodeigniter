@@ -4,13 +4,18 @@ __author__ = 'xiaozhang'
 
 import sys
 
+PY2 = sys.version_info[0] == 2
+PY3 = sys.version_info[0] == 3
 
+if PY3:
+    from io import StringIO
+    from http import cookies
+if PY2:
+    import StringIO
+    import Cookie as cookies
 
-import six
-from six import StringIO
 import cgi
-from six.moves import http_cookies
-SimpleCookie = http_cookies.SimpleCookie
+SimpleCookie = cookies.SimpleCookie
 
 if sys.version_info >= (3, 0):
     from urllib.parse import parse_qs # pragma: no cover
