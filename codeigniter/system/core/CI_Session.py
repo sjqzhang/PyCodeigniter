@@ -7,7 +7,13 @@ import threading
 import hashlib
 import redis
 import multiprocessing
-import Queue
+import sys
+PY2 = sys.version_info[0] == 2
+PY3 = sys.version_info[0] == 3
+if PY2:
+    import Queue
+if PY3:
+    import queue as Queue
 
 
 
