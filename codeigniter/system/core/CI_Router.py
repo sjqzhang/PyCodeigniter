@@ -9,6 +9,11 @@ import logging
 from logging.handlers import RotatingFileHandler
 import datetime
 import inspect
+
+import sys
+PY2 = sys.version_info[0] == 2
+PY3 = sys.version_info[0] == 3
+
 try:
     from StringIO import StringIO
 except ImportError:
@@ -196,7 +201,10 @@ class CI_Router(object):
     def wsgi(self,env):
         stime=time.time()
         path=env['PATH_INFO'].split('/')
-        path=filter(lambda p:p!='',path)
+        if PY2:
+            filter(lambda p:p!='',path)
+        if PY3:
+            path=list(filter(lambda p:p!='',path))
         controller_name=''
 
         req=CI_Request(env)

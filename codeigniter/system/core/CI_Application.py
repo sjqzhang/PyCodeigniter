@@ -482,11 +482,16 @@ class CI_Application(object):
             if PY2 and (not type(content) in [str,unicode]):
                 content = json.dumps(content)
             if PY3:
-                content = json.dumps(content)
+                if isinstance(content,str):
+                    content=content.encode('utf-8')
+                else:
+                    content = json.dumps(content).encode('utf-8')
             start_response(str(code),self.local.response.headers)
             self.local.response = None
-
-            return [str(content)]
+            if PY2:
+                return [str(content)]
+            if PY3:
+                return [content]
         except Exception as er:
             self.set500(str(er))
             return [str(self.local.response.body)]
