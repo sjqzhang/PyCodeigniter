@@ -16,8 +16,10 @@ import time
 import json
 import hashlib
 import inspect
-
-from . import CI_Application
+import os
+import sys
+sys.path.insert(0,os.path.dirname(__file__))
+from CI_Application import CI_Application
 
 try:
     import thread

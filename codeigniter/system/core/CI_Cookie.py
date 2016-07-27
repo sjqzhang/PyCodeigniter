@@ -2,9 +2,6 @@
 # -*- coding:utf8 -*-
 
 
-from . import PushTraceback
-
-
 
 class CookieData:
     def __init__(self):
@@ -52,7 +49,8 @@ class CI_Cookie:
                 cod.isPre = True
                 self.app.local.response.cookies[cod.name] = cod
         except BaseException as e:
-            self.app.logger.error("%s:%s" % ( PushTraceback(),e ))
+            self.app.logger.error(e)
+            # self.app.logger.error("%s:%s" % ( PushTraceback(),e ))
 
     def __getitem__(self,key):
         return self.get(key)

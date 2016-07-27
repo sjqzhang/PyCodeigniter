@@ -8,6 +8,7 @@ import os
 import json
 import imp
 import urllib
+sys.path.insert(0,os.path.dirname(__file__))
 try:
     import urllib2
 except:

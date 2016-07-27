@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 # -*- coding:utf8 -*-
-
-
+import os
+import imp
+import sys
+sys.path.insert(0,os.path.dirname(__file__))
 from CI_Application import CI as app
-import os,imp
 
 class CI_Hook(object):
 

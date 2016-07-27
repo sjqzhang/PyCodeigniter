@@ -9,7 +9,10 @@ import logging
 from logging.handlers import RotatingFileHandler
 import datetime
 import inspect
-import StringIO
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 import cgi
 
 try:
