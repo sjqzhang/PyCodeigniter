@@ -8,6 +8,9 @@ import types
 import collections
 
 import sqlite3
+import sys
+PY2 = sys.version_info[0] == 2
+PY3 = sys.version_info[0] == 3
 
 
 
@@ -105,7 +108,7 @@ class CI_Sqlite(object):
             sql,param=self.format(sql,param)
             # print(param)
         if self.debug:
-            if isinstance(sql,unicode):
+            if PY2 and isinstance(sql,unicode):
                 sql=unicode.encode(sql,'utf-8','ignore')
             self.logger.info(sql)
         if conn==None:
@@ -134,7 +137,7 @@ class CI_Sqlite(object):
                 conn.rollback()
             except Exception as er:
                 pass
-            if isinstance(sql,unicode):
+            if PY2 and isinstance(sql,unicode):
                 sql=unicode.encode(sql,'utf-8','ignore')
             self.app.logger.error(str(e)+"sql:\n"+sql)
             raise e

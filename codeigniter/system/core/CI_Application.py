@@ -17,6 +17,10 @@ import hashlib
 
 import platform
 
+PY2 = sys.version_info[0] == 2
+PY3 = sys.version_info[0] == 3
+
+
 try:
     import pyquery
 except Exception as er:
@@ -333,7 +337,7 @@ class CI_Application(object):
 
     def md5(self,s):
         m=hashlib.md5()
-        if isinstance(s,unicode):
+        if PY2 and isinstance(s,unicode):
             s=s.encode('utf-8')
         m.update(s)
         return m.hexdigest()
@@ -471,9 +475,11 @@ class CI_Application(object):
             content = self.local.response.body
             if self.cookie:
                 self.cookie.result_cookie()
-            if isinstance(content,unicode):
+            if PY2 and isinstance(content,unicode):
                 content=unicode.encode(content,'utf-8','ignore')
-            if not type(content) in [str,unicode]:
+            if PY2 and (not type(content) in [str,unicode]):
+                content = json.dumps(content)
+            if PY3:
                 content = json.dumps(content)
             start_response(str(code),self.local.response.headers)
             self.local.response = None

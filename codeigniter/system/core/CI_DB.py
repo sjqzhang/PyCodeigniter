@@ -6,7 +6,9 @@ __author__ = 'xiaozhang'
 import re
 import types
 import collections
-
+import sys
+PY2 = sys.version_info[0] == 2
+PY3 = sys.version_info[0] == 3
 
 
 from CI_DBActiveRec import CI_DBActiveRec
@@ -177,7 +179,8 @@ class CI_DB(object):
             sql,param=self.format(sql,param)
             # print(param)
         if self.debug:
-            if isinstance(sql,unicode):
+
+            if PY2 and isinstance(sql,unicode):
                 sql=unicode.encode(sql,'utf-8','ignore')
             self.logger.info(sql)
         if conn==None:
@@ -199,7 +202,7 @@ class CI_DB(object):
             else:
                 return result
         except Exception as  e:
-            if isinstance(sql,unicode):
+            if PY2 and isinstance(sql,unicode):
                 sql=unicode.encode(sql,'utf-8','ignore')
             self.app.logger.error(str(e)+"sql:\n"+sql)
             raise e

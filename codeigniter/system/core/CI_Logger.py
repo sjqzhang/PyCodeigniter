@@ -11,6 +11,7 @@ import re
 
 import sys
 PY2 = sys.version_info[0] == 2
+PY3 = sys.version_info[0] == 3
 
 
 class CI_Logger(object):
@@ -98,12 +99,12 @@ class CI_Logger(object):
             self.logger.log(level,"".join(errorlist))
         else:
             loginfo=self._get_log_back()
-            try:
+            if PY2:
                 if isinstance(message,unicode):
                     message=unicode.encode(message,'utf-8','ignore')
                 message = str( self._get_msg( loginfo)[0])+" "+str(message)
                 self.logger.log(level,message)
-            except:
+            if PY3:
                 message = str( self._get_msg( loginfo)[0])+" "+str(message)
                 self.logger.log(level,message)
 

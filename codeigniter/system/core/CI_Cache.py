@@ -20,6 +20,8 @@ import os
 import sys
 sys.path.insert(0,os.path.dirname(__file__))
 from CI_Application import CI_Application
+PY2 = sys.version_info[0] == 2
+PY3 = sys.version_info[0] == 3
 
 try:
     import thread
@@ -230,14 +232,14 @@ class CI_Cache(object):
             ks=m[1:].split('.')
             if len(ks)==2:
                 if ks[0] in data.keys() and ks[1] in data[ks[0]]:
-                    if isinstance(data[ks[0]][ks[1]],unicode):
+                    if PY2 and isinstance(data[ks[0]][ks[1]],unicode):
                         data[ks[0]][ks[1]]=unicode.encode(data[ks[0]][ks[1]],'utf-8','ignore')
                     key+=str(data[ks[0]][ks[1]])+'$'
                 else:
                     raise Exception('cache key error: %s or %s not found'%(ks[0],ks[1]))
             elif len(ks)==1:
                 if ks[0] in data.keys():
-                    if isinstance(data[ks[0]],unicode):
+                    if PY2 and isinstance(data[ks[0]],unicode):
                         data[ks[0]]=unicode.encode(data[ks[0]],'utf-8','ignore')
                     key+=str(data[ks[0]])+'$'
                 else:

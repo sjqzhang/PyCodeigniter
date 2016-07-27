@@ -3,7 +3,7 @@
 __author__ = 'xiaozhang'
 import uuid,time
 import threading
-from . import PushTraceback
+# from . import PushTraceback
 import hashlib
 import redis
 import multiprocessing
@@ -125,7 +125,8 @@ class CI_Session(object):
                 return
             self.cookie.set('PySessionUUID',  hashlib.md5("%s_%s" % (uuid.uuid1(),uuid.uuid4()) ).hexdigest() )
         except BaseException as e:
-            self.app.logger.error("%s:%s" % ( PushTraceback(),e ))
+            # self.app.logger.error("%s:%s" % ( PushTraceback(),e ))
+            self.app.logger.error(e)
 
 
 
@@ -135,7 +136,8 @@ class CI_Session(object):
             ukey = "%s_%s" %  (self.cookie['PySessionUUID'],key)
             self.store_porxy.set(ukey,value)
         except BaseException as e:
-            self.app.logger.error("%s:%s" % ( PushTraceback(),e ))
+            self.app.logger.error(e)
+            # self.app.logger.error("%s:%s" % ( PushTraceback(),e ))
 
 
     def get(self,key):
@@ -143,7 +145,8 @@ class CI_Session(object):
             ukey = "%s_%s" %  (self.cookie['PySessionUUID'],key)
             return self.store_porxy.get(ukey)
         except BaseException as e:
-            self.app.logger.error("%s:%s" % ( PushTraceback(),e ))
+            self.app.logger.error(e)
+            # self.app.logger.error("%s:%s" % ( PushTraceback(),e ))
 
     def __getitem__(self,key):
         return self.get(key)
