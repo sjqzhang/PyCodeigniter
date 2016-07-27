@@ -3,8 +3,12 @@
 __author__ = 'xiaozhang'
 
 
-import sys,cgi
-import StringIO
+import sys
+import cgi
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 PY2 = sys.version_info[0] == 2
 if PY2:
     from urlparse import parse_qs
