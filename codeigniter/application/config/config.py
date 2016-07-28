@@ -3,7 +3,7 @@ import logging
 
 
 db={
-    'type':'mysql', # mysql , sqlite
+    'creator':'pymysql',# sqlite3
     'host':'127.0.0.1',
     'user':'root',
     'passwd':'root',
@@ -14,6 +14,16 @@ db={
     'autocommit':True,
     'debug':True
 }
+
+
+sdb={
+    'creator':'sqlite3',
+    'database':'test.db',
+    'maxconnections':30,
+    'blocking':True,
+    'debug':True
+}
+
 
 
 
