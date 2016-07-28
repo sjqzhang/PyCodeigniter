@@ -12,10 +12,15 @@
 
 ###1.1 dependency
 + `logging`
-+ `pymysql`
-+ `DBUtils`
-+ `apscheduler`
++ `pymysql` or `MySQLdb`  (if you want to use mysql)
++ `gevent` (if you want to build  high performance )
 
+```
+optional 
+   redis
+   memcache
+   .....
+```
 ###1.2 how to install
 ```
 
@@ -356,7 +361,7 @@ class Index:
         return self.memcache.get('test')
 
     def test_tpl(self,req,resp): #template
-        return ci.tpl.render('template.html',[{'sNo':'123456','chinese':67,'math':90,'englist':85},\
+        return ci.tpl.render('template.html',data=[{'sNo':'123456','chinese':67,'math':90,'englist':85},\
             {'sNo':'123456','chinese':80,'math':96,'englist':85}])
 
 
