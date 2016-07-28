@@ -7,11 +7,14 @@ import re
 import types
 import collections
 import sys
+import os
 PY2 = sys.version_info[0] == 2
 PY3 = sys.version_info[0] == 3
+sys.path.insert(0,os.path.dirname(__file__))
 
 
 from CI_DBActiveRec import CI_DBActiveRec
+from CI_Util import OrderedDict
 
 
 import time
@@ -47,7 +50,7 @@ class Pool(object):
                 time.sleep(0.1)
 
         except Exception as er:
-            print(er)
+            raise Exception(er)
         finally:
             self.mutex.release()
 
@@ -82,7 +85,7 @@ class Pool(object):
 
 class CI_DB(object):
     def __init__(self, **kwargs):
-        import pymysql
+        # import pymysql
         # import DBUtils
         # from DBUtils.PooledDB import PooledDB
         if 'app' in kwargs.keys():
@@ -100,9 +103,18 @@ class CI_DB(object):
             self.autocommit=kwargs['autocommit']
         else:
             self.autocommit=True
-        self.pool=Pool(pymysql,**kwargs)
+        if 'creator' in kwargs.keys():
+            self.creator=kwargs['creator']
+            del kwargs['creator']
+        else:
+            self.creator='pymysql'
+        self.creator_mod=None
+        try:
+            self.creator_mod=__import__(self.creator)
+        except Exception as er:
+            self.logger.error(er)
+        self.pool=Pool(self.creator_mod,**kwargs)
         # self.pool=PooledDB(pymysql,**kwargs)
-
         self.queries=[]
 
 
@@ -138,7 +150,11 @@ class CI_DB(object):
         ks.sort(lcmp)
         for i in ks:
             sql=sql.replace(i,'%s')
-        sql=sql.replace("'%s'",'%s')
+        if self.creator=='pymysql':
+            sql=sql.replace("'%s'",'%s')
+        else:
+            sql=sql.replace("'%s'",'?')
+            sql=sql.replace("%s",'?')
         return sql,tuple(v)
 
     def dict_result(self,cursor):
@@ -151,7 +167,8 @@ class CI_DB(object):
             title.append({idx:i[0]})
             idx=idx+1
         for row in rows:
-            row2=collections.OrderedDict()
+            # row2=collections.OrderedDict()
+            row2=OrderedDict()
             for i in title:
                 for k in i.keys():
                     row2[i[k]]=row[k]

@@ -180,21 +180,21 @@ class CI_Application(object):
         module_list.append('CI_Cookie')
 
         if 'db' in self.config.keys():
-            if 'type' in self.config['db'] and self.config['db']['type']=='sqlite' :
-                exec('from CI_Sqlite import CI_Sqlite')
-                exec('from CI_DBActiveRec import CI_DBActiveRec')
+            # if 'type' in self.config['db'] and self.config['db']['type']=='sqlite' :
+            #     exec('from CI_Sqlite import CI_Sqlite')
+            #     exec('from CI_DBActiveRec import CI_DBActiveRec')
+            #
+            #     self.db= eval('CI_Sqlite(**self.config["db"])')
+            #     module_list.append('CI_Sqlite')
+            #     module_list.append('CI_DBActiveRec')
+            #
+            # else:
+            exec('from CI_DB import CI_DB')
+            exec('from CI_DBActiveRec import CI_DBActiveRec')
 
-                self.db= eval('CI_Sqlite(**self.config["db"])')
-                module_list.append('CI_Sqlite')
-                module_list.append('CI_DBActiveRec')
-
-            else:
-                exec('from CI_DB import CI_DB')
-                exec('from CI_DBActiveRec import CI_DBActiveRec')
-
-                self.db= eval('CI_DB(**self.config["db"])')
-                module_list.append('CI_DB')
-                module_list.append('CI_DBActiveRec')
+            self.db= eval('CI_DB(**self.config["db"])')
+            module_list.append('CI_DB')
+            module_list.append('CI_DBActiveRec')
         else:
             self.logger.warn('db not config')
         self.static = None
