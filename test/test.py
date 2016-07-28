@@ -8,9 +8,7 @@ import unittest
 
 import os
 import sys
-sys.path.insert(0,os.path.dirname( os.path.dirname(__file__)))
-sys.path.insert(0,os.path.dirname(__file__))
-
+sys.path.insert(0,os.path.dirname( os.path.dirname( os.path.abspath( __file__))))
 
 from codeigniter import ci
 from codeigniter import CI_Application
@@ -38,8 +36,10 @@ class TestServer(Base):
     def setUp(self):
 
 
-        threading.Thread(target=ci.start_server).start()
-        time.sleep(1)
+        th=threading.Thread(target=ci.start_server)
+        th.setDaemon(True)
+        th.start()
+
 
     def test_app(self):
         port= ci.config.get('server')['port']
