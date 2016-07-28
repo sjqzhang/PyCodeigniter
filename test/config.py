@@ -4,21 +4,16 @@ import logging
 
 
 sdb={
-    'type':'sqlite', #sqlite or mysql
-    'host':'',
-    'user':'',
-    'passwd':'',
+    'creator':'sqlite3', #sqlite or mysql
     'database':'test.db',
-    'charset':'utf8',
     'maxconnections':30,
     'blocking':True,
-    'autocommit':True,
     'debug':True
 }
 
 
 mdb={
-    'type':'mysql',
+    'creator':'pymysql',
     'host':'127.0.0.1',
     'user':'root',
     'passwd':'root',

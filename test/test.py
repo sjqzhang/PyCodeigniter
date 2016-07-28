@@ -9,6 +9,7 @@ import unittest
 import os
 import sys
 sys.path.insert(0,os.path.dirname( os.path.dirname(__file__)))
+sys.path.insert(0,os.path.dirname(__file__))
 
 
 from codeigniter import ci
@@ -26,7 +27,8 @@ class Base(unittest.TestCase):
         self.app=CI_Application(application_path= './',config_file='./config.py')
         # print ci.loader.load_module('../codeigniter/system/core/')
         mdb=ci.loader.cls('CI_DB')(**ci.config.get('mdb'))
-        sdb=ci.loader.cls('CI_Sqlite')(**ci.config.get('sdb'))
+        sdb=ci.loader.cls('CI_DB')(**ci.config.get('sdb'))
+        # print(sdb)
         ci.set('mdb',mdb)
         ci.set('sdb',sdb)
 
@@ -34,14 +36,16 @@ class Base(unittest.TestCase):
 
 class TestServer(Base):
     def setUp(self):
-        threading.Thread(target=ci.start_server).start()
 
+
+        threading.Thread(target=ci.start_server).start()
+        time.sleep(1)
 
     def test_app(self):
         port= ci.config.get('server')['port']
 
         # print ci.request('http://127.0.0.1:8006/index/index')
-        print ci.request('http://127.0.0.1:8006/index/index')
+        print(ci.request('http://127.0.0.1:%s/index/index'%(port)))
 
 
 
@@ -79,6 +83,9 @@ class TestDB(Base):
         with db.tran() as tx:
             tx.insert('test',{'title':'title','content':'content'})
             assert tx.scalar('select max(id) as mid from test')['mid']== tx.scalar('SELECT LAST_INSERT_ID() as last')['last']
+
+        rows=db.select('*')._from('test').limit(1).get()
+        assert len(rows)==1
 
 
     def _pool(self,db):
