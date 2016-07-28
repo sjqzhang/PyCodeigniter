@@ -123,11 +123,10 @@ class CI_DB(object):
         # print("get_connection")
         conn= self.pool.get_connection()
         # conn= self.pool.dedicated_connection()
-        # cursor=conn.cursor()
-        # cursor.execute('set names utf8')
-        # cursor.execute('set autocommit=OFF')
-        # cursor.close()
         return conn
+
+    def get_raw_connection(self):
+        return self.get_connection()._con
 
     def last_query(self):
         if len(self.queries)>0:
@@ -176,7 +175,8 @@ class CI_DB(object):
         return result
 
     def begin(self,conn):
-        conn._con.begin()
+        if hasattr(conn._con,'begin') and callable(getattr(conn._con,'begin')):
+            conn._con.begin()
 
     def rollback(self,conn):
         conn._con.rollback()
@@ -263,24 +263,16 @@ class CI_DB(object):
                 else:
                     self.conn=conn
 
+
             def __exit__(self, exc_type, exc_val, exc_tb):
                 if exc_type==None:
                     self._db.commit(self.conn)
                 else:
                     self._db.rollback(self.conn)
-                if self._db.autocommit:
-                    pass
-                     # cursor=self.conn.cursor()
-                     # cursor.execute('set autocommit=ON')
-                     # cursor.close()
                 self.conn.close()
 
             def __enter__(self):
-                # cursor=self.conn.cursor()
-                # cursor.execute('set autocommit=OFF')
-                # cursor.close()
-                self.conn._con.autocommit(False)
-
+                self._db.begin(self.conn)
                 return self
 
             def __getattr__(self, item):
