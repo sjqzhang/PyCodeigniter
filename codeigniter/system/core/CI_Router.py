@@ -80,7 +80,7 @@ class CI_Router(object):
                 # else:
                 #     data['__request__']=request
 
-            return '200 OK',eval('self.app.loader.ctrl(ctrl).'+func+'(**data)')
+            return '200 OK',eval('self.app.loader.ctrl(ctrl).'+func+'("","")')
         except TypeError as e:
             self.app.logger.error('when call controller %s function %s error,%s'%(ctrl,func,str(e)))
             return '200 OK',{'message':str(e),'code':500}
@@ -202,7 +202,7 @@ class CI_Router(object):
         stime=time.time()
         path=env['PATH_INFO'].split('/')
         if PY2:
-            filter(lambda p:p!='',path)
+            path=filter(lambda p:p!='',path)
         if PY3:
             path=list(filter(lambda p:p!='',path))
         controller_name=''
