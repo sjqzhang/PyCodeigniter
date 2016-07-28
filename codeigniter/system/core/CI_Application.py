@@ -165,7 +165,7 @@ class CI_Application(object):
                 self.config[conf]['app']=self
         exec('from CI_Logger import CI_Logger')
         self.logger= eval('CI_Logger(**self.config["log"])')
-        module_list=['CI_Loader','CI_Mail','CI_Router','CI_Input','CI_Cache']
+        module_list=['CI_Loader','CI_Mail','CI_Router','CI_Input','CI_Cache','CI_DB']
 
         cache_type='memory'
         for m in module_list:
@@ -267,7 +267,7 @@ class CI_Application(object):
                     self.loader.regcls(m,eval(m))
                 except:
                     pass
-        self._load_ci_cls()
+        # self._load_ci_cls()
 
     def _load_ci_cls(self):
         try:
