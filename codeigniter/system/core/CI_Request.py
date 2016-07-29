@@ -73,8 +73,15 @@ class CI_Request(object):
                 fp = env['wsgi.input']
                 a = cgi.FieldStorage(fp=fp, environ=env, keep_blank_values=1)
             else:
-                fp = StringIO(env.get('wsgi.input').read())
-                a = cgi.FieldStorage(fp=fp, environ=env, keep_blank_values=1)
+                fdata=env.get('wsgi.input').read()
+                try:
+                    fp = StringIO(fdata)
+                    a = cgi.FieldStorage(fp=fp, environ=env, keep_blank_values=1)
+                except Exception as e:
+                    data=parse_qs(fdata)
+                    for key in data.keys():
+                        self._params[ key ]=data[key][0]
+                    return
         else:
             a = cgi.FieldStorage(environ=env, keep_blank_values=1)
         self._has_parse=True
