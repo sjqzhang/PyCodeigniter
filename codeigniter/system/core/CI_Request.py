@@ -78,7 +78,7 @@ class CI_Request(object):
                     fp = StringIO(fdata)
                     a = cgi.FieldStorage(fp=fp, environ=env, keep_blank_values=1)
                 except Exception as e:
-                    data=parse_qs(fdata)
+                    data=parse_qs(fdata,keep_blank_values=1)
                     for key in data.keys():
                         self._params[ key ]=data[key][0]
                     return
