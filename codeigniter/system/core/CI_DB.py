@@ -187,8 +187,8 @@ class CI_DB(object):
     def close(self,conn):
         conn.close()
 
-    def query(self,sql,param=tuple(),conn=None):
-        auto_close=True
+    def query(self,sql,param=tuple(),conn=None,auto_commit=True):
+        # auto_commit=True
         # print(type(conn))
         if param==None:
             param=tuple()
@@ -202,8 +202,8 @@ class CI_DB(object):
             self.logger.info(sql)
         if conn==None:
             conn=self.get_connection()
-        else:
-            auto_close=False
+        # else:
+        #     auto_commit=False
         try:
             cursor=conn.cursor()
             if len(param)>0:
@@ -211,6 +211,8 @@ class CI_DB(object):
             else:
                 result=cursor.execute(sql)
             self.queries.append(sql)
+            if auto_commit:
+                self.commit(conn)
             if len(self.queries)>100:
                del self.queries[0]
             if re.compile(r'^\s*(select|show)',re.IGNORECASE).match(sql):
@@ -219,6 +221,8 @@ class CI_DB(object):
             else:
                 return result
         except Exception as  e:
+            if auto_commit:
+                self.rollback(conn)
             if PY2 and isinstance(sql,unicode):
                 sql=unicode.encode(sql,'utf-8','ignore')
             self.app.logger.error(str(e)+"sql:\n"+sql)
@@ -227,7 +231,7 @@ class CI_DB(object):
         finally:
             try:
                 cursor.close()
-                if auto_close:
+                if auto_commit:
                     conn.close()
                 # print("close")
             except UnboundLocalError as ee:
@@ -279,17 +283,17 @@ class CI_DB(object):
                 return getattr(self._db,item)
 
             def query(self,sql,param=tuple()):
-                return self._db.query(sql,param,self.conn)
+                return self._db.query(sql,param,self.conn,auto_commit=False)
             def execute(self,sql,param=tuple()):
-                return self.query(sql,param,self.conn)
+                return self.query(sql,param,self.conn,auto_commit=False)
             def scalar(self,sql,param=tuple()):
-                return self._db.scalar(sql,param,self.conn)
+                return self._db.scalar(sql,param,self.conn,auto_commit=False)
             def insert(self, table='', _set=None):
-                return self._db.insert(table,_set,self.conn)
+                return self._db.insert(table,_set,self.conn,auto_commit=False)
             def update(self, table='', _set=None, where=None):
-                return self._db.ar(conn).update(table,_set,where,self.conn)
+                return self._db.ar(conn).update(table,_set,where,self.conn,auto_commit=False)
             def delete(self, table='', where=''):
-                return self._db.delete(table,where,self.conn)
+                return self._db.delete(table,where,self.conn,auto_commit=False)
 
         return Tran(self,conn)
 
