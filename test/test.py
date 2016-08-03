@@ -77,6 +77,18 @@ class TestDB(Base):
         db.delete('test',{'id':'1'})
         rows=db.query('select * from test')
         assert len(rows)==0
+        with db.tran() as tx:
+            if tx.scalar('select count(1) as cnt from test where id=1')['cnt']==0:
+                tx.insert('test',{'title':'title','content':'content','id':1})
+            rows=tx.query('select * from test')
+            assert len(rows)==1
+            tx.update('test',{'title':'title','content':'change'},{'id':1})
+            rows=tx.query('select * from test')
+            assert rows[0]['content']=='change'
+            print tx.ar().select('*')._from('test').limit(1,0).get()
+            tx.delete('test',{'id':'1'})
+            rows=tx.query('select * from test')
+            assert len(rows)==0
 
 
     def _mysql(self,db):

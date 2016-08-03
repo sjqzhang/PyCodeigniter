@@ -238,8 +238,8 @@ class CI_DB(object):
                 pass
             except Exception as er:
                 self.logger.error(er)
-    def execute(self,sql,param=tuple(),conn=None):
-        return self.query(sql,param,conn)
+    def execute(self,sql,param=tuple(),conn=None,auto_commit=True):
+        return self.query(sql,param,conn,auto_commit)
 
     def insert(self, table='', _set=None,conn=None):
        return self.ar(conn).insert_safe(table,_set)
@@ -250,8 +250,8 @@ class CI_DB(object):
     def delete(self, table='', where='',conn=None):
         return self.ar(conn).delete(table,where)
 
-    def scalar(self,sql,param=tuple(),conn=None):
-        rows=self.query(sql,param,conn)
+    def scalar(self,sql,param=tuple(),conn=None,auto_commit=True):
+        rows=self.query(sql,param,conn,auto_commit)
         if isinstance(rows,list) and len(rows)>0:
             return rows[0]
         else:
@@ -266,8 +266,6 @@ class CI_DB(object):
                     self.conn=self._db.get_connection()
                 else:
                     self.conn=conn
-
-
             def __exit__(self, exc_type, exc_val, exc_tb):
                 if exc_type==None:
                     self._db.commit(self.conn)
@@ -289,11 +287,13 @@ class CI_DB(object):
             def scalar(self,sql,param=tuple()):
                 return self._db.scalar(sql,param,self.conn,auto_commit=False)
             def insert(self, table='', _set=None):
-                return self._db.insert(table,_set,self.conn,auto_commit=False)
+                return self._db.insert(table,_set,self.conn)
             def update(self, table='', _set=None, where=None):
-                return self._db.ar(conn).update(table,_set,where,self.conn,auto_commit=False)
+                return self._db.update(table,_set,where,self.conn)
             def delete(self, table='', where=''):
-                return self._db.delete(table,where,self.conn,auto_commit=False)
+                return self._db.delete(table,where,self.conn)
+            def ar(self,conn=None):
+                return self._db.ar(self.conn)
 
         return Tran(self,conn)
 

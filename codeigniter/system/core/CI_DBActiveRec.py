@@ -78,9 +78,11 @@ class CI_DBActiveRec():
         try:
             if self.conn==None:
                 self.conn=self.db.get_connection()
-            return self.db.query(sql,param=param,conn=self.conn)
+                self.auto_close=True
+            return self.db.query(sql,param=param,conn=self.conn,auto_commit=self.auto_close)
         finally:
             if self.auto_close:
+                self.db.commit(self.conn)
                 self.conn.close()
 
 
