@@ -54,6 +54,14 @@ class Pool(object):
         finally:
             self.mutex.release()
 
+    def reconnect(self,conn):
+        for c in self.pool:
+            self.pool.remove(conn)
+        try:
+            conn._con.close()
+        except Exception as er:
+            pass
+
     def create_connection(self):
         class Connection(object):
             def __init__(self,con,pool):
@@ -149,11 +157,12 @@ class CI_DB(object):
         ks.sort(lcmp)
         for i in ks:
             sql=sql.replace(i,'%s')
-        if self.creator=='pymysql':
-            sql=sql.replace("'%s'",'%s')
-        else:
+        if self.creator=='sqlite3':
             sql=sql.replace("'%s'",'?')
             sql=sql.replace("%s",'?')
+        else:
+            sql=sql.replace("'%s'",'%s')
+
         return sql,tuple(v)
 
     def dict_result(self,cursor):
@@ -220,7 +229,12 @@ class CI_DB(object):
                 return rows
             else:
                 return result
-        except Exception as  e:
+        except Exception as e:
+            keys=['gone away','connection','server','lost']
+            for key in keys:
+                if str(e).lower().find(key)!=-1:
+                    self.pool.reconnect(conn)
+                    break
             if auto_commit:
                 self.rollback(conn)
             if PY2 and isinstance(sql,unicode):
