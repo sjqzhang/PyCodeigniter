@@ -260,7 +260,10 @@ class CI_Router(object):
                     if self.app.local.response.body == "":
                         self.app.set500("post_controller_constructor hook result false")
                     return
-
+                funcobj = getattr(ctrl_instance,func)
+                if not callable(funcobj):
+                    self.app.set404()
+                    return
                 ret= getattr(ctrl_instance,func)(req,self.app.local.response)
                 if self.app.local.response.body=="":
                     self.app.local.response.body=ret
