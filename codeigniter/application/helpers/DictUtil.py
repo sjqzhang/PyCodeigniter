@@ -11,8 +11,8 @@ class Expr:
             '=': self._equal_,
             '!=': self._not_equal,
             '<>': self._not_equal,
-            'like': self._like,
-            'in':self._in
+            ' like ': self._like,
+            ' in ':self._in
         }
         self.key, self.op, self.val = self.__parser(expr)
         self.func = self.op_map[self.op]
