@@ -22,7 +22,7 @@ class Expr:
         assert len(op) >= 1
 
         op = min(op)
-        return str(expr[:op[0]]).strip().lower(), str(op[1]).strip().lower(), str(expr[op[0] + len(op[1]):]).strip().lower()
+        return str(expr[:op[0]]).strip().lower(), str(op[1]), str(expr[op[0] + len(op[1]):]).strip().lower()
 
     def _equal_(self, fst_val, sec_val):
         return fst_val == sec_val
