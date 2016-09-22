@@ -19,9 +19,11 @@ from CI_Util import OrderedDict
 
 import time
 from threading import Lock
+from threading import local
 class Pool(object):
     def __init__(self,creator,**kwargs):
-        # self.local=local()
+        self.local=local()
+        self.local.conn=None
         self.mutex=Lock()
         self.creator=creator
         self.pool=[]
@@ -38,15 +40,17 @@ class Pool(object):
             self.maxconnections=1
         self._kwargs=kwargs
     def get_connection(self):
-        self.mutex.acquire()
         try:
             while True:
+                self.mutex.acquire()
                 for conn in self.pool:
                     if conn.idle:
                         conn.idle=False
                         return conn
                 if len(self.pool)<self.maxconnections:
-                    return self.create_connection()
+                    conn= self.create_connection()
+                    self.pool.append(conn)
+                    return conn
                 time.sleep(0.1)
 
         except Exception as er:
@@ -55,12 +59,15 @@ class Pool(object):
             self.mutex.release()
 
     def reconnect(self,conn):
-        for c in self.pool:
-            self.pool.remove(conn)
         try:
+            self.mutex.acquire()
+            for c in self.pool:
+                self.pool.remove(conn)
             conn._con.close()
         except Exception as er:
             pass
+        finally:
+            self.mutex.release()
 
     def create_connection(self):
         class Connection(object):
@@ -70,13 +77,19 @@ class Pool(object):
                 self.idle=False
                 # pool.pool.append(self)
             def close(self):
-                self.idle=True
+                try:
+                    self.pool.mutex.acquire()
+                    self.idle=True
+                except Exception as er:
+                    pass
+                finally:
+                    self.pool.mutex.release()
                 # print('idle')
             def __getattr__(self, item):
                 if hasattr(self._con,item):
                     return getattr(self._con,item)
         conn= Connection(self.creator.connect(**self._kwargs),self)
-        self.pool.append(conn)
+        # self.pool.append(conn)
         return conn
 
 
@@ -230,11 +243,12 @@ class CI_DB(object):
             else:
                 return result
         except Exception as e:
-            keys=['gone away','connection','server','lost']
-            for key in keys:
-                if str(e).lower().find(key)!=-1:
-                    self.pool.reconnect(conn)
-                    break
+            # keys=['gone away','connection','server','lost']
+            # for key in keys:
+            #     if str(e).lower().find(key)!=-1:
+            #         self.pool.reconnect(conn)
+            #         break
+            self.pool.reconnect(conn)
             if auto_commit:
                 self.rollback(conn)
             if PY2 and isinstance(sql,unicode):
