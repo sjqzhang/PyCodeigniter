@@ -19,11 +19,13 @@ from CI_Util import OrderedDict
 
 import time
 from threading import Lock
+try:
+    from gevent.lock import Semaphore as Lock
+except Exception as er:
+    pass
 from threading import local
 class Pool(object):
     def __init__(self,creator,**kwargs):
-        self.local=local()
-        self.local.conn=None
         self.mutex=Lock()
         self.creator=creator
         self.pool=[]
@@ -43,15 +45,16 @@ class Pool(object):
         try:
             while True:
                 self.mutex.acquire()
-                for conn in self.pool:
-                    if conn.idle:
-                        conn.idle=False
+                if self.mutex.locked():
+                    for conn in self.pool:
+                        if conn.idle:
+                            conn.idle=False
+                            return conn
+                    if len(self.pool)<self.maxconnections:
+                        conn= self.create_connection()
+                        self.pool.append(conn)
                         return conn
-                if len(self.pool)<self.maxconnections:
-                    conn= self.create_connection()
-                    self.pool.append(conn)
-                    return conn
-                time.sleep(0.1)
+                    time.sleep(0.1)
 
         except Exception as er:
             raise Exception(er)
@@ -61,9 +64,10 @@ class Pool(object):
     def reconnect(self,conn):
         try:
             self.mutex.acquire()
-            for c in self.pool:
-                self.pool.remove(conn)
-            conn._con.close()
+            if self.mutex.locked():
+                for c in self.pool:
+                    self.pool.remove(conn)
+                conn._con.close()
         except Exception as er:
             pass
         finally:
@@ -79,7 +83,8 @@ class Pool(object):
             def close(self):
                 try:
                     self.pool.mutex.acquire()
-                    self.idle=True
+                    if self.pool.mutex.locked():
+                        self.idle=True
                 except Exception as er:
                     pass
                 finally:
@@ -135,15 +140,17 @@ class CI_DB(object):
         except Exception as er:
             self.logger.error(er)
         self.pool=Pool(self.creator_mod,**kwargs)
-        # self.pool=PooledDB(pymysql,**kwargs)
+        # self.pool=PooledDB(self.creator_mod,**kwargs)
         self.queries=[]
 
 
 
     def get_connection(self):
         # print("get_connection")
-        conn= self.pool.get_connection()
-        # conn= self.pool.dedicated_connection()
+        if hasattr(self.pool,'get_connection'):
+            conn= self.pool.get_connection()
+        else:
+            conn= self.pool.dedicated_connection()
         return conn
 
     def get_raw_connection(self):
@@ -152,6 +159,38 @@ class CI_DB(object):
     def last_query(self):
         if len(self.queries)>0:
             return self.queries[-1]
+
+    def escape_str(self, string, like = False):
+        if isinstance(string, dict):
+            for key,val in string.iteritems():
+                string[key] = self.escape_str(val, like)
+            return string
+
+        string = ''.join({'"':'\\"', "'":"\\'", "\0":"\\\0", "\\":"\\\\"}.get(c, c) for c in string)
+
+        # escape LIKE condition wildcards
+        if like == True:
+            string = string.replace('%', '\\%')
+            string = string.replace('_', '\\_')
+
+        return string
+
+
+
+    def sql_format(self,sql,param):
+        m=re.findall(r"{\w+}|\:\w+",sql,re.IGNORECASE|re.DOTALL)
+        v=list()
+        def lcmp(x,y):
+            if len(x)>len(y):
+                return -1
+            else:
+                return 1
+        ks=[]
+        for i in m:
+            key,num=re.subn(r"^'?{|}'?$|^\:",'',i)
+            sql=sql.replace(i,self.escape_str(param[key]))
+
+        return sql
 
     def format(self,sql,param):
         m=re.findall(r"{\w+}|\:\w+",sql,re.IGNORECASE|re.DOTALL)
@@ -204,7 +243,8 @@ class CI_DB(object):
         conn._con.rollback()
 
     def commit(self,conn):
-        conn._con.commit()
+        if conn._con!=None:
+            conn._con.commit()
 
     def close(self,conn):
         conn.close()
