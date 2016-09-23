@@ -19,11 +19,6 @@ from CI_Util import OrderedDict
 
 import time
 from threading import Lock
-try:
-    from gevent.lock import Semaphore as Lock
-except Exception as er:
-    pass
-from threading import local
 class Pool(object):
     def __init__(self,creator,**kwargs):
         self.mutex=Lock()
