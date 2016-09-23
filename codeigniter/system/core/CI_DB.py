@@ -249,6 +249,22 @@ class CI_DB(object):
     def close(self,conn):
         conn.close()
 
+    def batch(self,sql,param=list(),split=';',conn=None,auto_commit=True):
+        if not isinstance(param,list):
+            raise Exception('param must be list')
+        batch_sqls=[]
+        values=[]
+        for row in param:
+            _sql,vs=self.format(sql,row)
+            for _v in vs:
+                values.append(_v)
+            batch_sqls.append(_sql)
+        full_sql=split.join(batch_sqls)
+        return self.query(full_sql,tuple(values),conn,auto_commit)
+
+
+
+
     def query(self,sql,param=tuple(),conn=None,auto_commit=True):
         # auto_commit=True
         # print(type(conn))
