@@ -1,9 +1,9 @@
 pymysql
-#DBUtils
-apscheduler
+DBUtils
+#apscheduler
 gevent
-jinja2
-tenjin
+#jinja2
+#tenjin
 redis
 kazoo
 #memcache_wrapper
