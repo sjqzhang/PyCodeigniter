@@ -106,9 +106,6 @@ class Pool(object):
 
 class CI_DB(object):
     def __init__(self, **kwargs):
-        # import pymysql
-        # import DBUtils
-        # from DBUtils.PooledDB import PooledDB
         if 'app' in kwargs.keys():
             self.app=kwargs['app']
             self.logger=self.app.logger
@@ -134,8 +131,15 @@ class CI_DB(object):
             self.creator_mod=__import__(self.creator)
         except Exception as er:
             self.logger.error(er)
-        self.pool=Pool(self.creator_mod,**kwargs)
-        # self.pool=PooledDB(self.creator_mod,**kwargs)
+        try:
+            from DBUtils.PooledDB import PooledDB
+            self.pool=PooledDB(self.creator_mod,**kwargs)
+            self.logger.info('DB pool:DBUtils.PooledDB')
+        except:
+            self.pool=Pool(self.creator_mod,**kwargs)
+            self.logger.info('DB pool:CI_DB.Pool')
+
+
         self.queries=[]
 
 
@@ -294,12 +298,12 @@ class CI_DB(object):
             else:
                 return result
         except Exception as e:
-            # keys=['gone away','connection','server','lost']
-            # for key in keys:
-            #     if str(e).lower().find(key)!=-1:
-            #         self.pool.reconnect(conn)
-            #         break
-            self.pool.reconnect(conn)
+            keys=['gone away','connection','server','lost']
+            for key in keys:
+                if str(e).lower().find(key)!=-1:
+                    if hasattr(self.pool,'reconnect'):
+                        self.pool.reconnect(conn)
+                    break
             if auto_commit:
                 self.rollback(conn)
             if PY2 and isinstance(sql,unicode):
