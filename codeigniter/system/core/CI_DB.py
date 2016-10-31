@@ -19,11 +19,16 @@ from CI_Util import OrderedDict
 
 import time
 from threading import Lock
+import threading
+import time
+if PY2:
+    from  Queue import Queue
+if PY3:
+    from queue import Queue
 class Pool(object):
     def __init__(self,creator,**kwargs):
-        self.mutex=Lock()
+        # self.mutex=Lock()
         self.creator=creator
-        self.pool=[]
         self.idle=[]
         if 'blocking' in kwargs.keys():
             self.blocking=kwargs['blocking']
@@ -36,37 +41,43 @@ class Pool(object):
         else:
             self.maxconnections=1
         self._kwargs=kwargs
+        self.pool=Queue(self.maxconnections)
+
+        for i in range(self.maxconnections):
+            self.pool.put(self.create_connection())
+
+        threading.Thread(target=self._check_alive).start()
+
+
+
+    def _check_alive(self):
+        while True:
+            try:
+                for i in range(0,self.pool.qsize()):
+                    conn=self.pool.get()
+                    if hasattr(conn._con, 'ping') and callable(conn._con.ping):
+                        try:
+                            conn._con.ping()
+                            conn.close()
+                        except Exception as er:
+                            conn=self.create_connection()
+                            self.pool.put(conn)
+                time.sleep(60)
+            except Exception as er:
+                pass
+
     def get_connection(self):
         try:
             while True:
-                self.mutex.acquire()
-                if self.mutex.locked():
-                    for conn in self.pool:
-                        if conn.idle:
-                            conn.idle=False
-                            return conn
-                    if len(self.pool)<self.maxconnections:
-                        conn= self.create_connection()
-                        self.pool.append(conn)
-                        return conn
-                    time.sleep(0.1)
-
+                print(self.pool.qsize())
+                return self.pool.get()
         except Exception as er:
             raise Exception(er)
-        finally:
-            self.mutex.release()
 
-    def reconnect(self,conn):
-        try:
-            self.mutex.acquire()
-            if self.mutex.locked():
-                for c in self.pool:
-                    self.pool.remove(conn)
-                conn._con.close()
-        except Exception as er:
-            pass
-        finally:
-            self.mutex.release()
+
+
+    # def reconnect(self,conn):
+    #     pass
 
     def create_connection(self):
         class Connection(object):
@@ -74,22 +85,15 @@ class Pool(object):
                 self.pool=pool
                 self._con=con
                 self.idle=False
-                # pool.pool.append(self)
             def close(self):
                 try:
-                    self.pool.mutex.acquire()
-                    if self.pool.mutex.locked():
-                        self.idle=True
+                    self.pool.pool.put(self)
                 except Exception as er:
                     pass
-                finally:
-                    self.pool.mutex.release()
-                # print('idle')
             def __getattr__(self, item):
                 if hasattr(self._con,item):
                     return getattr(self._con,item)
         conn= Connection(self.creator.connect(**self._kwargs),self)
-        # self.pool.append(conn)
         return conn
 
 
@@ -131,13 +135,16 @@ class CI_DB(object):
             self.creator_mod=__import__(self.creator)
         except Exception as er:
             self.logger.error(er)
-        try:
-            from DBUtils.PooledDB import PooledDB
-            self.pool=PooledDB(self.creator_mod,**kwargs)
-            self.logger.info('DB pool:DBUtils.PooledDB')
-        except:
-            self.pool=Pool(self.creator_mod,**kwargs)
-            self.logger.info('DB pool:CI_DB.Pool')
+
+        self.pool=Pool(self.creator_mod,**kwargs)
+        self.logger.info('DB pool:CI_DB.Pool')
+        # try:
+        #     from DBUtils.PooledDB import PooledDB
+        #     self.pool=PooledDB(self.creator_mod,**kwargs)
+        #     self.logger.info('DB pool:DBUtils.PooledDB')
+        # except:
+        #     self.pool=Pool(self.creator_mod,**kwargs)
+        #     self.logger.info('DB pool:CI_DB.Pool')
 
 
         self.queries=[]
