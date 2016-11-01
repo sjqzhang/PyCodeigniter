@@ -69,7 +69,6 @@ class Pool(object):
     def get_connection(self):
         try:
             while True:
-                print(self.pool.qsize())
                 return self.pool.get()
         except Exception as er:
             raise Exception(er)
@@ -284,8 +283,10 @@ class CI_DB(object):
             if PY2 and isinstance(sql,unicode):
                 sql=unicode.encode(sql,'utf-8','ignore')
             self.logger.info(sql)
+        auto_close_connection=False
         if conn==None:
             conn=self.get_connection()
+            auto_close_connection=True
         # else:
         #     auto_commit=False
         try:
@@ -295,8 +296,8 @@ class CI_DB(object):
             else:
                 result=cursor.execute(sql)
             self.queries.append(sql)
-            if auto_commit:
-                self.commit(conn)
+            # if auto_commit:
+            #     self.commit(conn)
             if len(self.queries)>100:
                del self.queries[0]
             if re.compile(r'^\s*(select|show)',re.IGNORECASE).match(sql):
@@ -311,8 +312,8 @@ class CI_DB(object):
                     if hasattr(self.pool,'reconnect'):
                         self.pool.reconnect(conn)
                     break
-            if auto_commit:
-                self.rollback(conn)
+            # if auto_commit:
+            #     self.rollback(conn)
             if PY2 and isinstance(sql,unicode):
                 sql=unicode.encode(sql,'utf-8','ignore')
             self.app.logger.error(str(e)+"sql:\n"+sql)
@@ -320,8 +321,11 @@ class CI_DB(object):
 
         finally:
             try:
-                cursor.close()
-                if auto_commit:
+                try:
+                    cursor.close()
+                except Exception as er:
+                    pass
+                if auto_close_connection:
                     conn.close()
                 # print("close")
             except UnboundLocalError as ee:
