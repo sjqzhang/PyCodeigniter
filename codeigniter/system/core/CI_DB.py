@@ -45,16 +45,30 @@ class Pool(object):
 
         for i in range(self.maxconnections):
             self.pool.put(self.create_connection())
+        daemon=threading.Thread(target=self._check_alive)
+        daemon.setDaemon(True)
+        daemon.start()
 
-        threading.Thread(target=self._check_alive).start()
 
-
+    def ping(self,conn):
+        try:
+            cursor= conn.cursor()
+            cursor.execute('select 1')
+            row=cursor.fetchall()
+            if len(row)>0:
+                return True
+            else:
+                return False
+        except Exception as er:
+            return False
+        return True
 
     def _check_alive(self):
         while True:
             try:
-                for i in range(0,self.pool.qsize()):
-                    conn=self.pool.get()
+                size=self.pool.qsize()
+                for i in range(0,size):
+                    conn=self.get_connection()
                     if hasattr(conn._con, 'ping') and callable(conn._con.ping):
                         try:
                             conn._con.ping()
@@ -62,18 +76,61 @@ class Pool(object):
                         except Exception as er:
                             conn=self.create_connection()
                             self.pool.put(conn)
-                time.sleep(60)
+                    else:
+                        if self.ping(conn):
+                            conn.close
+                        else:
+                            conn=self.create_connection()
+                            self.pool.put(conn)
+                # time.sleep(60)
             except Exception as er:
                 pass
 
-    def get_connection(self):
+    # def get_connection(self):
+    #     conn=None
+    #     try:
+    #         conn=self.pool.get_nowait()
+    #     except Exception as er:
+    #         conn=None
+    #     if conn!=None:
+    #         return conn
+    #     else:
+    #         def _wait():
+    #             while True:
+    #                 try:
+    #                     conn=self.pool.get_nowait()
+    #                     return conn
+    #                 except Exception as er:
+    #                     time.sleep(0.1)
+    #                     pass
+    #
+    #         daemon=threading.Thread(target=_wait)
+    #         daemon.setDaemon(True)
+    #         daemon.start()
+    #         daemon.join()
+    #         return conn
+
+
+
+
+    def get_connection(self,deep=0):
         try:
             while True:
-                return self.pool.get()
+                try:
+                    conn=self.pool.get_nowait()
+                except Exception as er:
+                    conn=None
+                if conn==None:
+                    time.sleep(0.2)
+                    deep=deep+1
+                    if deep>60:
+                        raise Exception('The connection to the database resources are exhausted!')
+                    return self.get_connection(deep)
+                else:
+                    return conn
+
         except Exception as er:
             raise Exception(er)
-
-
 
     # def reconnect(self,conn):
     #     pass
@@ -135,15 +192,15 @@ class CI_DB(object):
         except Exception as er:
             self.logger.error(er)
 
-        self.pool=Pool(self.creator_mod,**kwargs)
-        self.logger.info('DB pool:CI_DB.Pool')
-        # try:
-        #     from DBUtils.PooledDB import PooledDB
-        #     self.pool=PooledDB(self.creator_mod,**kwargs)
-        #     self.logger.info('DB pool:DBUtils.PooledDB')
-        # except:
-        #     self.pool=Pool(self.creator_mod,**kwargs)
-        #     self.logger.info('DB pool:CI_DB.Pool')
+        # self.pool=Pool(self.creator_mod,**kwargs)
+        # self.logger.info('DB pool:CI_DB.Pool')
+        try:
+            from DBUtils.PooledDB import PooledDB
+            self.pool=PooledDB(self.creator_mod,**kwargs)
+            self.logger.info('DB pool:DBUtils.PooledDB')
+        except:
+            self.pool=Pool(self.creator_mod,**kwargs)
+            self.logger.info('DB pool:CI_DB.Pool')
 
 
         self.queries=[]
@@ -296,7 +353,7 @@ class CI_DB(object):
             else:
                 result=cursor.execute(sql)
             self.queries.append(sql)
-            # if auto_commit:
+            # if auto_commit and self.creator=='sqlite3':
             #     self.commit(conn)
             if len(self.queries)>100:
                del self.queries[0]
@@ -312,7 +369,7 @@ class CI_DB(object):
                     if hasattr(self.pool,'reconnect'):
                         self.pool.reconnect(conn)
                     break
-            # if auto_commit:
+            # if auto_commit and  self.creator=='sqlite3':
             #     self.rollback(conn)
             if PY2 and isinstance(sql,unicode):
                 sql=unicode.encode(sql,'utf-8','ignore')
@@ -325,8 +382,9 @@ class CI_DB(object):
                     cursor.close()
                 except Exception as er:
                     pass
-                if auto_close_connection:
+                if auto_close_connection or auto_commit:
                     conn.close()
+
                 # print("close")
             except UnboundLocalError as ee:
                 pass
