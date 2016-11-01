@@ -82,7 +82,7 @@ class Pool(object):
                         else:
                             conn=self.create_connection()
                             self.pool.put(conn)
-                # time.sleep(60)
+                time.sleep(60)
             except Exception as er:
                 pass
 
