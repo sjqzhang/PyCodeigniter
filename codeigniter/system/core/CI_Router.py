@@ -284,7 +284,7 @@ class CI_Router(object):
                 ret= getattr(ctrl_instance,func)(req,self.app.local.response)
                 if self.app.local.response.body=="":
                     self.app.local.response.body=ret
-                # self._log(env,200,stime)
+                self._log(env,200,stime)
                 # self.app.set200(ret)
                 self.app.hook.call_post_controller(env,ctrl_instance,func,ret)
                 return
