@@ -35,7 +35,7 @@ class CI_Router(object):
         self.access_log=logging.getLogger('access_log')
         self.error_log=logging.getLogger('error_log')
         self.access_log.setLevel(logging.DEBUG)
-        self.error_log.setLevel(logging.DEBUG)
+        self.error_log.setLevel(logging.WARN)
         if 'access_log' in self.config['server']:
             self.access_log_file= self.config['server']['access_log']
         else:
@@ -45,13 +45,27 @@ class CI_Router(object):
         else:
             self.error_log_file='./error.log'
         self._methods={}
+
+        error_log={
+
+            'file':self.error_log_file,
+            'level':logging.WARN,
+            'file_size':1024*1024*100,
+            'back_count':10
+
+        }
+
         acchandler = RotatingFileHandler(filename=self.access_log_file, maxBytes=1024*1024*1024, backupCount=10)
-        errhandler = RotatingFileHandler(filename=self.access_log_file, maxBytes=1024*1024*1024, backupCount=10)
+        # errhandler = RotatingFileHandler(filename=self.error_log_file, maxBytes=1024*1024*1024, backupCount=10)
         # format='%(asctime)s %(message)s'
         # acchandler.setFormatter(format)
         # errhandler.setFormatter(format)
         self.access_log.addHandler(acchandler)
-        self.error_log.addHandler(errhandler)
+
+        exec('from CI_Logger import CI_Logger')
+        self.error_log= eval('CI_Logger(**error_log)')
+
+        # self.error_log.addHandler(errhandler)
 
 
     def get_func(self,ctrl,func):
@@ -156,11 +170,13 @@ class CI_Router(object):
                 self.app.hook.call_post_controller(env,ctrl_instance,func,ret)
                 return 
             except TypeError as e:
+                self.error_log.error(e)
                 self.app.logger.error('when call controller %s function %s error,%s'%(controller_name,func,str(e)))
                 self._log(env,500,stime)
                 self.app.set200({'message':str(e),'code':500})
                 return
             except Exception as e:
+                self.error_log.error(e)
                 self._log(env,500,stime)
                 self.app.logger.error('when call controller %s function %s error,%s'%(controller_name,func,str(e)))
                 self.app.set500("Server Error,Please see log file")
@@ -252,6 +268,7 @@ class CI_Router(object):
                         self.app.set404()
                         return
             except Exception as err:
+                self.error_log.error(err)
                 self._log(env,404,stime)
                 self.app.set404()
                 return
@@ -272,11 +289,13 @@ class CI_Router(object):
                 self.app.hook.call_post_controller(env,ctrl_instance,func,ret)
                 return
             except TypeError as e:
+                self.error_log.error(e)
                 self.app.logger.error('when call controller %s function %s error,%s'%(controller_name,func,str(e)))
                 self._log(env,500,stime)
                 self.app.set200({'message':str(e),'code':500})
                 return
             except Exception as e:
+                self.error_log.error(e)
                 self._log(env,500,stime)
                 self.app.logger.error('when call controller %s function %s error,%s'%(controller_name,func,str(e)))
                 self.app.set500("Server Error,Please see log file")
