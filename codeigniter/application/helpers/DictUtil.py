@@ -44,11 +44,9 @@ class Expr:
         v=data_dict.get(self.key, '')
         if isinstance(v,unicode):
             v = v.encode('utf-8')
-        # if isinstance(v,list):
-        #     pass
-            # print(self.func)
-            # if 'in' in self.func.__name__:
-            #     return self.val in v
+        if isinstance(v,list):
+            if '_in' == self.func.__name__:
+                return self.val in v
         sec_val = str(v).lower()
         return self.func(self.val, sec_val)
 
