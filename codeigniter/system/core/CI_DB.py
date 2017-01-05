@@ -353,8 +353,8 @@ class CI_DB(object):
             else:
                 result=cursor.execute(sql)
             self.queries.append(sql)
-            # if auto_commit and self.creator=='sqlite3':
-            #     self.commit(conn)
+            if auto_commit and self.creator=='sqlite3':
+                self.commit(conn)
             if len(self.queries)>100:
                del self.queries[0]
             if re.compile(r'^\s*(select|show)',re.IGNORECASE).match(sql):
