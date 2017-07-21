@@ -115,6 +115,7 @@ class CI_Router(object):
             for i in ['HTTP_X_FORWARDED_FOR', 'HTTP_X_REAL_IP', 'REMOTE_ADDR']:
                 if i in env.keys():
                     addr=str(env[i]).strip()
+                    break
         except Exception as er:
             addr=env['REMOTE_ADDR']
         path=env['PATH_INFO']
