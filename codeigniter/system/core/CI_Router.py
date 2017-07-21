@@ -111,7 +111,12 @@ class CI_Router(object):
         now = datetime.datetime.now()
         dt=now.strftime('%Y-%m-%d %H:%M:%S')
         method=env['REQUEST_METHOD']
-        addr=env['REMOTE_ADDR']
+        try:
+            for i in ['HTTP_X_FORWARDED_FOR', 'HTTP_X_REAL_IP', 'REMOTE_ADDR']:
+                if i in env.keys():
+                    addr=str(env[i]).strip()
+        except Exception as er:
+            addr=env['REMOTE_ADDR']
         path=env['PATH_INFO']
         protol=env['SERVER_PROTOCOL']
         message="%s - - [%s] \"%s %s %s\" %s %s" % (addr,dt,method,path,protol,str(code),etime)
