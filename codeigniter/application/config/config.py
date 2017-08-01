@@ -56,7 +56,9 @@ mail={
     'host':'smtp.163.com',
     'user':'abc',
     'password':'abc',
-    'postfix':'163.com'
+    'postfix':'163.com',
+    'port':25,
+    'ttls':False
 }
 
 
