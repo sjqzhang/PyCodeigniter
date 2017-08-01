@@ -14,10 +14,13 @@ class CI_Mail(object):
     def __init__(self,**kwargs):
         self.app=kwargs['app'];
         self.host=kwargs['host'];
+        self.ttls=False
         if 'port' in kwargs:
             self.port=kwargs['port'];
         else:
             self.port=25
+        if 'ttls' in kwargs:
+            self.ttls=kwargs['ttls']
         self.user=kwargs['user'];
         self.password=kwargs['password'];
         self.postfix=kwargs['postfix'];
@@ -52,6 +55,8 @@ class CI_Mail(object):
         try:
             s = smtplib.SMTP(timeout=10)
             s.connect(self.host,self.port)
+            if self.ttls:
+                s.starttls()
             s.login(self.user,self.password)
             s.sendmail(me, to, msg.as_string())
             s.close()
