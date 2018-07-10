@@ -1,10 +1,10 @@
-pymysql
-DBUtils
+pymysql==0.7.6
+DBUtils==1.2
 #apscheduler
-gevent
+gevent==1.2.0
 #jinja2
 #tenjin
-redis
-kazoo
+redis==2.10.3
+kazoo==2.4.0
 #memcache_wrapper
 #pyquery
