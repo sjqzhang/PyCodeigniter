@@ -276,6 +276,37 @@ ci.cache.set_cache(B())
 ```
 
 
+容器如何使用
+
+拉取容器
+```
+docker pull sjqzhang/pycodeigniter
+```
+
+在宿主机/data/pyapp/上创建app.py
+```python
+#!/usr/bin/env python
+# -*- coding:utf8 -*-
+__author__ = 'xiaozhang'
+
+from codeigniter import CI_Application
+
+from codeigniter import ci
+
+def main():
+    app=CI_Application(r'./')
+    app.start_server()
+
+if __name__ == '__main__':
+    main()
+
+```
+运行容器
+```
+docker run -d -p 8005:8005 -v /data/pyapp:/data/pyapp sjqzhang/pycodeigniter
+```
+
+
 
 # if yout want to know more , please see the test case!!
 
