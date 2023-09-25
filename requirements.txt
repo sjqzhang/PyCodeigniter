@@ -1,7 +1,7 @@
 pymysql==0.7.6
 DBUtils==1.2
 #apscheduler
-gevent==1.2.0
+gevent==23.9.1
 #jinja2
 #tenjin
 redis==2.10.3
